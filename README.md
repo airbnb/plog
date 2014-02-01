@@ -1,6 +1,6 @@
 # plog
 
-Send unboxed messages over UDP, or line-separated over TCP, and have them forwarded to Kafka.
+Send unboxed messages over UDP, or line-separated messages over TCP, and have them forwarded to Kafka.
 
 ## Usage
 
