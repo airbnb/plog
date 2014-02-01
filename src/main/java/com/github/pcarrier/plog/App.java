@@ -24,7 +24,7 @@ import java.util.Properties;
 
 public class App {
 
-    private final static int MAX_LINE_LENGTH = Integer.parseInt(System.getProperty("plog.port", "1048576"));
+    private final static int MAX_LINE_LENGTH = Integer.parseInt(System.getProperty("plog.max_line_length", "1048576"));
     private final static int PORT = Integer.parseInt(System.getProperty("plog.port", "54321"));
     private final static Charset CHARSET = Charset.forName(System.getProperty("plog.charset", "UTF-8"));
     private final static String TOPIC = System.getProperty("plog.topic", "flog");
