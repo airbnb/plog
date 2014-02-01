@@ -14,7 +14,6 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import kafka.javaapi.producer.Producer;
-import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
 import java.io.IOException;
@@ -22,13 +21,10 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Pattern;
-
-import static io.netty.channel.ChannelHandler.Sharable;
 
 public class App {
 
-    private final static int MAX_LINE_LENGTH = 1048576;
+    private final static int MAX_LINE_LENGTH = Integer.parseInt(System.getProperty("plog.port", "1048576"));
     private final static int PORT = Integer.parseInt(System.getProperty("plog.port", "54321"));
     public static final Charset CHARSET = Charset.forName(System.getProperty("plog.charset", "UTF-8"));
 
@@ -72,14 +68,14 @@ public class App {
                 .option(ChannelOption.SO_LINGER, 0)
                 .handler(new LoggingHandler(LogLevel.WARN))
                 .childHandler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            protected void initChannel(SocketChannel channel) throws Exception {
-                channel.pipeline()
-                        .addLast(new LineBasedFrameDecoder(MAX_LINE_LENGTH))
-                        .addLast(new StringDecoder(CHARSET))
-                        .addLast(forwarder);
-            }
-        }).bind(new InetSocketAddress(PORT)).addListener(futureListener);
+                    @Override
+                    protected void initChannel(SocketChannel channel) throws Exception {
+                        channel.pipeline()
+                                .addLast(new LineBasedFrameDecoder(MAX_LINE_LENGTH))
+                                .addLast(new StringDecoder(CHARSET))
+                                .addLast(forwarder);
+                    }
+                }).bind(new InetSocketAddress(PORT)).addListener(futureListener);
 
         new Bootstrap().group(group).channel(NioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
