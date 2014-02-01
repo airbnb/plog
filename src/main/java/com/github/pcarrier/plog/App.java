@@ -26,10 +26,10 @@ public class App {
 
     private final static int MAX_LINE_LENGTH = Integer.parseInt(System.getProperty("plog.port", "1048576"));
     private final static int PORT = Integer.parseInt(System.getProperty("plog.port", "54321"));
-    public static final Charset CHARSET = Charset.forName(System.getProperty("plog.charset", "UTF-8"));
-
-    public static final String METADATA_BROKER_LIST = "metadata.broker.list";
-    public static final String SERIALIZER_CLASS = "serializer.class";
+    private final static Charset CHARSET = Charset.forName(System.getProperty("plog.charset", "UTF-8"));
+    private final static String TOPIC = System.getProperty("plog.topic", "flog");
+    private final static String METADATA_BROKER_LIST = "metadata.broker.list";
+    private final static String SERIALIZER_CLASS = "serializer.class";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Properties properties = System.getProperties();
@@ -47,7 +47,7 @@ public class App {
         ProducerConfig cfg = new ProducerConfig(properties);
 
         final Producer<String, String> producer = new Producer<String, String>(cfg);
-        final KafkaForwarder forwarder = new KafkaForwarder(producer);
+        final KafkaForwarder forwarder = new KafkaForwarder(TOPIC, producer);
 
         final EventLoopGroup group = new NioEventLoopGroup();
 

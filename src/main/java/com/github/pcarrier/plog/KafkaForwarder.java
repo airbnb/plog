@@ -12,16 +12,16 @@ import static io.netty.channel.ChannelHandler.Sharable;
 
 @Sharable
 final class KafkaForwarder extends SimpleChannelInboundHandler {
-    private final static String TOPIC = System.getProperty("plog.topic", "flog");
-
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
             "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$",
             Pattern.CASE_INSENSITIVE
     );
 
-    private Producer<String, String> producer;
+    private final String topic;
+    private final Producer<String, String> producer;
 
-    KafkaForwarder(Producer<String, String> producer) {
+    KafkaForwarder(String topic, Producer<String, String> producer) {
+        this.topic = topic;
         this.producer = producer;
     }
 
@@ -34,6 +34,6 @@ final class KafkaForwarder extends SimpleChannelInboundHandler {
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
         String s = (String) o;
-        producer.send(new KeyedMessage<String, String>(TOPIC, s));
+        producer.send(new KeyedMessage<String, String>(topic, s));
     }
 }
