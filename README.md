@@ -59,5 +59,5 @@ Command packet. To be defined.
 - Bytes 06-07: unsigned, big-endian, 16-byte integer. Byte length of the payload for each packet in the message.
 - Bytes 08-11: arbitrary 32-byte integer. Second half of the identifier for the message. Messages are identified by the UDP client port and this second half.
 - Bytes 12-15: signed, big-endian, 32-byte integer below 2,147,483,647. Total byte length of the message.
-- Bytes 16-23: reserved.
-- Bytes 24-: payload.
+- Bytes 16-23: zeroes. Reserved, might be used in later revisions.
+- Bytes 24-: bytes (UTF-8 by default). Payload. Will only read the payload length.
