@@ -1,0 +1,33 @@
+apply plugin: 'wrapper'
+apply plugin: 'java'
+apply plugin: 'idea'
+
+group = 'com.github.pcarrier.plog'
+version = '1.0-SNAPSHOT'
+mainClassName = 'com.github.pcarrier.plog.App'
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile(group: 'org.apache.kafka', name: 'kafka_2.10', version: '0.8.0') {
+        exclude module: 'zookeeper'
+        exclude module: 'zkclient'
+        exclude module: 'jmxri'
+        exclude module: 'jmxtools'
+    }
+
+    compile group: 'io.netty', name: 'netty-handler', version: '4.0.14.Final'
+    compile group: 'io.netty', name: 'netty-codec', version: '4.0.14.Final'
+    compile group: 'org.javassist', name: 'javassist', version: '3.18.1-GA'
+    compile 'com.google.guava:guava:16.0.1'
+}
+
+idea.module {
+    downloadJavadoc = true
+    downloadSources = true
+}
