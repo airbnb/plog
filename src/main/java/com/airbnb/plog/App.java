@@ -1,4 +1,4 @@
-package com.github.pcarrier.plog;
+package com.airbnb.plog;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;

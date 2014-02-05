@@ -2,9 +2,9 @@ apply plugin: 'wrapper'
 apply plugin: 'java'
 apply plugin: 'idea'
 
-group = 'com.github.pcarrier.plog'
+group = 'com.airbnb.plog'
 version = '1.0-SNAPSHOT'
-mainClassName = 'com.github.pcarrier.plog.App'
+mainClassName = 'com.airbnb.plog.App'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6

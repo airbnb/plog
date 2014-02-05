@@ -1,4 +1,4 @@
-package com.github.pcarrier.plog;
+package com.airbnb.plog;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
