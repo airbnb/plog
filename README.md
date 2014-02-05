@@ -61,3 +61,7 @@ Command packet. To be defined.
 - Bytes 12-15: signed, big-endian, 32-byte integer below 2,147,483,647. Total byte length of the message.
 - Bytes 16-23: zeroes. Reserved, might be used in later revisions.
 - Bytes 24-: bytes (UTF-8 by default). Payload. Will only read the payload length.
+
+## Operational tricks
+
+- To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, `sysctl net.core.rmem_max`.
