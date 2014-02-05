@@ -1,6 +1,6 @@
 # plog
 
-Send unboxed messages over UDP, or line-separated messages over TCP, and have them forwarded to Kafka 0.8.
+Send unboxed or multipart messages over UDP, or line-separated messages over TCP, and have them forwarded to Kafka 0.8.
 
 ## Getting started
 
@@ -35,3 +35,29 @@ Charset for text. We use string serialization by default and the string value as
 ### `plog.topic` (default: flog)
 
 The Kafka topic we will send messages to.
+
+## UDP protocol
+
+- If the first byte is outside of the 0-31 range, the message is considered to be unboxed and the whole packet is parsed as a string.
+
+- Otherwise, the first byte indicates the protocol version. Currently, only version `00` is defined.
+
+### Version 00
+
+- Byte 00: version (00)
+- Byte 01: packet type
+
+
+#### Packet type 00
+
+Command packet. To be defined.
+
+#### Packet type 01: multipart message
+
+- Bytes 02-03: unsigned, big-endian, 16-byte integer. Packet count for the message
+- Bytes 04-05: unsigned, big-endian, 16-byte integer. Number of packets for the message (between 1 and 65535)
+- Bytes 06-07: unsigned, big-endian, 16-byte integer. Byte length of the payload for each packet in the message.
+- Bytes 08-11: arbitrary 32-byte integer. Second half of the identifier for the message. Messages are identified by the UDP client port and this second half.
+- Bytes 12-15: unsigned, big-endian, 32-byte integer. Total byte length of the message.
+- Bytes 16-23: reserved.
+- Bytes 24-: payload.
