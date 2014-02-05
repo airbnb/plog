@@ -10,14 +10,17 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 public class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> {
-    final Charset charset;
+    private final Charset charset;
+    private final Statistics stats;
 
-    PlogPdecoder(String charset) {
+    PlogPdecoder(String charset, Statistics stats) {
         this.charset = Charset.forName(charset);
+        this.stats = stats;
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out)
+            throws Exception {
         final ByteBuf content = msg.content();
         final byte versionIdentifier = content.getByte(0);
         if (versionIdentifier < 0 || versionIdentifier > 31)
@@ -26,20 +29,17 @@ public class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> {
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {
                 case 0:
+                    stats.receivedV0Command();
                     throw new NotImplementedException();
                 case 1:
-                    out.add(MultiPartMessageFragment.fromDatagram(msg));
+                    final MultiPartMessageFragment fragment = MultiPartMessageFragment.fromDatagram(msg);
+                    stats.receivedV0MultipartFragment(fragment.getPacketIndex());
+                    out.add(fragment);
                 default:
-                    throw new IllegalArgumentException(
-                            "Unknown packet typeIdentifier " + typeIdentifier +
-                            " in version " + versionIdentifier);
+                    stats.receivedV0InvalidType();
             }
         } else {
-            throw new IllegalArgumentException("Unknown version " + versionIdentifier);
+            stats.receivedUdpInvalidVersion();
         }
-    }
-
-    private MultiPartMessageFragment decode(DatagramPacket msg) {
-        return null;
     }
 }

@@ -31,6 +31,8 @@ public class App {
     private final static String METADATA_BROKER_LIST = "metadata.broker.list";
     private final static String SERIALIZER_CLASS = "serializer.class";
 
+    private final Statistics stats = new Statistics();
+
     public static void main(String[] args) throws IOException, InterruptedException {
         Properties properties = System.getProperties();
         if (properties.getProperty(SERIALIZER_CLASS) == null)
