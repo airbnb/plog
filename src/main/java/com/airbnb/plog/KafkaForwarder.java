@@ -12,6 +12,7 @@ import static io.netty.channel.ChannelHandler.Sharable;
 
 @Sharable
 final class KafkaForwarder extends SimpleChannelInboundHandler {
+    // This makes me excrutiatingly sad
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
             "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$",
             Pattern.CASE_INSENSITIVE
@@ -29,11 +30,6 @@ final class KafkaForwarder extends SimpleChannelInboundHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (!(cause instanceof IOException && IGNORABLE_ERROR_MESSAGE.matcher(cause.getMessage()).matches()))
             super.exceptionCaught(ctx, cause);
-    }
-
-    @Override
-    public boolean acceptInboundMessage(Object msg) throws Exception {
-        return msg instanceof String;
     }
 
     @Override

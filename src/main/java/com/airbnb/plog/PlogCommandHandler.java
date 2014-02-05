@@ -13,11 +13,6 @@ public class PlogCommandHandler extends MessageToMessageDecoder<PlogCommand> {
     }
 
     @Override
-    public boolean acceptInboundMessage(Object msg) throws Exception {
-        return msg instanceof PlogCommand;
-    }
-
-    @Override
     protected void decode(ChannelHandlerContext ctx, PlogCommand msg, List<Object> out) throws Exception {
         if (msg.is(PlogCommand.ENVI)) {
                 /* TODO: send config back */

@@ -46,9 +46,4 @@ public final class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> 
             stats.receivedUdpInvalidVersion();
         }
     }
-
-    @Override
-    public boolean acceptInboundMessage(Object msg) throws Exception {
-        return msg instanceof DatagramPacket;
-    }
 }
