@@ -2,12 +2,13 @@ package com.airbnb.plog;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Statistics {
+public final class Statistics {
     private final AtomicInteger
             receivedTcpMessages = new AtomicInteger(),
             receivedUdpSimpleMessages = new AtomicInteger(),
             receivedUdpInvalidVersion = new AtomicInteger(),
             receivedV0InvalidType = new AtomicInteger(),
+            receivedUnknownCommand = new AtomicInteger(),
             receivedV0Commands = new AtomicInteger(),
             receivedV0MultipartMessages = new AtomicInteger(),
             receivedV0MultipartFragments0 = new AtomicInteger(),
@@ -45,6 +46,10 @@ public class Statistics {
 
     public final int receivedV0Command() {
         return this.receivedV0Commands.incrementAndGet();
+    }
+
+    public final int receivedUnknownCommand() {
+        return this.receivedUnknownCommand.incrementAndGet();
     }
 
     public final int receivedV0MultipartMessage() {
@@ -92,6 +97,7 @@ public class Statistics {
                 ", \"udpSimpleMessages\":" + this.receivedUdpSimpleMessages.get() +
                 ", \"udpInvalidVersion\":" + this.receivedUdpInvalidVersion.get() +
                 ", \"v0InvalidType\":" + this.receivedV0InvalidType.get() +
+                ", \"unkownCommand\":" + this.receivedUnknownCommand.get() +
                 ", \"v0Commands\":" + this.receivedV0Commands.get() +
                 ", \"v0MultipartMessages\":" + this.receivedV0MultipartMessages.get() +
                 ", \"v0MultipartFragments0\":" + this.receivedV0MultipartFragments0.get() +
@@ -111,5 +117,9 @@ public class Statistics {
                 ", \"v0MultipartFragments4096to8191\":" + this.receivedV0MultipartFragments4096to8191.get() +
                 ", \"v0MultipartFragments8192orMore\":" + this.receivedV0MultipartFragments8192orMore.get() +
                 "}";
+    }
+
+    public final String toJSON() {
+        return this.toString();
     }
 }

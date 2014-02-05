@@ -4,17 +4,16 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.MessageToMessageDecoder;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.charset.Charset;
 import java.util.List;
 
-public class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> {
+public final class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> {
     private final Charset charset;
     private final Statistics stats;
 
-    PlogPdecoder(String charset, Statistics stats) {
-        this.charset = Charset.forName(charset);
+    PlogPdecoder(Charset charset, Statistics stats) {
+        this.charset = charset;
         this.stats = stats;
     }
 
@@ -29,8 +28,13 @@ public class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> {
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {
                 case 0:
-                    stats.receivedV0Command();
-                    throw new NotImplementedException();
+                    final byte[] cmdBuff = new byte[4];
+                    try {
+                        content.getBytes(1, cmdBuff, 0, 4);
+                        out.add(new PlogCommand(new String(cmdBuff)));
+                    } catch (IndexOutOfBoundsException e) {
+                        stats.receivedUnknownCommand();
+                    }
                 case 1:
                     final MultiPartMessageFragment fragment = MultiPartMessageFragment.fromDatagram(msg);
                     stats.receivedV0MultipartFragment(fragment.getPacketIndex());
@@ -41,5 +45,10 @@ public class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> {
         } else {
             stats.receivedUdpInvalidVersion();
         }
+    }
+
+    @Override
+    public boolean acceptInboundMessage(Object msg) throws Exception {
+        return msg instanceof DatagramPacket;
     }
 }

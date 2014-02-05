@@ -32,6 +32,11 @@ final class KafkaForwarder extends SimpleChannelInboundHandler {
     }
 
     @Override
+    public boolean acceptInboundMessage(Object msg) throws Exception {
+        return msg instanceof String;
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
         String s = (String) o;
         producer.send(new KeyedMessage<String, String>(topic, s));
