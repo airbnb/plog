@@ -10,7 +10,8 @@ Send unboxed or multipart messages over UDP, or line-separated messages over TCP
 
 ## Configuration
 
-All done through system properties.
+All configuration can be done through system properties.
+The app settings are read using Typesafe Config.
 
 ### Kafka settings
 
@@ -20,21 +21,9 @@ If unspecified in system properties, we will set those defaults:
 - `serializer.class`: `kafka.serializer.StringEncoder`
 - `metadata.broker.list`: `kafka.serializer.StringEncoder` (other values untested and probably broken).
 
-### `plog.max_line_length` (default: 1048576 = 1MB)
+### plog settings
 
-Maximum number of bytes in a line. TCP only.
-
-### `plog.port` (default: 54321)
-
-Port to listen on, for TCP and UDP.
-
-### `plog.charset` (default: UTF-8)
-
-Charset for text. We use string serialization by default and the string value as a key for sharding.
-
-### `plog.topic` (default: flog)
-
-The Kafka topic we will send messages to.
+Please refer to [reference.conf](src/main/resources/reference.conf) for the options and their default values.
 
 ## UDP protocol
 
