@@ -43,13 +43,14 @@ public class App {
     }
 
     private void run(Properties properties, Config config) {
+
         final Config plogConfig = config.getConfig("plog");
+        final SimpleStatisticsReporter stats = new SimpleStatisticsReporter(properties.getProperty(CLIENT_ID));
         final Producer<String, String> producer = new Producer<String, String>(new ProducerConfig(properties));
-        final KafkaForwarder forwarder = new KafkaForwarder(plogConfig.getString("topic"), producer);
+        final KafkaForwarder forwarder = new KafkaForwarder(plogConfig.getString("topic"), producer, stats);
         final Charset charset = Charset.forName(plogConfig.getString("charset"));
         final int maxLineLength = plogConfig.getInt("max_line_length");
         final int port = plogConfig.getInt("port");
-        final SimpleStatisticsReporter stats = new SimpleStatisticsReporter();
         final PlogPDecoder plogPDecoder = new PlogPDecoder(charset, stats);
         final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(stats, plogConfig.getConfig("defrag"));
         final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);

@@ -2,6 +2,7 @@ package com.airbnb.plog;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import kafka.common.FailedToSendMessageException;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ final class KafkaForwarder extends SimpleChannelInboundHandler<String> {
 
     private final String topic;
     private final Producer<String, String> producer;
+    private final StatisticsReporter stats;
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -30,7 +32,11 @@ final class KafkaForwarder extends SimpleChannelInboundHandler<String> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) throws Exception {
-        producer.send(new KeyedMessage<String, String>(topic, msg));
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) {
+        try {
+            producer.send(new KeyedMessage<String, String>(topic, msg));
+        } catch (FailedToSendMessageException e) {
+            stats.failedToSend();
+        }
     }
 }

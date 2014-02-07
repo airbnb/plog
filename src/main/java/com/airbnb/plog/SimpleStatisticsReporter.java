@@ -1,11 +1,15 @@
 package com.airbnb.plog;
 
+import com.yammer.metrics.core.Meter;
+import kafka.producer.*;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 @ToString
+@RequiredArgsConstructor
 public final class SimpleStatisticsReporter implements StatisticsReporter {
     private final AtomicLong
             tcpMessages = new AtomicLong(),
@@ -14,8 +18,10 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             v0InvalidType = new AtomicLong(),
             unknownCommand = new AtomicLong(),
             v0Commands = new AtomicLong(),
-            v0MultipartMessages = new AtomicLong();
+            v0MultipartMessages = new AtomicLong(),
+            failedToSend = new AtomicLong();
     private final AtomicLongArray v0FragmentsLogScale = new AtomicLongArray(Short.SIZE);
+    private final String kafkaClientId;
 
     @Override
     public final long receivedTcpMessage() {
@@ -53,6 +59,11 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     @Override
+    public long failedToSend() {
+        return this.failedToSend.incrementAndGet();
+    }
+
+    @Override
     public final long receivedV0MultipartFragment(int index) {
         final int log2 = 31 - Integer.numberOfLeadingZeros(index);
         return v0FragmentsLogScale.incrementAndGet(log2);
@@ -62,23 +73,56 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         StringBuilder builder = new StringBuilder();
         builder.append("{\"tcpMessages\":");
         builder.append(this.tcpMessages.get());
-        builder.append(", \"udpSimpleMessages\":");
+        builder.append(",\"udpSimpleMessages\":");
         builder.append(this.udpSimpleMessages.get());
-        builder.append(", \"udpInvalidVersion\":");
+        builder.append(",\"udpInvalidVersion\":");
         builder.append(this.udpInvalidVersion.get());
-        builder.append(", \"v0InvalidType\":");
+        builder.append(",\"v0InvalidType\":");
         builder.append(this.v0InvalidType.get());
-        builder.append(", \"unknownCommand\":");
+        builder.append(",\"unknownCommand\":");
         builder.append(this.unknownCommand.get());
-        builder.append(", \"v0Commands\":");
+        builder.append(",\"v0Commands\":");
         builder.append(this.v0Commands.get());
-        builder.append(", \"v0MultipartMessages\":[");
+        builder.append(",\"v0MultipartMessages\":[");
         for (int i = 0; i < Short.SIZE - 2; i++) {
             builder.append(v0FragmentsLogScale.get(i));
             builder.append(',');
         }
         builder.append(v0FragmentsLogScale.get(Short.SIZE - 1));
-        builder.append("]}");
+        builder.append("],\"failedToSend\":");
+        builder.append(this.failedToSend.get());
+        builder.append(",\"kafka\":{");
+
+        final ProducerStats producerStats = ProducerStatsRegistry.getProducerStats(kafkaClientId);
+        final ProducerTopicStats producerTopicStats = ProducerTopicStatsRegistry.getProducerTopicStats(kafkaClientId);
+        final ProducerTopicMetrics producerAllTopicsStats = producerTopicStats.getProducerAllTopicsStats();
+
+        builder.append("\"serializationErrorRate\":{");
+        report(producerStats.serializationErrorRate(), builder);
+        builder.append("},\"failedSendRate\":{");
+        report(producerStats.failedSendRate(), builder);
+        builder.append("},\"resendRate\":{");
+        report(producerStats.resendRate(), builder);
+        builder.append("},\"byteRate\":{");
+        report(producerAllTopicsStats.byteRate(), builder);
+        builder.append("},\"droppedMessageRate\":{");
+        report(producerAllTopicsStats.droppedMessageRate(), builder);
+        builder.append("},\"messageRate\":{");
+        report(producerAllTopicsStats.messageRate(), builder);
+        builder.append("}}}");
+
         return builder.toString();
+    }
+
+    private void report(Meter meter, StringBuilder builder) {
+        builder.append("\"count\":");
+        builder.append(meter.count());
+        builder.append(",\"rate\":[");
+        builder.append(meter.oneMinuteRate());
+        builder.append(',');
+        builder.append(meter.fiveMinuteRate());
+        builder.append(',');
+        builder.append(meter.fifteenMinuteRate());
+        builder.append(']');
     }
 }
