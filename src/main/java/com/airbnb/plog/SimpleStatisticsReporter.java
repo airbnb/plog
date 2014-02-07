@@ -2,50 +2,58 @@ package com.airbnb.plog;
 
 import lombok.ToString;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 @ToString
-public final class Statistics {
-    private final AtomicInteger
-            tcpMessages = new AtomicInteger(),
-            udpSimpleMessages = new AtomicInteger(),
-            udpInvalidVersion = new AtomicInteger(),
-            v0InvalidType = new AtomicInteger(),
-            unknownCommand = new AtomicInteger(),
-            v0Commands = new AtomicInteger(),
-            v0MultipartMessages = new AtomicInteger();
-    private final AtomicIntegerArray v0FragmentsLogScale = new AtomicIntegerArray(Short.SIZE);
+public final class SimpleStatisticsReporter implements StatisticsReporter {
+    private final AtomicLong
+            tcpMessages = new AtomicLong(),
+            udpSimpleMessages = new AtomicLong(),
+            udpInvalidVersion = new AtomicLong(),
+            v0InvalidType = new AtomicLong(),
+            unknownCommand = new AtomicLong(),
+            v0Commands = new AtomicLong(),
+            v0MultipartMessages = new AtomicLong();
+    private final AtomicLongArray v0FragmentsLogScale = new AtomicLongArray(Short.SIZE);
 
-    public final int receivedTcpMessage() {
+    @Override
+    public final long receivedTcpMessage() {
         return this.tcpMessages.incrementAndGet();
     }
 
-    public final int receivedUdpSimpleMessage() {
+    @Override
+    public final long receivedUdpSimpleMessage() {
         return this.udpSimpleMessages.incrementAndGet();
     }
 
-    public final int receivedUdpInvalidVersion() {
+    @Override
+    public final long receivedUdpInvalidVersion() {
         return this.udpInvalidVersion.incrementAndGet();
     }
 
-    public final int receivedV0InvalidType() {
+    @Override
+    public final long receivedV0InvalidType() {
         return this.v0InvalidType.incrementAndGet();
     }
 
-    public final int receivedV0Command() {
+    @Override
+    public final long receivedV0Command() {
         return this.v0Commands.incrementAndGet();
     }
 
-    public final int receivedUnknownCommand() {
+    @Override
+    public final long receivedUnknownCommand() {
         return this.unknownCommand.incrementAndGet();
     }
 
-    public final int receivedV0MultipartMessage() {
+    @Override
+    public final long receivedV0MultipartMessage() {
         return this.v0MultipartMessages.incrementAndGet();
     }
 
-    public final int receivedV0MultipartFragment(int index) {
+    @Override
+    public final long receivedV0MultipartFragment(int index) {
         final int log2 = 31 - Integer.numberOfLeadingZeros(index);
         return v0FragmentsLogScale.incrementAndGet(log2);
     }

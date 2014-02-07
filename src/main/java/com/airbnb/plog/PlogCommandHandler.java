@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand> {
     public static final byte[] PONG_BYTES = "PONG".getBytes();
-    private final Statistics stats;
+    private final SimpleStatisticsReporter stats;
     private final Config config;
 
     private DatagramPacket pong(PlogCommand ping) {

@@ -9,9 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class PlogDefragmenter extends SimpleChannelInboundHandler<MultiPartMessageFragment> {
-    private final Statistics stats;
+    private final StatisticsReporter stats;
 
-    public PlogDefragmenter(Statistics stats, Config config) {
+    public PlogDefragmenter(StatisticsReporter stats, Config config) {
         this.stats = stats;
         final Map<Long, IncomingMultiPartMessage> map = Collections.synchronizedMap(new LinkedHashMap());
     }

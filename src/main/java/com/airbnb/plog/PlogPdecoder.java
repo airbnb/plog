@@ -12,7 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> {
     private final Charset charset;
-    private final Statistics stats;
+    private final StatisticsReporter stats;
 
     @Override
     protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out)
