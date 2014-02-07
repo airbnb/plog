@@ -43,7 +43,7 @@ public class App {
         final int maxLineLength = config.getInt("max_line_length");
         final int port = config.getInt("port");
         final Statistics stats = new Statistics();
-        final PlogPdecoder plogPdecoder = new PlogPdecoder(charset, stats);
+        final PlogPDecoder plogPDecoder = new PlogPDecoder(charset, stats);
         final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(stats);
         final PlogCommandHandler commandHandler = new PlogCommandHandler(stats);
 
@@ -81,7 +81,7 @@ public class App {
                     @Override
                     protected void initChannel(NioDatagramChannel channel) throws Exception {
                         channel.pipeline()
-                                .addLast(plogPdecoder)
+                                .addLast(plogPDecoder)
                                 .addLast(plogDefragmenter)
                                 .addLast(commandHandler)
                                 .addLast(forwarder);

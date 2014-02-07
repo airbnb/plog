@@ -8,11 +8,11 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import java.nio.charset.Charset;
 import java.util.List;
 
-public final class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> {
+public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> {
     private final Charset charset;
     private final Statistics stats;
 
-    PlogPdecoder(Charset charset, Statistics stats) {
+    PlogPDecoder(Charset charset, Statistics stats) {
         this.charset = charset;
         this.stats = stats;
     }
@@ -28,13 +28,11 @@ public final class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> 
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {
                 case 0:
-                    final byte[] cmdBuff = new byte[4];
-                    try {
-                        content.getBytes(1, cmdBuff, 0, 4);
-                        out.add(new PlogCommand(new String(cmdBuff)));
-                    } catch (IndexOutOfBoundsException e) {
+                    final PlogCommand e = readCommand(msg);
+                    if (e != null)
+                        out.add(e);
+                    else
                         stats.receivedUnknownCommand();
-                    }
                 case 1:
                     final MultiPartMessageFragment fragment = MultiPartMessageFragment.fromDatagram(msg);
                     stats.receivedV0MultipartFragment(fragment.getPacketIndex());
@@ -44,6 +42,20 @@ public final class PlogPdecoder extends MessageToMessageDecoder<DatagramPacket> 
             }
         } else {
             stats.receivedUdpInvalidVersion();
+        }
+    }
+
+    private PlogCommand readCommand(DatagramPacket msg) {
+        final byte[] cmdBuff = new byte[4];
+        final ByteBuf content = msg.content();
+        final int trailLength = content.readableBytes() - 6;
+        final byte[] trail = new byte[trailLength];
+        try {
+            content.getBytes(2, cmdBuff, 0, 4);
+            content.getBytes(6, trail, 0, trail.length);
+            return new PlogCommand(new String(cmdBuff), msg.sender(), trail);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
         }
     }
 }
