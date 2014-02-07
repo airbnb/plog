@@ -50,7 +50,23 @@ The Kafka topic we will send messages to.
 
 #### Packet type 00
 
-Command packet. To be defined.
+Command packet. Commands are always 4 ASCII characters, trailing payload can be used. Command matching is case-insensitive.
+
+- KILL crashes the process without any attention for detail or respect for ongoing operations.
+
+        $ printf '\0\0kill'|socat -t0 - UDP-DATAGRAM:127.0.0.1:54321
+
+- PING will cause the process to reply back with PONG. Trailing payload is sent back and can be used for request/reply matching.
+
+        $ printf "\0\0PingFor$$\n\n"|socat - UDP-DATAGRAM:127.0.0.1:54321
+        PONGFor17575
+        
+        $
+
+- STAT is used to request statistics in UTF-8-encoded JSON. Per convention, the trailing payload should be used for politeness.
+
+        $ printf "\0\0statistics please, gentle service"|socat - UDP-DATAGRAM:127.0.0.1:54321
+        {"tcpMessages":0, "udpSimpleMessages":0, "udpInvalidVersion":0, "v0InvalidType":0, "unknownCommand":1, "v0Commands":520, "v0MultipartMessages":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
 
 #### Packet type 01: multipart message
 

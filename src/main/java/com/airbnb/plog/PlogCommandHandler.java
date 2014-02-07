@@ -1,5 +1,6 @@
 package com.airbnb.plog;
 
+import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,12 +20,17 @@ public class PlogCommandHandler extends MessageToMessageDecoder<PlogCommand> {
     @Override
     protected void decode(ChannelHandlerContext ctx, PlogCommand cmd, List<Object> out) throws Exception {
         if (cmd.is(PlogCommand.KILL)) {
+            System.err.println("KILL SWITCH!");
             System.exit(1);
         } else if (cmd.is(PlogCommand.PING)) {
+            stats.receivedV0Command();
             ctx.writeAndFlush(pong(cmd));
         } else if (cmd.is(PlogCommand.STAT)) {
-            // TODO: send stats
+            stats.receivedV0Command();
+            final ByteBuf resp = Unpooled.wrappedBuffer(stats.toJSON().getBytes(Charsets.UTF_8));
+            ctx.writeAndFlush(new DatagramPacket(resp, cmd.getSender()));
         } else if (cmd.is(PlogCommand.ENVI)) {
+            stats.receivedV0Command();
             // TODO: send config back
         } else {
             stats.receivedUnknownCommand();
