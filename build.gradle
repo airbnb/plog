@@ -1,17 +1,16 @@
 apply plugin: 'wrapper'
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'application'
+apply plugin: 'shadow'
 
 group = 'com.airbnb.plog'
 version = '1.0-SNAPSHOT'
 mainClassName = 'com.airbnb.plog.App'
-
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
-repositories {
-    mavenCentral()
-}
+repositories { mavenCentral() }
 
 dependencies {
     compile 'io.netty:netty-handler:4.0.14.Final'
@@ -30,4 +29,9 @@ dependencies {
 idea.module {
     downloadJavadoc = true
     downloadSources = true
+}
+
+buildscript {
+    repositories { jcenter() }
+    dependencies { classpath 'com.github.jengelman.gradle.plugins:shadow:0.8' }
 }
