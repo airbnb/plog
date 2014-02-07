@@ -76,3 +76,13 @@ The choice of JSON could change to MessagePack.
 ## Operational tricks
 
 - To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, `sysctl net.core.rmem_max`.
+
+## Event logging at Airbnb
+
+We use JSON objects with the following fields:
+
+- type: String. Only very few values are acceptable due to our pipeline splitting event streams by type.
+- uuid: String.
+- host: String.
+- timestamp: int64.
+- data: String→String map or String.
