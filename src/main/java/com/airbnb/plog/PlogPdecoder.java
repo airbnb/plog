@@ -33,10 +33,12 @@ public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> 
                         out.add(e);
                     else
                         stats.receivedUnknownCommand();
+                    break;
                 case 1:
                     final MultiPartMessageFragment fragment = MultiPartMessageFragment.fromDatagram(msg);
                     stats.receivedV0MultipartFragment(fragment.getPacketIndex());
                     out.add(fragment);
+                    break;
                 default:
                     stats.receivedV0InvalidType();
             }
