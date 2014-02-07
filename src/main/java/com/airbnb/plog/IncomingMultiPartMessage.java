@@ -5,19 +5,19 @@ import io.netty.buffer.Unpooled;
 
 import java.util.BitSet;
 
-public class IncomingMultipPartMessage {
+public class IncomingMultiPartMessage {
     private final ByteBuf payload;
     private final BitSet receivedFragments;
     private boolean ready = false;
 
-    private IncomingMultipPartMessage(int totalLength, int fragmentCount) {
+    private IncomingMultiPartMessage(int totalLength, int fragmentCount) {
         this.payload = Unpooled.buffer(totalLength, totalLength);
         receivedFragments = new BitSet(fragmentCount);
     }
 
-    public IncomingMultipPartMessage fromFragment(MultiPartMessageFragment fragment) {
-        final IncomingMultipPartMessage msg =
-                new IncomingMultipPartMessage(fragment.getTotalLength(), fragment.getFragmentCount());
+    public IncomingMultiPartMessage fromFragment(MultiPartMessageFragment fragment) {
+        final IncomingMultiPartMessage msg =
+                new IncomingMultiPartMessage(fragment.getTotalLength(), fragment.getFragmentCount());
         msg.ingestFragment(fragment);
         return msg;
     }

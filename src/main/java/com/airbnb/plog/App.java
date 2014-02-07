@@ -15,12 +15,14 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.Properties;
 
+@Slf4j
 public class App {
     private final static String METADATA_BROKER_LIST = "metadata.broker.list";
     private final static String SERIALIZER_CLASS = "serializer.class";
@@ -54,7 +56,7 @@ public class App {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                 if (channelFuture.isDone() && !channelFuture.isSuccess()) {
-                    System.err.println(channelFuture.cause());
+                    log.error("Channel failure: {}", channelFuture.cause());
                     System.exit(1);
                 }
             }
@@ -89,6 +91,6 @@ public class App {
                     }
                 }).bind(new InetSocketAddress(port)).addListener(futureListener);
 
-        System.out.println("Started");
+        log.info("Started");
     }
 }

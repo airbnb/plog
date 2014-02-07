@@ -4,18 +4,15 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.MessageToMessageDecoder;
+import lombok.RequiredArgsConstructor;
 
 import java.nio.charset.Charset;
 import java.util.List;
 
+@RequiredArgsConstructor
 public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> {
     private final Charset charset;
     private final Statistics stats;
-
-    PlogPDecoder(Charset charset, Statistics stats) {
-        this.charset = charset;
-        this.stats = stats;
-    }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out)

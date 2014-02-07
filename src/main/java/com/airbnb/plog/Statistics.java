@@ -1,8 +1,11 @@
 package com.airbnb.plog;
 
+import lombok.ToString;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
+@ToString
 public final class Statistics {
     private final AtomicInteger
             tcpMessages = new AtomicInteger(),
@@ -47,8 +50,7 @@ public final class Statistics {
         return v0FragmentsLogScale.incrementAndGet(log2);
     }
 
-    @Override
-    public final String toString() {
+    public final String toJSON() {
         StringBuilder builder = new StringBuilder();
         builder.append("{\"tcpMessages\":");
         builder.append(this.tcpMessages.get());
@@ -70,9 +72,5 @@ public final class Statistics {
         builder.append(v0FragmentsLogScale.get(Short.SIZE - 1));
         builder.append("]}");
         return builder.toString();
-    }
-
-    public final String toJSON() {
-        return this.toString();
     }
 }

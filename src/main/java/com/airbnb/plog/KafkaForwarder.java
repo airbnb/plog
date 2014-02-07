@@ -4,14 +4,16 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.util.regex.Pattern;
 
 import static io.netty.channel.ChannelHandler.Sharable;
 
+@RequiredArgsConstructor
 @Sharable
-final class KafkaForwarder extends SimpleChannelInboundHandler {
+final class KafkaForwarder extends SimpleChannelInboundHandler<String> {
     // This makes me excrutiatingly sad
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
             "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$",
@@ -21,11 +23,6 @@ final class KafkaForwarder extends SimpleChannelInboundHandler {
     private final String topic;
     private final Producer<String, String> producer;
 
-    KafkaForwarder(String topic, Producer<String, String> producer) {
-        this.topic = topic;
-        this.producer = producer;
-    }
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (!(cause instanceof IOException && IGNORABLE_ERROR_MESSAGE.matcher(cause.getMessage()).matches()))
@@ -33,8 +30,7 @@ final class KafkaForwarder extends SimpleChannelInboundHandler {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) throws Exception {
-        String s = (String) o;
-        producer.send(new KeyedMessage<String, String>(topic, s));
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String msg) throws Exception {
+        producer.send(new KeyedMessage<String, String>(topic, msg));
     }
 }

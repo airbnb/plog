@@ -2,34 +2,29 @@ package com.airbnb.plog;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.DatagramPacket;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.nio.ByteOrder;
-import java.util.Arrays;
 
+@ToString
+@RequiredArgsConstructor
 public class MultiPartMessageFragment {
+    @Getter
     final int fragmentCount;
+    @Getter
     final int fragmentIndex;
+    @Getter
     final int fragmentSize;
+    @Getter
     final int msgPort;
+    @Getter
     final int msgId;
+    @Getter
     final int totalLength;
+    @Getter
     final byte[] payload;
-
-    private MultiPartMessageFragment(int fragmentCount,
-                                     int fragmentIndex,
-                                     int fragmentSize,
-                                     int msgPort,
-                                     int msgId,
-                                     int totalLength,
-                                     byte[] payload) {
-        this.fragmentCount = fragmentCount;
-        this.fragmentIndex = fragmentIndex;
-        this.fragmentSize = fragmentSize;
-        this.msgPort = msgPort;
-        this.msgId = msgId;
-        this.totalLength = totalLength;
-        this.payload = payload;
-    }
 
     static MultiPartMessageFragment fromDatagram(DatagramPacket packet) {
         final ByteBuf content = packet.content().order(ByteOrder.LITTLE_ENDIAN);
@@ -47,46 +42,5 @@ public class MultiPartMessageFragment {
 
         final int msgPort = packet.sender().getPort();
         return new MultiPartMessageFragment(packetCount, packetIndex, packetSize, msgPort, msgId, totalLength, payload);
-    }
-
-    @Override
-    public String toString() {
-        return "MultiPartMessageFragment{" +
-                "fragmentCount=" + fragmentCount +
-                ", fragmentIndex=" + fragmentIndex +
-                ", fragmentSize=" + fragmentSize +
-                ", msgPort=" + msgPort +
-                ", msgId=" + msgId +
-                ", totalLength=" + totalLength +
-                ", payload=" + Arrays.toString(payload) +
-                '}';
-    }
-
-    public int getFragmentCount() {
-        return fragmentCount;
-    }
-
-    public int getFragmentIndex() {
-        return fragmentIndex;
-    }
-
-    public int getFragmentSize() {
-        return fragmentSize;
-    }
-
-    public int getMsgPort() {
-        return msgPort;
-    }
-
-    public int getMsgId() {
-        return msgId;
-    }
-
-    public int getTotalLength() {
-        return totalLength;
-    }
-
-    public byte[] getPayload() {
-        return payload;
     }
 }

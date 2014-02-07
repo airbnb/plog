@@ -1,24 +1,23 @@
 package com.airbnb.plog;
 
+import lombok.Getter;
+import lombok.ToString;
+
 import java.net.InetSocketAddress;
 
+@ToString
 public class PlogCommand {
-    static final String PING = "PING";
-    static final String STAT = "STAT";
-    static final String KILL = "KILL";
-    static final String ENVI = "ENVI";
+    public static final String PING = "PING";
+    public static final String STAT = "STAT";
+    public static final String KILL = "KILL";
+    public static final String ENVI = "ENVI";
 
-    public String getCommand() {
-        return command;
-    }
-
-    public byte[] getTrail() {
-        return trail;
-    }
-
-    public InetSocketAddress getSender() {
-        return sender;
-    }
+    @Getter
+    private final String command;
+    @Getter
+    private final InetSocketAddress sender;
+    @Getter
+    private final byte[] trail;
 
     PlogCommand(String command, InetSocketAddress sender, byte[] trail) {
         this.command = command.toUpperCase();
@@ -29,8 +28,4 @@ public class PlogCommand {
     boolean is(String cmd) {
         return cmd.equals(this.getCommand());
     }
-
-    private final String command;
-    private final InetSocketAddress sender;
-    private final byte[] trail;
 }

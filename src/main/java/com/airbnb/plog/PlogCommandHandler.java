@@ -7,16 +7,15 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@RequiredArgsConstructor
 public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand> {
     public static final byte[] PONG_BYTES = "PONG".getBytes();
     private final Statistics stats;
     private final Config config;
-
-    public PlogCommandHandler(Statistics stats, Config config) {
-        this.stats = stats;
-        this.config = config;
-    }
 
     private DatagramPacket pong(PlogCommand ping) {
         final byte[] trail = ping.getTrail();
@@ -30,7 +29,7 @@ public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand>
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, PlogCommand cmd) throws Exception {
         if (cmd.is(PlogCommand.KILL)) {
-            System.err.println("KILL SWITCH!");
+            log.warn("KILL SWITCH!");
             System.exit(1);
         } else if (cmd.is(PlogCommand.PING)) {
             stats.receivedV0Command();
