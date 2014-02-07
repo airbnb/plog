@@ -18,14 +18,14 @@ public class PlogCommandHandler extends MessageToMessageDecoder<PlogCommand> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, PlogCommand cmd, List<Object> out) throws Exception {
-        if (cmd.is(PlogCommand.ENVI)) {
-                /* TODO: send config back */
-        } else if (cmd.is(PlogCommand.KILL)) {
+        if (cmd.is(PlogCommand.KILL)) {
             System.exit(1);
         } else if (cmd.is(PlogCommand.PING)) {
             ctx.writeAndFlush(pong(cmd));
         } else if (cmd.is(PlogCommand.STAT)) {
-            /* TODO: send stats */
+            // TODO: send stats
+        } else if (cmd.is(PlogCommand.ENVI)) {
+            // TODO: send config back
         } else {
             stats.receivedUnknownCommand();
         }
