@@ -22,6 +22,7 @@ Please refer to [Kafka's documentation](http://kafka.apache.org/08/configuration
 If unspecified in system properties, we will set those defaults:
 - `serializer.class`: `kafka.serializer.StringEncoder`
 - `metadata.broker.list`: `kafka.serializer.StringEncoder` (other values untested and probably broken).
+- `client.id`: `plog_$HOSTNAME`
 
 ### plog settings
 

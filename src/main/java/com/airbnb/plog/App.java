@@ -18,6 +18,7 @@ import kafka.producer.ProducerConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.Properties;
@@ -26,6 +27,7 @@ import java.util.Properties;
 public class App {
     private final static String METADATA_BROKER_LIST = "metadata.broker.list";
     private final static String SERIALIZER_CLASS = "serializer.class";
+    private final static String CLIENT_ID = "client.id";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Properties kafkaProperties = System.getProperties();
@@ -33,6 +35,8 @@ public class App {
             kafkaProperties.setProperty(SERIALIZER_CLASS, "kafka.serializer.StringEncoder");
         if (kafkaProperties.getProperty(METADATA_BROKER_LIST) == null)
             kafkaProperties.setProperty(METADATA_BROKER_LIST, "127.0.0.1:9092");
+        if (kafkaProperties.getProperty(CLIENT_ID) == null)
+            kafkaProperties.setProperty(CLIENT_ID, "plog_" + InetAddress.getLocalHost().getHostName());
 
         final Config config = ConfigFactory.load();
         new App().run(kafkaProperties, config);
