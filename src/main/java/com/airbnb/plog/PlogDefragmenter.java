@@ -1,11 +1,9 @@
 package com.airbnb.plog;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty.channel.SimpleChannelInboundHandler;
 
-import java.util.List;
-
-public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFragment> {
+public class PlogDefragmenter extends SimpleChannelInboundHandler<MultiPartMessageFragment> {
     private final Statistics stats;
 
     public PlogDefragmenter(Statistics stats) {
@@ -13,7 +11,7 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, MultiPartMessageFragment msg, List<Object> out) throws Exception {
-        /* TODO: defragment */
+    protected void channelRead0(ChannelHandlerContext ctx, MultiPartMessageFragment msg) throws Exception {
+
     }
 }
