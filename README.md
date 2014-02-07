@@ -57,6 +57,8 @@ Command packet. Commands are always 4 ASCII characters, trailing payload can be 
         $ printf "\0\0statistics please, gentle service"|socat - UDP-DATAGRAM:127.0.0.1:54321
         {"tcpMessages":0, "udpSimpleMessages":0, "udpInvalidVersion":0, "v0InvalidType":0, "unknownCommand":1, "v0Commands":520, "v0MultipartMessages":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
 
+- ENVI returns the environment as a UTF-8-encoded string. The format is not defined further.
+
 #### Packet type 01: multipart message
 
 - Bytes 02-03: unsigned, big-endian, 16-byte integer. Packet count for the message (between 0 for 1 packet and 65534).

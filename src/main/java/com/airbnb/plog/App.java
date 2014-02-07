@@ -33,19 +33,20 @@ public class App {
             kafkaProperties.setProperty(METADATA_BROKER_LIST, "127.0.0.1:9092");
 
         final Config config = ConfigFactory.load();
-        new App().run(kafkaProperties, config.getConfig("plog"));
+        new App().run(kafkaProperties, config);
     }
 
     private void run(Properties properties, Config config) {
+        final Config plogConfig = config.getConfig("plog");
         final Producer<String, String> producer = new Producer<String, String>(new ProducerConfig(properties));
-        final KafkaForwarder forwarder = new KafkaForwarder(config.getString("topic"), producer);
-        final Charset charset = Charset.forName(config.getString("charset"));
-        final int maxLineLength = config.getInt("max_line_length");
-        final int port = config.getInt("port");
+        final KafkaForwarder forwarder = new KafkaForwarder(plogConfig.getString("topic"), producer);
+        final Charset charset = Charset.forName(plogConfig.getString("charset"));
+        final int maxLineLength = plogConfig.getInt("max_line_length");
+        final int port = plogConfig.getInt("port");
         final Statistics stats = new Statistics();
         final PlogPDecoder plogPDecoder = new PlogPDecoder(charset, stats);
-        final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(stats);
-        final PlogCommandHandler commandHandler = new PlogCommandHandler(stats);
+        final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(stats, plogConfig.getConfig("defrag"));
+        final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);
 
         final EventLoopGroup group = new NioEventLoopGroup();
 

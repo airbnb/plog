@@ -7,24 +7,24 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 public class MultiPartMessageFragment {
-    final int packetCount;
-    final int packetIndex;
-    final int packetSize;
+    final int fragmentCount;
+    final int fragmentIndex;
+    final int fragmentSize;
     final int msgPort;
     final int msgId;
     final int totalLength;
     final byte[] payload;
 
-    private MultiPartMessageFragment(int packetCount,
-                                     int packetIndex,
-                                     int packetSize,
+    private MultiPartMessageFragment(int fragmentCount,
+                                     int fragmentIndex,
+                                     int fragmentSize,
                                      int msgPort,
                                      int msgId,
                                      int totalLength,
                                      byte[] payload) {
-        this.packetCount = packetCount;
-        this.packetIndex = packetIndex;
-        this.packetSize = packetSize;
+        this.fragmentCount = fragmentCount;
+        this.fragmentIndex = fragmentIndex;
+        this.fragmentSize = fragmentSize;
         this.msgPort = msgPort;
         this.msgId = msgId;
         this.totalLength = totalLength;
@@ -52,9 +52,9 @@ public class MultiPartMessageFragment {
     @Override
     public String toString() {
         return "MultiPartMessageFragment{" +
-                "packetCount=" + packetCount +
-                ", packetIndex=" + packetIndex +
-                ", packetSize=" + packetSize +
+                "fragmentCount=" + fragmentCount +
+                ", fragmentIndex=" + fragmentIndex +
+                ", fragmentSize=" + fragmentSize +
                 ", msgPort=" + msgPort +
                 ", msgId=" + msgId +
                 ", totalLength=" + totalLength +
@@ -62,16 +62,16 @@ public class MultiPartMessageFragment {
                 '}';
     }
 
-    public int getPacketCount() {
-        return packetCount;
+    public int getFragmentCount() {
+        return fragmentCount;
     }
 
-    public int getPacketIndex() {
-        return packetIndex;
+    public int getFragmentIndex() {
+        return fragmentIndex;
     }
 
-    public int getPacketSize() {
-        return packetSize;
+    public int getFragmentSize() {
+        return fragmentSize;
     }
 
     public int getMsgPort() {

@@ -1,6 +1,7 @@
 package com.airbnb.plog;
 
 import com.google.common.base.Charsets;
+import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -10,9 +11,11 @@ import io.netty.channel.socket.DatagramPacket;
 public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand> {
     public static final byte[] PONG_BYTES = "PONG".getBytes();
     private final Statistics stats;
+    private final Config config;
 
-    public PlogCommandHandler(Statistics stats) {
+    public PlogCommandHandler(Statistics stats, Config config) {
         this.stats = stats;
+        this.config = config;
     }
 
     private DatagramPacket pong(PlogCommand ping) {
@@ -34,13 +37,18 @@ public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand>
             ctx.writeAndFlush(pong(cmd));
         } else if (cmd.is(PlogCommand.STAT)) {
             stats.receivedV0Command();
-            final ByteBuf resp = Unpooled.wrappedBuffer(stats.toJSON().getBytes(Charsets.UTF_8));
-            ctx.writeAndFlush(new DatagramPacket(resp, cmd.getSender()));
+            reply(ctx, cmd, stats.toJSON());
         } else if (cmd.is(PlogCommand.ENVI)) {
             stats.receivedV0Command();
-            // TODO: send config back
+            reply(ctx, cmd, config.toString());
         } else {
             stats.receivedUnknownCommand();
         }
+    }
+
+    private void reply(ChannelHandlerContext ctx, PlogCommand cmd, String response) {
+        final ByteBuf payload = Unpooled.wrappedBuffer(response.getBytes(Charsets.UTF_8));
+        final DatagramPacket packet = new DatagramPacket(payload, cmd.getSender());
+        ctx.writeAndFlush(packet);
     }
 }
