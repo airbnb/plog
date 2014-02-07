@@ -3,6 +3,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'application'
 apply plugin: 'shadow'
+apply plugin: 'project-report'
 
 group = 'com.airbnb.plog'
 version = '1.0-SNAPSHOT'
