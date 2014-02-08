@@ -25,8 +25,7 @@ public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> 
             msg.retain();
             stats.receivedUdpSimpleMessage();
             out.add(msg.content());
-        }
-        else if (versionIdentifier == 0) {
+        } else if (versionIdentifier == 0) {
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {
                 case 0:
@@ -34,8 +33,7 @@ public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> 
                     if (e != null) {
                         log.debug("v0 command");
                         out.add(e);
-                    }
-                    else
+                    } else
                         stats.receivedUnknownCommand();
                     break;
                 case 1:

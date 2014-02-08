@@ -2,10 +2,10 @@ package com.airbnb.plog;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheStats;
 import com.google.common.cache.Weigher;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
-import io.netty.util.ReferenceCounted;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -17,7 +17,6 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
     private final StatisticsReporter stats;
     private final Cache<Long, PartialMultiPartMessage> incompleteMessages;
 
-
     public PlogDefragmenter(StatisticsReporter stats, int maxSize) {
         this.stats = stats;
         incompleteMessages = CacheBuilder.newBuilder()
@@ -28,6 +27,10 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
                         return msg.length();
                     }
                 }).build();
+    }
+
+    public CacheStats getCacheStats() {
+        return incompleteMessages.stats();
     }
 
     private synchronized PartialMultiPartMessage ingestIntoIncompleteMessage(MultiPartMessageFragment fragment) {

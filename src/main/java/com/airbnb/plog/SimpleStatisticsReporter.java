@@ -1,5 +1,6 @@
 package com.airbnb.plog;
 
+import com.google.common.cache.CacheStats;
 import com.yammer.metrics.core.Meter;
 import kafka.producer.*;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             exceptions = new AtomicLong();
     private final AtomicLongArray v0FragmentsLogScale = new AtomicLongArray(Short.SIZE);
     private final String kafkaClientId;
+    private CacheStats cacheStats = null;
 
     @Override
     public final long receivedTcpMessage() {
@@ -96,11 +98,23 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             builder.append(v0FragmentsLogScale.get(i));
             builder.append(',');
         }
+
         builder.append(v0FragmentsLogScale.get(Short.SIZE - 1));
         builder.append("],\"failedToSend\":");
         builder.append(this.failedToSend.get());
         builder.append(",\"exceptions\":");
         builder.append(this.exceptions.get());
+
+        if (cacheStats != null) {
+            builder.append(",\"cache\":{\"evictions\":");
+            builder.append(cacheStats.evictionCount());
+            builder.append(",\"hitCount\":");
+            builder.append(cacheStats.hitCount());
+            builder.append(",\"missCount\":");
+            builder.append(cacheStats.missCount());
+            builder.append('}');
+        }
+
         builder.append(",\"kafka\":{");
 
         final ProducerStats producerStats = ProducerStatsRegistry.getProducerStats(kafkaClientId);
@@ -134,5 +148,12 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(',');
         builder.append(meter.fifteenMinuteRate());
         builder.append(']');
+    }
+
+    public synchronized void withDefragCacheStats(CacheStats cacheStats) {
+        if (this.cacheStats == null)
+            this.cacheStats = cacheStats;
+        else
+            throw new IllegalStateException("Cache stat already provided");
     }
 }

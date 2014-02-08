@@ -10,7 +10,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import kafka.javaapi.producer.Producer;
@@ -55,9 +54,10 @@ public class App {
                 charset);
         final int maxLineLength = plogConfig.getInt("max_line_length");
         final int port = plogConfig.getInt("port");
-        final PlogPDecoder plogPDecoder = new PlogPDecoder(stats);
-        final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(stats,
+        final PlogPDecoder protocolDecoder = new PlogPDecoder(stats);
+        final PlogDefragmenter defragmenter = new PlogDefragmenter(stats,
                 plogConfig.getInt("defrag.max_size"));
+        stats.withDefragCacheStats(defragmenter.getCacheStats());
         final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);
 
         final EventLoopGroup group = new NioEventLoopGroup();
@@ -93,8 +93,8 @@ public class App {
                     @Override
                     protected void initChannel(NioDatagramChannel channel) throws Exception {
                         channel.pipeline()
-                                .addLast(plogPDecoder)
-                                .addLast(plogDefragmenter)
+                                .addLast(protocolDecoder)
+                                .addLast(defragmenter)
                                 .addLast(commandHandler)
                                 .addLast(forwarder)
                                 .addLast(new SimpleChannelInboundHandler<Void>() {
