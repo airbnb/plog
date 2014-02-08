@@ -45,6 +45,7 @@ public class PartialMultiPartMessage {
             }
         }
         payload.setBytes(foffset, fpayload, 0, copiedLength);
+        fragment.getPayload().release();
     }
 
     public ByteBuf getPayload() {
