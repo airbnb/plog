@@ -10,4 +10,5 @@ public interface StatisticsReporter {
     long receivedV0MultipartMessage();
     long receivedV0MultipartFragment(int index);
     long failedToSend();
+    long exception();
 }

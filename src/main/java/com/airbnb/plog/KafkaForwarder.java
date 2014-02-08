@@ -38,7 +38,7 @@ final class KafkaForwarder extends SimpleChannelInboundHandler<ByteBuf> {
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         final int length = msg.readableBytes();
         final byte[] bytes = new byte[length];
-        msg.readBytes(bytes, 0, length);
+        msg.readBytes(bytes);
         String str = new String(bytes, charset);
 
         try {

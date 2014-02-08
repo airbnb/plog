@@ -83,7 +83,6 @@ public class App {
                     protected void initChannel(SocketChannel channel) throws Exception {
                         channel.pipeline()
                                 .addLast(new LineBasedFrameDecoder(maxLineLength))
-                                .addLast(new StringDecoder(charset))
                                 .addLast(forwarder);
                     }
                 }).bind(new InetSocketAddress(port)).addListener(futureListener);
@@ -97,7 +96,19 @@ public class App {
                                 .addLast(plogPDecoder)
                                 .addLast(plogDefragmenter)
                                 .addLast(commandHandler)
-                                .addLast(forwarder);
+                                .addLast(forwarder)
+                                .addLast(new SimpleChannelInboundHandler<Void>() {
+                                    @Override
+                                    protected void channelRead0(ChannelHandlerContext ctx, Void msg) throws Exception {
+                                        log.error("Some seriously weird stuff going on here!");
+                                    }
+
+                                    @Override
+                                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                                        log.error("Exception down the UDP pipeline", cause);
+                                        stats.exception();
+                                    }
+                                });
                     }
                 }).bind(new InetSocketAddress(port)).addListener(futureListener);
 

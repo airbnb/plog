@@ -5,10 +5,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
 @RequiredArgsConstructor
+@Slf4j
 public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> {
     private final StatisticsReporter stats;
 
@@ -18,19 +20,27 @@ public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> 
         final ByteBuf content = msg.content();
         final byte versionIdentifier = content.getByte(0);
         // versions are non-printable characters, push down the pipeline send as-is.
-        if (versionIdentifier < 0 || versionIdentifier > 31)
+        if (versionIdentifier < 0 || versionIdentifier > 31) {
+            log.debug("Unboxed UDP message");
+            msg.retain();
+            stats.receivedUdpSimpleMessage();
             out.add(msg.content());
+        }
         else if (versionIdentifier == 0) {
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {
                 case 0:
                     final PlogCommand e = readCommand(msg);
-                    if (e != null)
+                    if (e != null) {
+                        log.debug("v0 command");
                         out.add(e);
+                    }
                     else
                         stats.receivedUnknownCommand();
                     break;
                 case 1:
+                    log.debug("v0 multipart message: {}", msg);
+                    msg.retain();
                     final MultiPartMessageFragment fragment = MultiPartMessageFragment.fromDatagram(msg);
                     stats.receivedV0MultipartFragment(fragment.getFragmentIndex());
                     out.add(fragment);

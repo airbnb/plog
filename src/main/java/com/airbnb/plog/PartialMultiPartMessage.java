@@ -3,48 +3,48 @@ package com.airbnb.plog;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
 
+@Slf4j
 public class PartialMultiPartMessage {
     private final ByteBuf payload;
     private final BitSet receivedFragments;
+    private final int expectedFragments;
     @Getter
     private boolean complete = false;
 
     private PartialMultiPartMessage(int totalLength, int fragmentCount) {
         this.payload = Unpooled.buffer(totalLength, totalLength);
+        this.payload.writerIndex(totalLength);
         receivedFragments = new BitSet(fragmentCount + 1);
-    }
-
-    /**
-     * Constructor for single-fragment messages, taking shortcuts
-     */
-    private PartialMultiPartMessage(MultiPartMessageFragment singleFragment) {
-        this.payload = Unpooled.wrappedBuffer(singleFragment.getPayload());
-        this.receivedFragments = null;
-        this.complete = true;
+        expectedFragments = fragmentCount + 1;
     }
 
     public static PartialMultiPartMessage fromFragment(MultiPartMessageFragment fragment) {
-        if (fragment.isAlone())
-            return new PartialMultiPartMessage(fragment);
-
-        final PartialMultiPartMessage msg =
-                new PartialMultiPartMessage(fragment.getTotalLength(), fragment.getFragmentCount());
+        final PartialMultiPartMessage msg = new PartialMultiPartMessage(
+                fragment.getTotalLength(),
+                fragment.getFragmentCount());
         msg.ingestFragment(fragment);
         return msg;
     }
 
     public void ingestFragment(MultiPartMessageFragment fragment) {
         final int size = fragment.getFragmentSize();
+        final ByteBuf fpayload = fragment.getPayload();
         final int index = fragment.getFragmentIndex();
+        final int foffset = size * index;
+        final int copiedLength = Math.min(
+                Math.min(fpayload.readableBytes(), size),
+                payload.capacity() - foffset);
         synchronized (receivedFragments) {
             receivedFragments.set(index);
-            if (receivedFragments.cardinality() == receivedFragments.size())
+            if (receivedFragments.cardinality() == expectedFragments) {
                 this.complete = true;
+            }
         }
-        payload.writeBytes(fragment.getPayload(), size * index, size);
+        payload.setBytes(foffset, fpayload, 0, copiedLength);
     }
 
     public ByteBuf getPayload() {

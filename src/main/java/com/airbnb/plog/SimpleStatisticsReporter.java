@@ -4,12 +4,14 @@ import com.yammer.metrics.core.Meter;
 import kafka.producer.*;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 @ToString
 @RequiredArgsConstructor
+@Slf4j
 public final class SimpleStatisticsReporter implements StatisticsReporter {
     private final AtomicLong
             tcpMessages = new AtomicLong(),
@@ -19,7 +21,8 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             unknownCommand = new AtomicLong(),
             v0Commands = new AtomicLong(),
             v0MultipartMessages = new AtomicLong(),
-            failedToSend = new AtomicLong();
+            failedToSend = new AtomicLong(),
+            exceptions = new AtomicLong();
     private final AtomicLongArray v0FragmentsLogScale = new AtomicLongArray(Short.SIZE);
     private final String kafkaClientId;
 
@@ -64,8 +67,13 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     @Override
+    public long exception() {
+        return this.exceptions.incrementAndGet();
+    }
+
+    @Override
     public final long receivedV0MultipartFragment(int index) {
-        final int log2 = 31 - Integer.numberOfLeadingZeros(index);
+        final int log2 = Integer.SIZE - Integer.numberOfLeadingZeros(index);
         return v0FragmentsLogScale.incrementAndGet(log2);
     }
 
@@ -91,6 +99,8 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(v0FragmentsLogScale.get(Short.SIZE - 1));
         builder.append("],\"failedToSend\":");
         builder.append(this.failedToSend.get());
+        builder.append(",\"exceptions\":");
+        builder.append(this.exceptions.get());
         builder.append(",\"kafka\":{");
 
         final ProducerStats producerStats = ProducerStatsRegistry.getProducerStats(kafkaClientId);

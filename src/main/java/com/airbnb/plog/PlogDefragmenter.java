@@ -5,9 +5,14 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.Weigher;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty.util.ReferenceCounted;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+/* TODO(pierre): much more instrumentation */
+
+@Slf4j
 public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFragment> {
     private final StatisticsReporter stats;
     private final Cache<Long, PartialMultiPartMessage> incompleteMessages;
@@ -30,8 +35,12 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
         final PartialMultiPartMessage fromMap = incompleteMessages.getIfPresent(id);
         if (fromMap != null) {
             fromMap.ingestFragment(fragment);
-            if (fromMap.isComplete())
+            if (fromMap.isComplete()) {
+                log.debug("complete message");
                 incompleteMessages.invalidate(fragment.getMsgId());
+            } else {
+                log.debug("incomplete message");
+            }
             return fromMap;
         } else {
             PartialMultiPartMessage message = PartialMultiPartMessage.fromFragment(fragment);
@@ -45,9 +54,11 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
         PartialMultiPartMessage message;
 
         if (fragment.isAlone()) {
+            log.debug("1-packet multipart message");
             out.add(fragment.getPayload());
             stats.receivedV0MultipartMessage();
         } else {
+            log.debug("multipart message");
             message = ingestIntoIncompleteMessage(fragment);
             if (message.isComplete()) {
                 out.add(message.getPayload());
@@ -55,4 +66,5 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
             }
         }
     }
+
 }

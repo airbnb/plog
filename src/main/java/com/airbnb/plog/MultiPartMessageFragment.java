@@ -25,13 +25,15 @@ public class MultiPartMessageFragment {
     private final ByteBuf payload;
 
     static MultiPartMessageFragment fromDatagram(DatagramPacket packet) {
-        final ByteBuf content = packet.content().order(ByteOrder.LITTLE_ENDIAN);
+        final ByteBuf content = packet.content().order(ByteOrder.BIG_ENDIAN);
         final int length = content.readableBytes();
         if (length < 24)
             throw new IllegalArgumentException("Packet too short: " + length + " bytes");
 
-        final int packetCount = content.getUnsignedShort(2);
-        final int packetIndex = content.getUnsignedShort(4);
+        final int fragmentCount = content.getUnsignedShort(2);
+        final int fragmentIndex = content.getUnsignedShort(4);
+        if (fragmentIndex > fragmentCount)
+            throw new IllegalArgumentException("Index " + fragmentIndex + " < count " + fragmentCount);
         final int packetSize = content.getUnsignedShort(6);
         final int idRightPart = content.getInt(8);
         final int totalLength = content.getInt(12);
@@ -39,12 +41,12 @@ public class MultiPartMessageFragment {
 
         final int port = packet.sender().getPort();
         return new MultiPartMessageFragment(
-                packetCount, packetIndex, packetSize,
-                (port << 32 + idRightPart),
+                fragmentCount, fragmentIndex, packetSize,
+                (port << 32) + idRightPart,
                 totalLength, payload);
     }
 
     boolean isAlone() {
-        return fragmentCount == 0 && fragmentIndex == 0;
+        return fragmentCount == 0;
     }
 }
