@@ -2,7 +2,8 @@
 
 Send unboxed or multipart messages over UDP, or line-separated messages over TCP, and have them forwarded to Kafka 0.8.
 
-The TCP protocol is not considered stable yet. It is likely to move to boxed messages, probably using MessagePack.
+The TCP protocol is **not stable yet**. It is likely to move to proper message boxing using MessagePack,
+and support commands.
 
 ## Getting started
 
