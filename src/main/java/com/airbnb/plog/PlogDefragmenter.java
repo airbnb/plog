@@ -1,7 +1,5 @@
 package com.airbnb.plog;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.Weigher;
 import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -16,21 +14,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFragment> {
     private final StatisticsReporter stats;
-    private final Map<Long, IncomingMultiPartMessage> incompleteMessages;
+    private final Map<Long, IncomingMultiPartMessage> incompleteMessages =
+            new LinkedHashMap<Long, IncomingMultiPartMessage>();
     private final Charset charset;
+    private final AtomicInteger payloadSize = new AtomicInteger();
+    private final int maxPayloadSize;
+
 
     public PlogDefragmenter(Charset charset, StatisticsReporter stats, Config config) {
         this.charset = charset;
         this.stats = stats;
-        incompleteMessages = new CacheBuilder<Long, IncomingMultiPartMessage>()
-                .maximumWeight(config.getInt("max_size"))
-                .weigher(new Weigher<Long, IncomingMultiPartMessage>() {
-                    @Override
-                    public int weigh(Long id, IncomingMultiPartMessage msg) {
-                        return msg.length();
-                    }
-                }).build();
-
+        maxPayloadSize = config.getInt("max_size");
     }
 
     private long identifierFor(MultiPartMessageFragment fragment) {
