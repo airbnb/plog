@@ -52,7 +52,7 @@ public class App {
         final int maxLineLength = plogConfig.getInt("max_line_length");
         final int port = plogConfig.getInt("port");
         final PlogPDecoder plogPDecoder = new PlogPDecoder(charset, stats);
-        final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(stats, plogConfig.getConfig("defrag"));
+        final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(charset, stats, plogConfig.getConfig("defrag"));
         final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);
 
         final EventLoopGroup group = new NioEventLoopGroup();

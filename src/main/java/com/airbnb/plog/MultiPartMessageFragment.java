@@ -12,19 +12,19 @@ import java.nio.ByteOrder;
 @RequiredArgsConstructor
 public class MultiPartMessageFragment {
     @Getter
-    final int fragmentCount;
+    private final int fragmentCount;
     @Getter
-    final int fragmentIndex;
+    private final int fragmentIndex;
     @Getter
-    final int fragmentSize;
+    private final int fragmentSize;
     @Getter
-    final int msgPort;
+    private final int msgPort;
     @Getter
-    final int msgId;
+    private final int msgId;
     @Getter
-    final int totalLength;
+    private final int totalLength;
     @Getter
-    final byte[] payload;
+    private final byte[] payload;
 
     static MultiPartMessageFragment fromDatagram(DatagramPacket packet) {
         final ByteBuf content = packet.content().order(ByteOrder.LITTLE_ENDIAN);
@@ -42,5 +42,9 @@ public class MultiPartMessageFragment {
 
         final int msgPort = packet.sender().getPort();
         return new MultiPartMessageFragment(packetCount, packetIndex, packetSize, msgPort, msgId, totalLength, payload);
+    }
+
+    boolean isAlone() {
+        return fragmentCount == 0 && fragmentIndex == 0;
     }
 }
