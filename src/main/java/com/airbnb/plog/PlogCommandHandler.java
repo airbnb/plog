@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand> {
-    public static final byte[] PONG_BYTES = "PONG".getBytes();
+    private static final byte[] PONG_BYTES = "PONG".getBytes();
     private final SimpleStatisticsReporter stats;
     private final Config config;
 

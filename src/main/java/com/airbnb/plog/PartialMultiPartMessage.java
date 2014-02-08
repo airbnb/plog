@@ -6,13 +6,13 @@ import lombok.Getter;
 
 import java.util.BitSet;
 
-public class IncomingMultiPartMessage {
+public class PartialMultiPartMessage {
     private final ByteBuf payload;
     private final BitSet receivedFragments;
     @Getter
     private boolean complete = false;
 
-    private IncomingMultiPartMessage(int totalLength, int fragmentCount) {
+    private PartialMultiPartMessage(int totalLength, int fragmentCount) {
         this.payload = Unpooled.buffer(totalLength, totalLength);
         receivedFragments = new BitSet(fragmentCount + 1);
     }
@@ -20,18 +20,18 @@ public class IncomingMultiPartMessage {
     /**
      * Constructor for single-fragment messages, taking shortcuts
      */
-    private IncomingMultiPartMessage(MultiPartMessageFragment singleFragment) {
+    private PartialMultiPartMessage(MultiPartMessageFragment singleFragment) {
         this.payload = Unpooled.wrappedBuffer(singleFragment.getPayload());
         this.receivedFragments = null;
         this.complete = true;
     }
 
-    public static IncomingMultiPartMessage fromFragment(MultiPartMessageFragment fragment) {
+    public static PartialMultiPartMessage fromFragment(MultiPartMessageFragment fragment) {
         if (fragment.isAlone())
-            return new IncomingMultiPartMessage(fragment);
+            return new PartialMultiPartMessage(fragment);
 
-        final IncomingMultiPartMessage msg =
-                new IncomingMultiPartMessage(fragment.getTotalLength(), fragment.getFragmentCount());
+        final PartialMultiPartMessage msg =
+                new PartialMultiPartMessage(fragment.getTotalLength(), fragment.getFragmentCount());
         msg.ingestFragment(fragment);
         return msg;
     }
@@ -42,7 +42,7 @@ public class IncomingMultiPartMessage {
         synchronized (receivedFragments) {
             receivedFragments.set(index);
             if (receivedFragments.cardinality() == receivedFragments.size())
-                complete = true;
+                this.complete = true;
         }
         payload.writeBytes(fragment.getPayload(), size * index, size);
     }

@@ -6,12 +6,10 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.RequiredArgsConstructor;
 
-import java.nio.charset.Charset;
 import java.util.List;
 
 @RequiredArgsConstructor
 public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> {
-    private final Charset charset;
     private final StatisticsReporter stats;
 
     @Override
@@ -19,8 +17,9 @@ public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> 
             throws Exception {
         final ByteBuf content = msg.content();
         final byte versionIdentifier = content.getByte(0);
+        // versions are non-printable characters, push down the pipeline send as-is.
         if (versionIdentifier < 0 || versionIdentifier > 31)
-            out.add(msg.content().toString(charset));
+            out.add(msg.content());
         else if (versionIdentifier == 0) {
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {

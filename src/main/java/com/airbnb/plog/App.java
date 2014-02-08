@@ -47,12 +47,17 @@ public class App {
         final Config plogConfig = config.getConfig("plog");
         final SimpleStatisticsReporter stats = new SimpleStatisticsReporter(properties.getProperty(CLIENT_ID));
         final Producer<String, String> producer = new Producer<String, String>(new ProducerConfig(properties));
-        final KafkaForwarder forwarder = new KafkaForwarder(plogConfig.getString("topic"), producer, stats);
         final Charset charset = Charset.forName(plogConfig.getString("charset"));
+        final KafkaForwarder forwarder = new KafkaForwarder(
+                plogConfig.getString("topic"),
+                producer,
+                stats,
+                charset);
         final int maxLineLength = plogConfig.getInt("max_line_length");
         final int port = plogConfig.getInt("port");
-        final PlogPDecoder plogPDecoder = new PlogPDecoder(charset, stats);
-        final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(charset, stats, plogConfig.getConfig("defrag"));
+        final PlogPDecoder plogPDecoder = new PlogPDecoder(stats);
+        final PlogDefragmenter plogDefragmenter = new PlogDefragmenter(stats,
+                plogConfig.getInt("defrag.max_size"));
         final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);
 
         final EventLoopGroup group = new NioEventLoopGroup();
@@ -61,7 +66,7 @@ public class App {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                 if (channelFuture.isDone() && !channelFuture.isSuccess()) {
-                    log.error("Channel failure: {}", channelFuture.cause());
+                    log.error("Channel failure", channelFuture.cause());
                     System.exit(1);
                 }
             }
