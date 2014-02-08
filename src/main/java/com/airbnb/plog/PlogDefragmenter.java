@@ -1,9 +1,6 @@
 package com.airbnb.plog;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheStats;
-import com.google.common.cache.Weigher;
+import com.google.common.cache.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +23,15 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
                     public int weigh(Long id, PartialMultiPartMessage msg) {
                         return msg.length();
                     }
-                }).build();
+                })
+                .removalListener(new RemovalListener<Long, PartialMultiPartMessage>() {
+                    @Override
+                    public void onRemoval(RemovalNotification<Long, PartialMultiPartMessage> notification) {
+                        // TODO(pierre): statistics! let's make sure we can discrimate complete messages
+                        // from evictions with if (notification.wasEvicted())
+                    }
+                })
+                .build();
     }
 
     public CacheStats getCacheStats() {
