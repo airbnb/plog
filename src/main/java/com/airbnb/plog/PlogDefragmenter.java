@@ -18,6 +18,7 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
         this.stats = stats;
         incompleteMessages = CacheBuilder.newBuilder()
                 .maximumWeight(maxSize)
+                .recordStats()
                 .weigher(new Weigher<Long, PartialMultiPartMessage>() {
                     @Override
                     public int weigh(Long id, PartialMultiPartMessage msg) {
