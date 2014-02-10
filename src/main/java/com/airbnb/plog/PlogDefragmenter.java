@@ -64,13 +64,13 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
 
         if (fragment.isAlone()) {
             log.debug("1-packet multipart message");
-            out.add(fragment.getPayload());
+            out.add(new Message(fragment.getPayload()));
             stats.receivedV0MultipartMessage();
         } else {
             log.debug("multipart message");
             message = ingestIntoIncompleteMessage(fragment);
             if (message.isComplete()) {
-                out.add(message.getPayload());
+                out.add(new Message(message.getPayload()));
                 stats.receivedV0MultipartMessage();
             }
         }
