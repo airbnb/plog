@@ -29,16 +29,16 @@ public class App {
     private final static String CLIENT_ID = "client.id";
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Properties kafkaProperties = System.getProperties();
-        if (kafkaProperties.getProperty(SERIALIZER_CLASS) == null)
-            kafkaProperties.setProperty(SERIALIZER_CLASS, "kafka.serializer.StringEncoder");
-        if (kafkaProperties.getProperty(METADATA_BROKER_LIST) == null)
-            kafkaProperties.setProperty(METADATA_BROKER_LIST, "127.0.0.1:9092");
-        if (kafkaProperties.getProperty(CLIENT_ID) == null)
-            kafkaProperties.setProperty(CLIENT_ID, "plog_" + InetAddress.getLocalHost().getHostName());
+        Properties systemProperties = System.getProperties();
+        if (systemProperties.getProperty(SERIALIZER_CLASS) == null)
+            systemProperties.setProperty(SERIALIZER_CLASS, "kafka.serializer.StringEncoder");
+        if (systemProperties.getProperty(METADATA_BROKER_LIST) == null)
+            systemProperties.setProperty(METADATA_BROKER_LIST, "127.0.0.1:9092");
+        if (systemProperties.getProperty(CLIENT_ID) == null)
+            systemProperties.setProperty(CLIENT_ID, "plog_" + InetAddress.getLocalHost().getHostName());
 
         final Config config = ConfigFactory.load();
-        new App().run(kafkaProperties, config);
+        new App().run(systemProperties, config);
     }
 
     private void run(Properties properties, Config config) {
