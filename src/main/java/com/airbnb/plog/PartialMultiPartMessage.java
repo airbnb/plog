@@ -35,16 +35,15 @@ public class PartialMultiPartMessage {
         final ByteBuf fpayload = fragment.getPayload();
         final int index = fragment.getFragmentIndex();
         final int foffset = size * index;
-        final int copiedLength = Math.min(
-                Math.min(fpayload.readableBytes(), size),
-                payload.capacity() - foffset);
+        final int lengthFromFragment = Math.min(fpayload.readableBytes(), size);
+        final int lengthToCopy = Math.min(lengthFromFragment, payload.capacity() - foffset);
         synchronized (receivedFragments) {
             receivedFragments.set(index);
             if (receivedFragments.cardinality() == expectedFragments) {
                 this.complete = true;
             }
         }
-        payload.setBytes(foffset, fpayload, 0, copiedLength);
+        payload.setBytes(foffset, fpayload, 0, lengthToCopy);
         fragment.getPayload().release();
     }
 
