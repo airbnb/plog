@@ -74,6 +74,11 @@ The choice of JSON could change to MessagePack.
 - Bytes 16-23: zeroes. Reserved, might be used in later revisions.
 - Bytes 24-: bytes (UTF-8 by default). Payload. Will only read the payload length.
 
+## Building a fat JAR
+
+    $ ./gradlew shadowJar
+    $ ls -l ./build/distributions/plog-1.0-SNAPSHOT-shadow.jar
+
 ## Operational tricks
 
 - To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, `sysctl net.core.rmem_max`.
