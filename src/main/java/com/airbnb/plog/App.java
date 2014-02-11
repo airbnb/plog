@@ -83,6 +83,7 @@ public class App {
                     protected void initChannel(SocketChannel channel) throws Exception {
                         channel.pipeline()
                                 .addLast(new LineBasedFrameDecoder(maxLineLength))
+                                .addLast(new Message.ByteBufToMessageDecoder())
                                 .addLast(forwarder);
                     }
                 }).bind(new InetSocketAddress(port)).addListener(futureListener);
