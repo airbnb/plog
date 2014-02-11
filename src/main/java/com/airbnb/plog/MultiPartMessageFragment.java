@@ -42,10 +42,8 @@ public class MultiPartMessageFragment {
         final ByteBuf payload = content.slice(HEADER_SIZE, packetSize);
 
         final int port = packet.sender().getPort();
-        return new MultiPartMessageFragment(
-                fragmentCount, fragmentIndex, packetSize,
-                (port << 32) + idRightPart,
-                totalLength, payload);
+        final long msgId = (((long) port) << Integer.SIZE) + idRightPart;
+        return new MultiPartMessageFragment(fragmentCount, fragmentIndex, packetSize, msgId, totalLength, payload);
     }
 
     boolean isAlone() {
