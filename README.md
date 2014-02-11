@@ -5,6 +5,14 @@ Send unboxed or multipart messages over UDP, or line-separated messages over TCP
 The TCP protocol is **not stable yet**. It is likely to move to proper message boxing using MessagePack,
 and support commands.
 
+## Disclaimer
+
+**As-is:** This project is not actively maintained or supported.
+While updates may still be made and we welcome feedback, keep in mind we may not respond to pull requests or issues quickly.
+
+**Let us know!** If you fork this, or if you use it, or if it helps in anyway, we'd love to hear from you! opensource@airbnb.com
+
+
 ## Getting started
 
     $ ./gladew run
