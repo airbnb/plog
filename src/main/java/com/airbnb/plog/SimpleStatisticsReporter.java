@@ -115,11 +115,19 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
         builder.append("],\"missingFragmentsInDroppedMultipartMessages\":[");
         final int droppedFragmentsLength = droppedFragments.length();
-        for (int i = 0; i < droppedFragmentsLength; i++) {
-            builder.append(droppedFragments.get(i));
-            builder.append(',');
+        for (int packetCountLog = 0; packetCountLog < Short.SIZE; packetCountLog++) {
+            builder.append('[');
+            for (int packetIndexLog = 0; packetIndexLog < Short.SIZE; packetIndexLog++) {
+                builder.append(droppedFragments.get(packetCountLog * Short.SIZE + packetIndexLog));
+
+                if (packetIndexLog != Short.SIZE - 1)
+                    builder.append(',');
+            }
+            builder.append(']');
+
+            if (packetCountLog != Short.SIZE - 1)
+                builder.append(',');
         }
-        builder.append(droppedFragments.get(droppedFragmentsLength - 1));
 
         builder.append("],\"failedToSend\":");
         builder.append(this.failedToSend.get());
