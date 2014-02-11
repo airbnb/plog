@@ -10,19 +10,21 @@ import java.util.BitSet;
 @Slf4j
 public class PartialMultiPartMessage {
     private final ByteBuf payload;
+    @Getter
     private final BitSet receivedFragments;
-    private final int expectedFragments;
+    @Getter
+    private final int fragmentCount;
     @Getter
     private boolean complete = false;
 
-    private PartialMultiPartMessage(int totalLength, int fragmentCount) {
+    private PartialMultiPartMessage(final int totalLength, final int fragmentCount) {
         this.payload = Unpooled.buffer(totalLength, totalLength);
         this.payload.writerIndex(totalLength);
-        receivedFragments = new BitSet(fragmentCount + 1);
-        expectedFragments = fragmentCount + 1;
+        this.receivedFragments = new BitSet(fragmentCount);
+        this.fragmentCount = fragmentCount;
     }
 
-    public static PartialMultiPartMessage fromFragment(MultiPartMessageFragment fragment) {
+    public static PartialMultiPartMessage fromFragment(final MultiPartMessageFragment fragment) {
         final PartialMultiPartMessage msg = new PartialMultiPartMessage(
                 fragment.getTotalLength(),
                 fragment.getFragmentCount());
@@ -30,7 +32,7 @@ public class PartialMultiPartMessage {
         return msg;
     }
 
-    public void ingestFragment(MultiPartMessageFragment fragment) {
+    public void ingestFragment(final MultiPartMessageFragment fragment) {
         final int size = fragment.getFragmentSize();
         final ByteBuf fpayload = fragment.getPayload();
         final int index = fragment.getFragmentIndex();
@@ -39,7 +41,7 @@ public class PartialMultiPartMessage {
         final int lengthToCopy = Math.min(lengthFromFragment, payload.capacity() - foffset);
         synchronized (receivedFragments) {
             receivedFragments.set(index);
-            if (receivedFragments.cardinality() == expectedFragments) {
+            if (receivedFragments.cardinality() == fragmentCount) {
                 this.complete = true;
             }
         }

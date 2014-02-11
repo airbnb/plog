@@ -25,8 +25,14 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             failedToSend = new AtomicLong(),
             exceptions = new AtomicLong();
     private final AtomicLongArray v0FragmentsLogScale = new AtomicLongArray(Short.SIZE);
+    private final AtomicLongArray droppedFragments =
+            new AtomicLongArray(Short.SIZE * Short.SIZE);
     private final String kafkaClientId;
     private CacheStats cacheStats = null;
+
+    private static final int intLog2(int i) {
+        return Integer.SIZE - Integer.numberOfLeadingZeros(i);
+    }
 
     @Override
     public final long receivedTcpMessage() {
@@ -74,9 +80,14 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     @Override
-    public final long receivedV0MultipartFragment(int index) {
-        final int log2 = Integer.SIZE - Integer.numberOfLeadingZeros(index);
-        return v0FragmentsLogScale.incrementAndGet(log2);
+    public final long receivedV0MultipartFragment(final int index) {
+        return v0FragmentsLogScale.incrementAndGet(intLog2(index));
+    }
+
+    @Override
+    public long missingFragmentInDroppedMultiPartMessage(final int fragmentIndex, final int expectedFragments) {
+        final int target = (Short.SIZE * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
+        return droppedFragments.incrementAndGet(target);
     }
 
     public final String toJSON() {
@@ -93,13 +104,23 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(this.unknownCommand.get());
         builder.append(",\"v0Commands\":");
         builder.append(this.v0Commands.get());
+
         builder.append(",\"v0MultipartMessages\":[");
-        for (int i = 0; i < Short.SIZE - 2; i++) {
+        final int v0FragmentsLogScaleLength = v0FragmentsLogScale.length();
+        for (int i = 0; i < v0FragmentsLogScaleLength - 1; i++) {
             builder.append(v0FragmentsLogScale.get(i));
             builder.append(',');
         }
+        builder.append(v0FragmentsLogScale.get(v0FragmentsLogScaleLength - 1));
 
-        builder.append(v0FragmentsLogScale.get(Short.SIZE - 1));
+        builder.append("],\"missingFragmentsInDroppedMultipartMessages\":");
+        final int droppedFragmentsLength = droppedFragments.length();
+        for (int i = 0; i < droppedFragmentsLength; i++) {
+            builder.append(droppedFragments.get(i));
+            builder.append(',');
+        }
+        builder.append(droppedFragments.get(droppedFragmentsLength - 1));
+
         builder.append("],\"failedToSend\":");
         builder.append(this.failedToSend.get());
         builder.append(",\"exceptions\":");

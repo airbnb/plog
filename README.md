@@ -66,7 +66,7 @@ The choice of JSON could change to MessagePack.
 
 #### Packet type 01: multipart message
 
-- Bytes 02-03: unsigned, big-endian, 16-byte integer. Packet count for the message (between 0 for 1 packet and 65534).
+- Bytes 02-03: unsigned, big-endian, 16-byte integer. Packet count for the message (between 1 and 65535).
 - Bytes 04-05: unsigned, big-endian, 16-byte integer. Index of this packet in the message (between 0 for the first packet and 65534).
 - Bytes 06-07: unsigned, big-endian, 16-byte integer. Byte length of the payload for each packet in the message.
 - Bytes 08-11: arbitrary 32-byte integer. Second half of the identifier for the message. Messages are identified by the UDP client port and this second half.

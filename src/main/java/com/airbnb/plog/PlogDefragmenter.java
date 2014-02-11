@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.BitSet;
 import java.util.List;
 
 /* TODO(pierre): much more instrumentation */
@@ -14,7 +15,7 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
     private final StatisticsReporter stats;
     private final Cache<Long, PartialMultiPartMessage> incompleteMessages;
 
-    public PlogDefragmenter(StatisticsReporter stats, int maxSize) {
+    public PlogDefragmenter(final StatisticsReporter stats, int maxSize) {
         this.stats = stats;
         incompleteMessages = CacheBuilder.newBuilder()
                 .maximumWeight(maxSize)
@@ -28,8 +29,18 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
                 .removalListener(new RemovalListener<Long, PartialMultiPartMessage>() {
                     @Override
                     public void onRemoval(RemovalNotification<Long, PartialMultiPartMessage> notification) {
-                        // TODO(pierre): statistics! let's make sure we can discrimate complete messages
-                        // from evictions with if (notification.wasEvicted())
+                        final PartialMultiPartMessage message = notification.getValue();
+                        if (message != null) {
+                            final int fragmentCount = message.getFragmentCount();
+                            final BitSet receivedFragments = message.getReceivedFragments();
+                            for (int idx = 0; idx < fragmentCount; idx++)
+                                if (!receivedFragments.get(idx))
+                                    stats.missingFragmentInDroppedMultiPartMessage(idx, fragmentCount);
+                        } else {
+                            // let's use the magic value fragment 0, expected fragments 0 if the message was GC'ed,
+                            // as it wouldn't happen otherwise
+                            stats.missingFragmentInDroppedMultiPartMessage(0, 0);
+                        }
                     }
                 })
                 .build();

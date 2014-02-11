@@ -49,6 +49,6 @@ public class MultiPartMessageFragment {
     }
 
     boolean isAlone() {
-        return fragmentCount == 0;
+        return fragmentCount == 1;
     }
 }
