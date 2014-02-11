@@ -8,8 +8,8 @@ and support commands.
 ## Getting started
 
     $ ./gladew run
-    $ printf 'foo\nbar\nbaz'|socat -t0 - TCP:127.0.0.1:54321
-    $ printf 'yipee!'|socat -t0 - UDP-DATAGRAM:127.0.0.1:54321
+    $ printf 'foo\nbar\nbaz'|socat -t0 - TCP:127.0.0.1:23456
+    $ printf 'yipee!'|socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
 
 ## Configuration
 
@@ -47,11 +47,11 @@ Command packet. Commands are always 4 ASCII characters, trailing payload can be 
 
 - KILL crashes the process without any attention for detail or respect for ongoing operations.
 
-        $ printf '\0\0kill'|socat -t0 - UDP-DATAGRAM:127.0.0.1:54321
+        $ printf '\0\0kill'|socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
 
 - PING will cause the process to reply back with PONG. Trailing payload is sent back and can be used for request/reply matching.
 
-        $ printf "\0\0PingFor$$\n\n"|socat - UDP-DATAGRAM:127.0.0.1:54321
+        $ printf "\0\0PingFor$$\n\n"|socat - UDP-DATAGRAM:127.0.0.1:23456
         PONGFor17575
         
         $
@@ -59,7 +59,7 @@ Command packet. Commands are always 4 ASCII characters, trailing payload can be 
 - STAT is used to request statistics in UTF-8-encoded JSON. Per convention, the trailing payload should be used for politeness.
 The choice of JSON could change to MessagePack.
 
-        $ printf "\0\0statistics please, gentle service"|socat - UDP-DATAGRAM:127.0.0.1:54321
+        $ printf "\0\0statistics please, gentle service"|socat - UDP-DATAGRAM:127.0.0.1:23456
         {"tcpMessages":0, "udpSimpleMessages":0, "udpInvalidVersion":0, "v0InvalidType":0, "unknownCommand":1, "v0Commands":520, "v0MultipartMessages":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
 
 - ENVI returns the environment as a UTF-8-encoded string. The format is not defined further.
