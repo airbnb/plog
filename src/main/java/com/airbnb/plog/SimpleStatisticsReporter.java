@@ -113,7 +113,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         }
         builder.append(v0FragmentsLogScale.get(v0FragmentsLogScaleLength - 1));
 
-        builder.append("],\"missingFragmentsInDroppedMultipartMessages\":");
+        builder.append("],\"missingFragmentsInDroppedMultipartMessages\":[");
         final int droppedFragmentsLength = droppedFragments.length();
         for (int i = 0; i < droppedFragmentsLength; i++) {
             builder.append(droppedFragments.get(i));
