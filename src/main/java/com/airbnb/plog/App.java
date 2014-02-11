@@ -90,6 +90,8 @@ public class App {
 
         new Bootstrap().group(group).channel(NioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
+                .option(ChannelOption.SO_RCVBUF, plogConfig.getInt("udp.SO_RCVBUF"))
+                .option(ChannelOption.SO_SNDBUF, plogConfig.getInt("udp.SO_SNDBUF"))
                 .handler(new ChannelInitializer<NioDatagramChannel>() {
                     @Override
                     protected void initChannel(NioDatagramChannel channel) throws Exception {
