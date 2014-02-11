@@ -7,3 +7,4 @@
 - keep packet payloads as array in multipart message
 - avoid using String altogether (will probably need custom kafka sharder)
 - clean up & improve logging
+- snappy compression
