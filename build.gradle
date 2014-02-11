@@ -22,6 +22,7 @@ dependencies {
     compile 'com.typesafe:config:1.2.0'
     compile 'org.slf4j:slf4j-api:1.7.6'
     compile 'log4j:log4j:1.2.17'
+    compile 'org.xerial.snappy:snappy-java:1.1.0.1'
     compile('org.apache.kafka:kafka_2.10:0.8.0') {
         exclude module: 'zookeeper'
         exclude module: 'zkclient'
@@ -37,6 +38,18 @@ shadow { artifactSet { exclude '*:lombok:*' } }
 idea.module {
     downloadJavadoc = true
     downloadSources = true
+}
+
+run {
+    maxHeapSize = '64M'
+    systemProperties = [
+        'batch.num.messages': 50,
+//      'compression.codec': 'snappy',
+        'producer.type': 'async',
+        'queue.buffering.max.messages': 100,
+        'queue.buffering.max.ms': 500,
+        'request.required.acks': 1
+    ]
 }
 
 buildscript {
