@@ -76,10 +76,8 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
         PartialMultiPartMessage message;
 
         if (fragment.isAlone()) {
-            log.debug("1-packet multipart message");
             pushPayloadIfValid(fragment.getPayload(), fragment.getMsgHash(), 1, out);
         } else {
-            log.debug("multipart message");
             message = ingestIntoIncompleteMessage(fragment);
             if (message.isComplete())
                 pushPayloadIfValid(message.getPayload(), message.getHash(), message.getFragmentCount(), out);
@@ -96,7 +94,8 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
             out.add(new Message(bytes));
             this.stats.receivedV0MultipartMessage();
         } else {
-            log.warn("Client sent hash {}, computed hash {}", expectedHash, computedHash);
+            log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",
+                    expectedHash, computedHash, bytes, fragmentCount);
             this.stats.receivedV0InvalidChecksum(fragmentCount);
         }
     }
