@@ -2,6 +2,7 @@ package com.airbnb.plog;
 
 import com.google.common.cache.*;
 import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -95,7 +96,7 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
             this.stats.receivedV0MultipartMessage();
         } else {
             log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",
-                    expectedHash, computedHash, bytes, fragmentCount);
+                    expectedHash, computedHash, BaseEncoding.base16().encode(bytes), fragmentCount);
             this.stats.receivedV0InvalidChecksum(fragmentCount);
         }
     }
