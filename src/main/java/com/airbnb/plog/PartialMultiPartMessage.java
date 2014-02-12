@@ -53,27 +53,38 @@ public class PartialMultiPartMessage {
         final int msgHash = fragment.getMsgHash();
         final ByteBuf fragmentPayload = fragment.getPayload();
         final int fragmentIndex = fragment.getFragmentIndex();
+        final boolean fragmentIsLast = fragmentIndex == fragmentCount - 1;
+        final int foffset = fragmentSize * fragmentIndex;
+
+        final int fragmentLength;
+        final boolean validFragmentLength;
+
+        if (fragmentIsLast) {
+            fragmentLength = fragmentPayload.readableBytes();
+            validFragmentLength = this.length() - foffset == fragmentLength;
+        } else {
+            fragmentLength = fragmentSize;
+            validFragmentLength = fragmentLength == this.fragmentSize;
+        }
 
         if ((this.getFragmentSize() != fragmentSize) ||
                 this.getFragmentCount() != fragmentCount ||
-                this.getHash() != msgHash) {
+                this.getHash() != msgHash ||
+                !validFragmentLength) {
             log.warn("Invalid fragment {} for multipart {}", fragment, this);
             stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
-        } else {
-            // valid fragment
-            final int foffset = fragmentSize * fragmentIndex;
-            final int lengthFromFragment = Math.min(fragmentPayload.readableBytes(), fragmentSize);
-            final int lengthToCopy = Math.min(lengthFromFragment, payload.capacity() - foffset);
-
-            synchronized (receivedFragments) {
-                receivedFragments.set(fragmentIndex);
-                if (receivedFragments.cardinality() == this.fragmentCount) {
-                    this.complete = true;
-                }
-            }
-            payload.setBytes(foffset, fragmentPayload, 0, lengthToCopy);
-            fragment.getPayload().release();
+            return;
         }
+
+        // valid fragment
+        synchronized (receivedFragments) {
+            receivedFragments.set(fragmentIndex);
+            if (receivedFragments.cardinality() == this.fragmentCount) {
+                this.complete = true;
+            }
+        }
+        payload.setBytes(foffset, fragmentPayload, 0, fragmentLength);
+        fragment.getPayload().release();
     }
 
     public ByteBuf getPayload() {
