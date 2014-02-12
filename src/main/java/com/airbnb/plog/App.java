@@ -19,19 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
 import java.util.Properties;
 
 @Slf4j
 public class App {
     private final static String METADATA_BROKER_LIST = "metadata.broker.list";
-    private final static String SERIALIZER_CLASS = "serializer.class";
     private final static String CLIENT_ID = "client.id";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Properties systemProperties = System.getProperties();
-        if (systemProperties.getProperty(SERIALIZER_CLASS) == null)
-            systemProperties.setProperty(SERIALIZER_CLASS, "kafka.serializer.StringEncoder");
         if (systemProperties.getProperty(METADATA_BROKER_LIST) == null)
             systemProperties.setProperty(METADATA_BROKER_LIST, "127.0.0.1:9092");
         if (systemProperties.getProperty(CLIENT_ID) == null)
@@ -45,13 +41,10 @@ public class App {
 
         final Config plogConfig = config.getConfig("plog");
         final SimpleStatisticsReporter stats = new SimpleStatisticsReporter(properties.getProperty(CLIENT_ID));
-        final Producer<String, String> producer = new Producer<String, String>(new ProducerConfig(properties));
-        final Charset charset = Charset.forName(plogConfig.getString("charset"));
         final KafkaForwarder forwarder = new KafkaForwarder(
                 plogConfig.getString("topic"),
-                producer,
-                stats,
-                charset);
+                new Producer<Void, byte[]>(new ProducerConfig(properties)),
+                stats);
         final int maxLineLength = plogConfig.getInt("max_line_length");
         final int port = plogConfig.getInt("port");
         final PlogPDecoder protocolDecoder = new PlogPDecoder(stats);

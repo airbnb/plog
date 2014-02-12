@@ -8,7 +8,7 @@ import lombok.ToString;
 
 import java.nio.ByteOrder;
 
-@ToString
+@ToString(exclude = {"payload"})
 @RequiredArgsConstructor
 public class MultiPartMessageFragment {
     static final int HEADER_SIZE = 24;
@@ -38,15 +38,15 @@ public class MultiPartMessageFragment {
         final int fragmentIndex = content.getUnsignedShort(4);
         if (fragmentIndex > fragmentCount)
             throw new IllegalArgumentException("Index " + fragmentIndex + " < count " + fragmentCount);
-        final int packetSize = Math.min(content.getUnsignedShort(6), content.readableBytes() - HEADER_SIZE);
+        final int fragmentSize = content.getUnsignedShort(6);
         final int idRightPart = content.getInt(8);
         final int totalLength = content.getInt(12);
         final int msgHash = content.getInt(16);
-        final ByteBuf payload = content.slice(HEADER_SIZE, packetSize);
+        final ByteBuf payload = content.slice(HEADER_SIZE, length - HEADER_SIZE);
 
         final int port = packet.sender().getPort();
         final long msgId = (((long) port) << Integer.SIZE) + idRightPart;
-        return new MultiPartMessageFragment(fragmentCount, fragmentIndex, packetSize, msgId, totalLength, msgHash, payload);
+        return new MultiPartMessageFragment(fragmentCount, fragmentIndex, fragmentSize, msgId, totalLength, msgHash, payload);
     }
 
     boolean isAlone() {

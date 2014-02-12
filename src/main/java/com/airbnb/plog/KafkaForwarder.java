@@ -9,7 +9,6 @@ import kafka.producer.KeyedMessage;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
 import static io.netty.channel.ChannelHandler.Sharable;
@@ -24,9 +23,8 @@ final class KafkaForwarder extends SimpleChannelInboundHandler<Message> {
     );
 
     private final String topic;
-    private final Producer<String, String> producer;
+    private final Producer<Void, byte[]> producer;
     private final StatisticsReporter stats;
-    private final Charset charset;
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -36,9 +34,8 @@ final class KafkaForwarder extends SimpleChannelInboundHandler<Message> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        String str = new String(msg.getPayload(), charset);
         try {
-            producer.send(new KeyedMessage<String, String>(topic, str));
+            producer.send(new KeyedMessage<Void, byte[]>(topic, msg.getPayload()));
         } catch (FailedToSendMessageException e) {
             stats.failedToSend();
         }

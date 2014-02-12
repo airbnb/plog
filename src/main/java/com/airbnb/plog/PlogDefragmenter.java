@@ -26,7 +26,7 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
                 .weigher(new Weigher<Long, PartialMultiPartMessage>() {
                     @Override
                     public int weigh(Long id, PartialMultiPartMessage msg) {
-                        return msg.length();
+                        return msg.getPayloadLength();
                     }
                 })
                 .removalListener(new RemovalListener<Long, PartialMultiPartMessage>() {

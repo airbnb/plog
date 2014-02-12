@@ -3,11 +3,13 @@ package com.airbnb.plog;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
 
 @Slf4j
+@ToString(exclude = {"payload"})
 public class PartialMultiPartMessage {
     private final ByteBuf payload;
     @Getter
@@ -60,18 +62,18 @@ public class PartialMultiPartMessage {
         final boolean validFragmentLength;
 
         if (fragmentIsLast) {
-            fragmentLength = fragmentPayload.readableBytes();
-            validFragmentLength = this.length() - foffset == fragmentLength;
+            fragmentLength = fragmentPayload.capacity();
+            validFragmentLength = this.getPayloadLength() - foffset == fragmentLength;
         } else {
             fragmentLength = fragmentSize;
             validFragmentLength = fragmentLength == this.fragmentSize;
         }
 
-        if ((this.getFragmentSize() != fragmentSize) ||
+        if (this.getFragmentSize() != fragmentSize ||
                 this.getFragmentCount() != fragmentCount ||
                 this.getHash() != msgHash ||
                 !validFragmentLength) {
-            log.warn("Invalid fragment {} for multipart {}", fragment, this);
+            log.warn("Invalid {} for {}", fragment, this);
             stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
             return;
         }
@@ -94,7 +96,7 @@ public class PartialMultiPartMessage {
             throw new IllegalStateException("Not complete");
     }
 
-    public int length() {
+    public int getPayloadLength() {
         return payload.capacity();
     }
 }
