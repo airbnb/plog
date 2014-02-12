@@ -6,6 +6,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -20,6 +21,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 public class App {
@@ -45,6 +48,7 @@ public class App {
                 plogConfig.getString("topic"),
                 new Producer<byte[], byte[]>(new ProducerConfig(properties)),
                 stats);
+        final ExecutorService threadPool = Executors.newFixedThreadPool(plogConfig.getInt("threads"));
         final int maxLineLength = plogConfig.getInt("max_line_length");
         final int port = plogConfig.getInt("port");
         final PlogPDecoder protocolDecoder = new PlogPDecoder(stats);
@@ -91,6 +95,17 @@ public class App {
                     @Override
                     protected void initChannel(NioDatagramChannel channel) throws Exception {
                         channel.pipeline()
+                                .addLast(new SimpleChannelInboundHandler<DatagramPacket>(false) {
+                                    @Override
+                                    protected void channelRead0(final ChannelHandlerContext ctx, final DatagramPacket msg) throws Exception {
+                                        threadPool.submit(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                ctx.fireChannelRead(msg);
+                                            }
+                                        });
+                                    }
+                                })
                                 .addLast(protocolDecoder)
                                 .addLast(defragmenter)
                                 .addLast(commandHandler)
