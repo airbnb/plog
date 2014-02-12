@@ -86,12 +86,17 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
         }
     }
 
-    private void pushPayloadIfValid(final ByteBuf payload, final int hash, final int fragmentCount, List<Object> out) {
+    private void pushPayloadIfValid(final ByteBuf payload,
+                                    final int expectedHash,
+                                    final int fragmentCount,
+                                    List<Object> out) {
         final byte[] bytes = ByteBufs.toByteArray(payload);
-        if (Hashing.murmur3_32().hashBytes(bytes).asInt() == hash) {
+        final int computedHash = Hashing.murmur3_32().hashBytes(bytes).asInt();
+        if (computedHash == expectedHash) {
             out.add(new Message(bytes));
             this.stats.receivedV0MultipartMessage();
         } else {
+            log.warn("Client sent hash {}, computed hash {}", expectedHash, computedHash);
             this.stats.receivedV0InvalidChecksum(fragmentCount);
         }
     }

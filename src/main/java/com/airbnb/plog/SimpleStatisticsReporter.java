@@ -25,7 +25,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             failedToSend = new AtomicLong(),
             exceptions = new AtomicLong();
     private final AtomicLongArray
-            v0MultiPartMessages = new AtomicLongArray(Short.SIZE),
+            v0MultipartMessageFragments = new AtomicLongArray(Short.SIZE),
             v0InvalidChecksum = new AtomicLongArray(Short.SIZE),
             droppedFragments = new AtomicLongArray(Short.SIZE * Short.SIZE),
             invalidFragments = new AtomicLongArray(Short.SIZE * Short.SIZE);
@@ -83,7 +83,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     @Override
     public final long receivedV0MultipartFragment(final int index) {
-        return v0MultiPartMessages.incrementAndGet(intLog2(index));
+        return v0MultipartMessageFragments.incrementAndGet(intLog2(index));
     }
 
     @Override
@@ -119,7 +119,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(this.v0Commands.get());
 
         builder.append(',');
-        appendLogStats(builder, "v0MultiPartMessages", v0MultiPartMessages);
+        appendLogStats(builder, "v0MultipartMessageFragments", v0MultipartMessageFragments);
         builder.append(',');
         appendLogStats(builder, "v0InvalidChecksum", v0InvalidChecksum);
         builder.append(',');

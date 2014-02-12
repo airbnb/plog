@@ -29,6 +29,7 @@ dependencies {
         exclude module: 'jmxri'
         exclude module: 'jmxtools'
     }
+    testCompile 'org.codehaus.groovy:groovy-binary:2.2.1'
 }
 
 jar { manifest { attributes 'Main-Class': 'com.airbnb.plog.App' } }
@@ -43,11 +44,9 @@ idea.module {
 run {
     maxHeapSize = '128M'
     systemProperties = [
-//      'batch.num.messages': 50,
 // the kafka binary distrib doesn't seem to include snappy support
 //      'compression.codec': 'snappy',
         'producer.type': 'async',
-//      'queue.buffering.max.messages': 100,
         'queue.buffering.max.ms': 500,
         'request.required.acks': 1
     ]
