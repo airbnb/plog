@@ -88,10 +88,12 @@ public class App {
                     }
                 }).bind(new InetSocketAddress(port)).addListener(futureListener);
 
+        final Config udpConfig = plogConfig.getConfig("udp");
         new Bootstrap().group(group).channel(NioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
-                .option(ChannelOption.SO_RCVBUF, plogConfig.getInt("udp.SO_RCVBUF"))
-                .option(ChannelOption.SO_SNDBUF, plogConfig.getInt("udp.SO_SNDBUF"))
+                .option(ChannelOption.SO_RCVBUF, udpConfig.getInt("SO_RCVBUF"))
+                .option(ChannelOption.SO_SNDBUF, udpConfig.getInt("SO_SNDBUF"))
+                .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(udpConfig.getInt("RECV_SIZE")))
                 .handler(new ChannelInitializer<NioDatagramChannel>() {
                     @Override
                     protected void initChannel(NioDatagramChannel channel) throws Exception {
