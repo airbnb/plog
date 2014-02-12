@@ -43,6 +43,15 @@ idea.module {
 
 run {
     maxHeapSize = '128M'
+    jvmArgs = [
+        '-XX:+UseConcMarkSweepGC',
+        '-XX:+AggressiveOpts',
+        '-XX:+UseCompressedOops',
+        '-XX:+UseFastEmptyMethods',
+        '-XX:+UseFastAccessorMethods',
+        '-XX:CompileThreshold=1500',
+    ]
+
     systemProperties = [
 // the kafka binary distrib doesn't seem to include snappy support
 //      'compression.codec': 'snappy',
