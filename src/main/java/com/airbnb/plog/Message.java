@@ -10,14 +10,13 @@ import java.util.List;
 
 @Data
 public class Message {
-    private final ByteBuf payload;
+    private final byte[] payload;
 
     @ChannelHandler.Sharable
     public static final class ByteBufToMessageDecoder extends MessageToMessageDecoder<ByteBuf> {
         @Override
         protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
-            buf.retain();
-            out.add(new Message(buf));
+            out.add(ByteBufs.toByteArray(buf));
         }
     }
 }

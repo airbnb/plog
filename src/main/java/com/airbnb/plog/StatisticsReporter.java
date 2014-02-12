@@ -17,7 +17,11 @@ public interface StatisticsReporter {
 
     long receivedV0MultipartFragment(int index);
 
-    long missingFragmentInDroppedMultiPartMessage(int index, int length);
+    long receivedV0InvalidChecksum(int index);
+
+    long receivedV0InvalidMultipartFragment(final int fragmentIndex, final int expectedFragments);
+
+    long missingFragmentInDroppedMultiPartMessage(final int fragmentIndex, final int expectedFragments);
 
     long failedToSend();
 

@@ -36,10 +36,7 @@ final class KafkaForwarder extends SimpleChannelInboundHandler<Message> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        final int length = msg.getPayload().readableBytes();
-        final byte[] bytes = new byte[length];
-        msg.getPayload().readBytes(bytes);
-        String str = new String(bytes, charset);
+        String str = new String(msg.getPayload(), charset);
         try {
             producer.send(new KeyedMessage<String, String>(topic, str));
         } catch (FailedToSendMessageException e) {

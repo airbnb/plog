@@ -24,6 +24,8 @@ public class MultiPartMessageFragment {
     @Getter
     private final int totalLength;
     @Getter
+    private final int msgHash;
+    @Getter
     private final ByteBuf payload;
 
     static MultiPartMessageFragment fromDatagram(DatagramPacket packet) {
@@ -39,11 +41,12 @@ public class MultiPartMessageFragment {
         final int packetSize = Math.min(content.getUnsignedShort(6), content.readableBytes() - HEADER_SIZE);
         final int idRightPart = content.getInt(8);
         final int totalLength = content.getInt(12);
+        final int msgHash = content.getInt(16);
         final ByteBuf payload = content.slice(HEADER_SIZE, packetSize);
 
         final int port = packet.sender().getPort();
         final long msgId = (((long) port) << Integer.SIZE) + idRightPart;
-        return new MultiPartMessageFragment(fragmentCount, fragmentIndex, packetSize, msgId, totalLength, payload);
+        return new MultiPartMessageFragment(fragmentCount, fragmentIndex, packetSize, msgId, totalLength, msgHash, payload);
     }
 
     boolean isAlone() {

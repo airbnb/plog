@@ -24,7 +24,7 @@ public final class PlogPDecoder extends MessageToMessageDecoder<DatagramPacket> 
             log.debug("Unboxed UDP message");
             msg.retain();
             stats.receivedUdpSimpleMessage();
-            out.add(new Message(msg.content()));
+            out.add(new Message(ByteBufs.toByteArray(msg.content())));
         } else if (versionIdentifier == 0) {
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {

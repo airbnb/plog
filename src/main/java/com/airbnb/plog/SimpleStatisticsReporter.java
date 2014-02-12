@@ -24,9 +24,11 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             v0MultipartMessages = new AtomicLong(),
             failedToSend = new AtomicLong(),
             exceptions = new AtomicLong();
-    private final AtomicLongArray v0FragmentsLogScale = new AtomicLongArray(Short.SIZE);
-    private final AtomicLongArray droppedFragments =
-            new AtomicLongArray(Short.SIZE * Short.SIZE);
+    private final AtomicLongArray
+            v0MultiPartMessages = new AtomicLongArray(Short.SIZE),
+            v0InvalidChecksum = new AtomicLongArray(Short.SIZE),
+            droppedFragments = new AtomicLongArray(Short.SIZE * Short.SIZE),
+            invalidFragments = new AtomicLongArray(Short.SIZE * Short.SIZE);
     private final String kafkaClientId;
     private CacheStats cacheStats = null;
 
@@ -81,7 +83,18 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     @Override
     public final long receivedV0MultipartFragment(final int index) {
-        return v0FragmentsLogScale.incrementAndGet(intLog2(index));
+        return v0MultiPartMessages.incrementAndGet(intLog2(index));
+    }
+
+    @Override
+    public final long receivedV0InvalidChecksum(int fragments) {
+        return this.v0InvalidChecksum.incrementAndGet(fragments - 1);
+    }
+
+    @Override
+    public long receivedV0InvalidMultipartFragment(final int fragmentIndex, final int expectedFragments) {
+        final int target = (Short.SIZE * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
+        return droppedFragments.incrementAndGet(target);
     }
 
     @Override
@@ -105,31 +118,17 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(",\"v0Commands\":");
         builder.append(this.v0Commands.get());
 
-        builder.append(",\"v0MultipartMessages\":[");
-        final int v0FragmentsLogScaleLength = v0FragmentsLogScale.length();
-        for (int i = 0; i < v0FragmentsLogScaleLength - 1; i++) {
-            builder.append(v0FragmentsLogScale.get(i));
-            builder.append(',');
-        }
-        builder.append(v0FragmentsLogScale.get(v0FragmentsLogScaleLength - 1));
+        builder.append(',');
+        appendLogStats(builder, "v0MultiPartMessages", v0MultiPartMessages);
+        builder.append(',');
+        appendLogStats(builder, "v0InvalidChecksum", v0InvalidChecksum);
+        builder.append(',');
 
-        builder.append("],\"missingFragmentsInDroppedMultipartMessages\":[");
-        final int droppedFragmentsLength = droppedFragments.length();
-        for (int packetCountLog = 0; packetCountLog < Short.SIZE; packetCountLog++) {
-            builder.append('[');
-            for (int packetIndexLog = 0; packetIndexLog < Short.SIZE; packetIndexLog++) {
-                builder.append(droppedFragments.get(packetCountLog * Short.SIZE + packetIndexLog));
+        appendLogLogStats(builder, "v0InvalidFragments", invalidFragments);
+        builder.append(',');
+        appendLogLogStats(builder, "missingFragmentsInDroppedMultipartMessages", droppedFragments);
 
-                if (packetIndexLog != Short.SIZE - 1)
-                    builder.append(',');
-            }
-            builder.append(']');
-
-            if (packetCountLog != Short.SIZE - 1)
-                builder.append(',');
-        }
-
-        builder.append("],\"failedToSend\":");
+        builder.append(",\"failedToSend\":");
         builder.append(this.failedToSend.get());
         builder.append(",\"exceptions\":");
         builder.append(this.exceptions.get());
@@ -165,6 +164,38 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append("}}}");
 
         return builder.toString();
+    }
+
+    private void appendLogStats(StringBuilder builder, String name, AtomicLongArray data) {
+        builder.append('\"');
+        builder.append(name);
+        builder.append("\":[");
+        for (int i = 0; i < Short.SIZE - 1; i++) {
+            builder.append(data.get(i));
+            builder.append(',');
+        }
+        builder.append(data.get(Short.SIZE - 1));
+        builder.append(']');
+    }
+
+    private void appendLogLogStats(StringBuilder builder, String name, AtomicLongArray data) {
+        builder.append('\"');
+        builder.append(name);
+        builder.append("\":[");
+        for (int packetCountLog = 0; packetCountLog < Short.SIZE; packetCountLog++) {
+            builder.append('[');
+            for (int packetIndexLog = 0; packetIndexLog < Short.SIZE; packetIndexLog++) {
+                builder.append(data.get(packetCountLog * Short.SIZE + packetIndexLog));
+
+                if (packetIndexLog != Short.SIZE - 1)
+                    builder.append(',');
+            }
+            builder.append(']');
+
+            if (packetCountLog != Short.SIZE - 1)
+                builder.append(',');
+        }
+        builder.append(']');
     }
 
     private void report(Meter meter, StringBuilder builder) {

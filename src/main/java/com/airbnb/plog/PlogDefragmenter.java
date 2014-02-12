@@ -1,6 +1,8 @@
 package com.airbnb.plog;
 
 import com.google.common.cache.*;
+import com.google.common.hash.Hashing;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +56,7 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
         final long id = fragment.getMsgId();
         final PartialMultiPartMessage fromMap = incompleteMessages.getIfPresent(id);
         if (fromMap != null) {
-            fromMap.ingestFragment(fragment);
+            fromMap.ingestFragment(fragment, this.stats);
             if (fromMap.isComplete()) {
                 log.debug("complete message");
                 incompleteMessages.invalidate(fragment.getMsgId());
@@ -63,7 +65,7 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
             }
             return fromMap;
         } else {
-            PartialMultiPartMessage message = PartialMultiPartMessage.fromFragment(fragment);
+            PartialMultiPartMessage message = PartialMultiPartMessage.fromFragment(fragment, this.stats);
             incompleteMessages.put(id, message);
             return message;
         }
@@ -75,16 +77,22 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
 
         if (fragment.isAlone()) {
             log.debug("1-packet multipart message");
-            out.add(new Message(fragment.getPayload()));
-            stats.receivedV0MultipartMessage();
+            pushPayloadIfValid(fragment.getPayload(), fragment.getMsgHash(), 1, out);
         } else {
             log.debug("multipart message");
             message = ingestIntoIncompleteMessage(fragment);
-            if (message.isComplete()) {
-                out.add(new Message(message.getPayload()));
-                stats.receivedV0MultipartMessage();
-            }
+            if (message.isComplete())
+                pushPayloadIfValid(message.getPayload(), message.getHash(), message.getFragmentCount(), out);
         }
     }
 
+    private void pushPayloadIfValid(final ByteBuf payload, final int hash, final int fragmentCount, List<Object> out) {
+        final byte[] bytes = ByteBufs.toByteArray(payload);
+        if (Hashing.murmur3_32().hashBytes(bytes).asInt() == hash) {
+            out.add(new Message(bytes));
+            this.stats.receivedV0MultipartMessage();
+        } else {
+            this.stats.receivedV0InvalidChecksum(fragmentCount);
+        }
+    }
 }
