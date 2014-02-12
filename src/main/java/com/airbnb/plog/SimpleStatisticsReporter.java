@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicLongArray;
 @Slf4j
 public final class SimpleStatisticsReporter implements StatisticsReporter {
     private final AtomicLong
-            tcpMessages = new AtomicLong(),
             udpSimpleMessages = new AtomicLong(),
             udpInvalidVersion = new AtomicLong(),
             v0InvalidType = new AtomicLong(),
@@ -34,11 +33,6 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     private static final int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
-    }
-
-    @Override
-    public final long receivedTcpMessage() {
-        return this.tcpMessages.incrementAndGet();
     }
 
     @Override
@@ -105,9 +99,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     public final String toJSON() {
         StringBuilder builder = new StringBuilder();
-        builder.append("{\"tcpMessages\":");
-        builder.append(this.tcpMessages.get());
-        builder.append(",\"udpSimpleMessages\":");
+        builder.append("{\"udpSimpleMessages\":");
         builder.append(this.udpSimpleMessages.get());
         builder.append(",\"udpInvalidVersion\":");
         builder.append(this.udpInvalidVersion.get());

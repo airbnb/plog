@@ -3,16 +3,10 @@ package com.airbnb.plog;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +43,6 @@ public class App {
                 new Producer<byte[], byte[]>(new ProducerConfig(properties)),
                 stats);
         final ExecutorService threadPool = Executors.newFixedThreadPool(plogConfig.getInt("threads"));
-        final int maxLineLength = plogConfig.getInt("max_line_length");
         final int port = plogConfig.getInt("port");
         final PlogPDecoder protocolDecoder = new PlogPDecoder(stats);
         final PlogDefragmenter defragmenter = new PlogDefragmenter(stats,
@@ -68,22 +61,6 @@ public class App {
                 }
             }
         };
-
-        new ServerBootstrap().group(group).channel(NioServerSocketChannel.class)
-                .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.SO_REUSEADDR, true)
-                .option(ChannelOption.SO_KEEPALIVE, true)
-                .option(ChannelOption.SO_LINGER, 0)
-                .handler(new LoggingHandler(LogLevel.WARN))
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel channel) throws Exception {
-                        channel.pipeline()
-                                .addLast(new LineBasedFrameDecoder(maxLineLength))
-                                .addLast(new Message.ByteBufToMessageDecoder())
-                                .addLast(forwarder);
-                    }
-                }).bind(new InetSocketAddress(port)).addListener(futureListener);
 
         final Config udpConfig = plogConfig.getConfig("udp");
         new Bootstrap().group(group).channel(NioDatagramChannel.class)

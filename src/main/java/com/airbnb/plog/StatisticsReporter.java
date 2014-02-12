@@ -1,8 +1,6 @@
 package com.airbnb.plog;
 
 public interface StatisticsReporter {
-    long receivedTcpMessage();
-
     long receivedUdpSimpleMessage();
 
     long receivedUdpInvalidVersion();
