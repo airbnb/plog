@@ -43,7 +43,7 @@ public class App {
         final SimpleStatisticsReporter stats = new SimpleStatisticsReporter(properties.getProperty(CLIENT_ID));
         final KafkaForwarder forwarder = new KafkaForwarder(
                 plogConfig.getString("topic"),
-                new Producer<Void, byte[]>(new ProducerConfig(properties)),
+                new Producer<byte[], byte[]>(new ProducerConfig(properties)),
                 stats);
         final int maxLineLength = plogConfig.getInt("max_line_length");
         final int port = plogConfig.getInt("port");

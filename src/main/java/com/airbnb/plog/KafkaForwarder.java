@@ -1,6 +1,5 @@
 package com.airbnb.plog;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import kafka.common.FailedToSendMessageException;
@@ -23,7 +22,7 @@ final class KafkaForwarder extends SimpleChannelInboundHandler<Message> {
     );
 
     private final String topic;
-    private final Producer<Void, byte[]> producer;
+    private final Producer<byte[], byte[]> producer;
     private final StatisticsReporter stats;
 
     @Override
@@ -35,7 +34,7 @@ final class KafkaForwarder extends SimpleChannelInboundHandler<Message> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
         try {
-            producer.send(new KeyedMessage<Void, byte[]>(topic, msg.getPayload()));
+            producer.send(new KeyedMessage<byte[], byte[]>(topic, msg.getPayload()));
         } catch (FailedToSendMessageException e) {
             stats.failedToSend();
         }
