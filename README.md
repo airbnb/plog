@@ -1,9 +1,6 @@
 # plog
 
-Send unboxed or multipart messages over UDP, or line-separated messages over TCP, and have them forwarded to Kafka 0.8.
-
-The TCP protocol is **not stable yet**. It is likely to move to proper message boxing using MessagePack,
-and support commands.
+Fire and forget unboxed or multipart messages over UDP, have them forwarded to Kafka 0.8.
 
 ## Disclaimer
 
@@ -16,7 +13,6 @@ While updates may still be made and we welcome feedback, keep in mind we may not
 ## Getting started
 
     $ ./gladew run
-    $ printf 'foo\nbar\nbaz'|socat -t0 - TCP:127.0.0.1:23456
     $ printf 'yipee!'|socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
 
 ## Configuration
@@ -67,7 +63,7 @@ Command packet. Commands are always 4 ASCII characters, trailing payload can be 
 The choice of JSON could change to MessagePack.
 
         $ printf "\0\0statistics please, gentle service"|socat - UDP-DATAGRAM:127.0.0.1:23456
-        {"tcpMessages":0, "udpSimpleMessages":0, "udpInvalidVersion":0, "v0InvalidType":0, "unknownCommand":1, "v0Commands":520, "v0MultipartMessages":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
+        {""udpSimpleMessages":0, [...]}
 
 - ENVI returns the environment as a UTF-8-encoded string. The format is not defined further.
 
