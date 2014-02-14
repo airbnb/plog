@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /* TODO(pierre): much more instrumentation */
 
@@ -18,10 +19,11 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
     private final StatisticsReporter stats;
     private final Cache<Long, PartialMultiPartMessage> incompleteMessages;
 
-    public PlogDefragmenter(final StatisticsReporter stats, int maxSize) {
+    public PlogDefragmenter(final StatisticsReporter stats, int maxSize, long expirationTimeInMs) {
         this.stats = stats;
         incompleteMessages = CacheBuilder.newBuilder()
                 .maximumWeight(maxSize)
+                .expireAfterAccess(expirationTimeInMs, TimeUnit.MILLISECONDS)
                 .recordStats()
                 .weigher(new Weigher<Long, PartialMultiPartMessage>() {
                     @Override
