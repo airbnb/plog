@@ -1,5 +1,6 @@
-package com.airbnb.plog;
+package com.airbnb.plog.commands;
 
+import com.airbnb.plog.stats.SimpleStatisticsReporter;
 import com.google.common.base.Charsets;
 import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;

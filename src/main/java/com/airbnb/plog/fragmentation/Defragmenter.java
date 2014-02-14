@@ -1,5 +1,8 @@
-package com.airbnb.plog;
+package com.airbnb.plog.fragmentation;
 
+import com.airbnb.plog.Message;
+import com.airbnb.plog.stats.StatisticsReporter;
+import com.airbnb.plog.utils.ByteBufs;
 import com.google.common.cache.*;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
@@ -11,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-/* TODO(pierre): much more instrumentation */
 
 @Slf4j
 public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragment> {

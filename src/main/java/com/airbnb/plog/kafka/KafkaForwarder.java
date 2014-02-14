@@ -1,5 +1,7 @@
-package com.airbnb.plog;
+package com.airbnb.plog.kafka;
 
+import com.airbnb.plog.Message;
+import com.airbnb.plog.stats.StatisticsReporter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import kafka.common.FailedToSendMessageException;
@@ -14,7 +16,7 @@ import static io.netty.channel.ChannelHandler.Sharable;
 
 @RequiredArgsConstructor
 @Sharable
-final class KafkaForwarder extends SimpleChannelInboundHandler<Message> {
+public final class KafkaForwarder extends SimpleChannelInboundHandler<Message> {
     // This makes me excrutiatingly sad
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
             "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$",
