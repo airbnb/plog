@@ -1,11 +1,13 @@
 package com.airbnb.plog.fragmentation;
 
 import com.airbnb.plog.Message;
+import com.airbnb.plog.packetloss.ServerHoleDetector;
 import com.airbnb.plog.stats.StatisticsReporter;
 import com.airbnb.plog.utils.ByteBufs;
 import com.google.common.cache.*;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
+import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
@@ -19,12 +21,20 @@ import java.util.concurrent.TimeUnit;
 public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragment> {
     private final StatisticsReporter stats;
     private final Cache<Long, FragmentedMessage> incompleteMessages;
+    private final ServerHoleDetector detector;
 
-    public Defragmenter(final StatisticsReporter stats, int maxSize, long expirationTimeInMs) {
-        this.stats = stats;
+    public Defragmenter(final StatisticsReporter statisticsReporter, Config config) {
+        this.stats = statisticsReporter;
+
+        final Config holeConfig = config.getConfig("detect_holes");
+        if (holeConfig.getBoolean("enabled"))
+            detector = new ServerHoleDetector(holeConfig, stats);
+        else
+            detector = null;
+
         incompleteMessages = CacheBuilder.newBuilder()
-                .maximumWeight(maxSize)
-                .expireAfterAccess(expirationTimeInMs, TimeUnit.MILLISECONDS)
+                .maximumWeight(config.getInt("max_size"))
+                .expireAfterAccess(config.getDuration("expire_time", TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
                 .recordStats()
                 .weigher(new Weigher<Long, FragmentedMessage>() {
                     @Override
@@ -41,11 +51,11 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
                             final BitSet receivedFragments = message.getReceivedFragments();
                             for (int idx = 0; idx < fragmentCount; idx++)
                                 if (!receivedFragments.get(idx))
-                                    stats.missingFragmentInDroppedMultiPartMessage(idx, fragmentCount);
+                                    stats.missingFragmentInDroppedMessage(idx, fragmentCount);
                         } else {
                             // let's use the magic value fragment 0, expected fragments 0 if the message was GC'ed,
                             // as it wouldn't happen otherwise
-                            stats.missingFragmentInDroppedMultiPartMessage(0, 0);
+                            stats.missingFragmentInDroppedMessage(0, 0);
                         }
                     }
                 })
@@ -69,6 +79,8 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
             }
             return fromMap;
         } else {
+            if (detector != null)
+                detector.reportNewMessage(fragment.getMsgId());
             FragmentedMessage message = FragmentedMessage.fromFragment(fragment, this.stats);
             incompleteMessages.put(id, message);
             return message;
@@ -80,6 +92,8 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
         FragmentedMessage message;
 
         if (fragment.isAlone()) {
+            if (detector != null)
+                detector.reportNewMessage(fragment.getMsgId());
             pushPayloadIfValid(fragment.getPayload(), fragment.getMsgHash(), 1, out);
         } else {
             message = ingestIntoIncompleteMessage(fragment);

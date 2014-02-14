@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicLongArray;
 @Slf4j
 public final class SimpleStatisticsReporter implements StatisticsReporter {
     private final AtomicLong
+            holesFromDeadPort = new AtomicLong(),
+            holesFromNewMessage = new AtomicLong(),
             udpSimpleMessages = new AtomicLong(),
             udpInvalidVersion = new AtomicLong(),
             v0InvalidType = new AtomicLong(),
@@ -77,6 +79,16 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     @Override
+    public long foundHolesFromDeadPort(int holesFound) {
+        return holesFromDeadPort.addAndGet(holesFound);
+    }
+
+    @Override
+    public long foundHolesFromNewMessage(int holesFound) {
+        return holesFromNewMessage.addAndGet(holesFound);
+    }
+
+    @Override
     public final long receivedV0MultipartFragment(final int index) {
         return v0MultipartMessageFragments.incrementAndGet(intLog2(index));
     }
@@ -93,7 +105,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     @Override
-    public long missingFragmentInDroppedMultiPartMessage(final int fragmentIndex, final int expectedFragments) {
+    public long missingFragmentInDroppedMessage(final int fragmentIndex, final int expectedFragments) {
         final int target = (Short.SIZE * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
         return droppedFragments.incrementAndGet(target);
     }
@@ -110,6 +122,14 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(this.unknownCommand.get());
         builder.append(",\"v0Commands\":");
         builder.append(this.v0Commands.get());
+        builder.append(",\"failedToSend\":");
+        builder.append(this.failedToSend.get());
+        builder.append(",\"exceptions\":");
+        builder.append(this.exceptions.get());
+        builder.append(",\"holesFromDeadPort\":");
+        builder.append(this.holesFromDeadPort.get());
+        builder.append(",\"holesFromNewMessage\":");
+        builder.append(this.holesFromNewMessage.get());
 
         builder.append(',');
         appendLogStats(builder, "v0MultipartMessageFragments", v0MultipartMessageFragments);
@@ -120,11 +140,6 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         appendLogLogStats(builder, "v0InvalidFragments", invalidFragments);
         builder.append(',');
         appendLogLogStats(builder, "missingFragmentsInDroppedMultipartMessages", droppedFragments);
-
-        builder.append(",\"failedToSend\":");
-        builder.append(this.failedToSend.get());
-        builder.append(",\"exceptions\":");
-        builder.append(this.exceptions.get());
 
         if (defragmenter != null) {
             final CacheStats cacheStats = defragmenter.getCacheStats();

@@ -19,9 +19,13 @@ public interface StatisticsReporter {
 
     long receivedV0InvalidMultipartFragment(final int fragmentIndex, final int expectedFragments);
 
-    long missingFragmentInDroppedMultiPartMessage(final int fragmentIndex, final int expectedFragments);
+    long missingFragmentInDroppedMessage(final int fragmentIndex, final int expectedFragments);
 
     long failedToSend();
 
     long exception();
+
+    long foundHolesFromDeadPort(int holesFound);
+
+    long foundHolesFromNewMessage(int holesFound);
 }

@@ -50,9 +50,7 @@ public class App {
         final ExecutorService threadPool = Executors.newFixedThreadPool(plogConfig.getInt("threads"));
         final int port = plogConfig.getInt("port");
         final ProtocolDecoder protocolDecoder = new ProtocolDecoder(stats);
-        final Defragmenter defragmenter = new Defragmenter(stats,
-                plogConfig.getInt("defrag.max_size"),
-                plogConfig.getDuration("defrag.expire_time", TimeUnit.MILLISECONDS));
+        final Defragmenter defragmenter = new Defragmenter(stats, plogConfig.getConfig("defrag"));
         stats.withDefrag(defragmenter);
         final FourLetterCommandHandler commandHandler = new FourLetterCommandHandler(stats, config);
 
