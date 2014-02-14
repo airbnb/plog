@@ -29,7 +29,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             droppedFragments = new AtomicLongArray(Short.SIZE * Short.SIZE),
             invalidFragments = new AtomicLongArray(Short.SIZE * Short.SIZE);
     private final String kafkaClientId;
-    private CacheStats cacheStats = null;
+    private PlogDefragmenter defragmenter = null;
 
     private static final int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
@@ -125,7 +125,8 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(",\"exceptions\":");
         builder.append(this.exceptions.get());
 
-        if (cacheStats != null) {
+        if (defragmenter != null) {
+            final CacheStats cacheStats = defragmenter.getCacheStats();
             builder.append(",\"cache\":{\"evictions\":");
             builder.append(cacheStats.evictionCount());
             builder.append(",\"hitCount\":");
@@ -202,10 +203,10 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(']');
     }
 
-    public synchronized void withDefragCacheStats(CacheStats cacheStats) {
-        if (this.cacheStats == null)
-            this.cacheStats = cacheStats;
+    public synchronized void withDefrag(PlogDefragmenter defragmenter) {
+        if (this.defragmenter == null)
+            this.defragmenter = defragmenter;
         else
-            throw new IllegalStateException("Cache stat already provided");
+            throw new IllegalStateException("PlogDefragmenter already provided");
     }
 }

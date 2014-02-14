@@ -47,7 +47,7 @@ public class App {
         final PlogPDecoder protocolDecoder = new PlogPDecoder(stats);
         final PlogDefragmenter defragmenter = new PlogDefragmenter(stats,
                 plogConfig.getInt("defrag.max_size"));
-        stats.withDefragCacheStats(defragmenter.getCacheStats());
+        stats.withDefrag(defragmenter);
         final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);
 
         final EventLoopGroup group = new NioEventLoopGroup();
