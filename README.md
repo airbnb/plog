@@ -32,6 +32,25 @@ If unspecified in system properties, we will set those defaults:
 
 Please refer to [reference.conf](src/main/resources/reference.conf) for the options and their default values.
 
+## Building a fat JAR
+
+    $ ./gradlew shadowJar
+    $ ls -l ./build/distributions/plog-1.0-SNAPSHOT-shadow.jar
+
+## Operational tricks
+
+- To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, we use `sysctl net.core.rmem_max = 1048576`.
+
+## Event logging at Airbnb
+
+We use JSON objects with the following fields:
+
+- type: String. Only very few values are acceptable due to our pipeline splitting event streams by type.
+- uuid: String.
+- host: String.
+- timestamp: int64.
+- data: String→String map or String.
+
 ## UDP protocol
 
 - If the first byte is outside of the 0-31 range, the message is considered to be unboxed and the whole packet is parsed as a string.
@@ -76,22 +95,3 @@ Command packet. Commands are always 4 ASCII characters, trailing payload can be 
 - Bytes 16-19: big-endian, 32-bit MurmurHash3 hash of the total message payload.
 - Bytes 20-23: zeroes. Reserved, might be used in later revisions.
 - Bytes 24-: bytes (UTF-8 by default). Payload. Will only read the payload length.
-
-## Building a fat JAR
-
-    $ ./gradlew shadowJar
-    $ ls -l ./build/distributions/plog-1.0-SNAPSHOT-shadow.jar
-
-## Operational tricks
-
-- To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, we use `sysctl net.core.rmem_max = 1048576`.
-
-## Event logging at Airbnb
-
-We use JSON objects with the following fields:
-
-- type: String. Only very few values are acceptable due to our pipeline splitting event streams by type.
-- uuid: String.
-- host: String.
-- timestamp: int64.
-- data: String→String map or String.
