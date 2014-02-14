@@ -88,7 +88,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     @Override
     public long receivedV0InvalidMultipartFragment(final int fragmentIndex, final int expectedFragments) {
         final int target = (Short.SIZE * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
-        return droppedFragments.incrementAndGet(target);
+        return invalidFragments.incrementAndGet(target);
     }
 
     @Override
