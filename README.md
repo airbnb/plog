@@ -60,7 +60,6 @@ Command packet. Commands are always 4 ASCII characters, trailing payload can be 
         $
 
 - STAT is used to request statistics in UTF-8-encoded JSON. Per convention, the trailing payload should be used for politeness.
-The choice of JSON could change to MessagePack.
 
         $ printf "\0\0statistics please, gentle service"|socat - UDP-DATAGRAM:127.0.0.1:23456
         {""udpSimpleMessages":0, [...]}
