@@ -63,7 +63,7 @@ We use JSON objects with the following fields:
 - Byte 01: packet type
 
 
-#### Packet type 00
+#### Packet type 00: commands
 
 Command packet. Commands are always 4 ASCII characters, trailing payload can be used. Command matching is case-insensitive.
 
@@ -85,11 +85,13 @@ Command packet. Commands are always 4 ASCII characters, trailing payload can be 
 
 - ENVI returns the environment as a UTF-8-encoded string. The format is not defined further.
 
-#### Packet type 01: multipart message
+#### Packet type 01: fragmented message
 
-- Bytes 02-03: unsigned, big-endian, 16-bit integer. Packet count for the message (between 1 and 65535).
-- Bytes 04-05: unsigned, big-endian, 16-bit integer. Index of this packet in the message (between 0 for the first packet and 65534).
-- Bytes 06-07: unsigned, big-endian, 16-bit integer. Byte length of the payload for each packet in the message.
+Note that 1-fragment fragmented messages are perfectly possible.
+
+- Bytes 02-03: unsigned, big-endian, 16-bit integer. Fragment count for the message (between 1 and 65535).
+- Bytes 04-05: unsigned, big-endian, 16-bit integer. Index of this fragment in the message (between 0 for the first fragment and 65534).
+- Bytes 06-07: unsigned, big-endian, 16-bit integer. Byte length of the payload for each fragment in the message.
 - Bytes 08-11: arbitrary 32-byte integer. Second half of the identifier for the message. Messages are identified by the UDP client port and this second half.
 - Bytes 12-15: signed, big-endian, 32-bit integer below 2,147,483,647. Total byte length of the message.
 - Bytes 16-19: big-endian, 32-bit MurmurHash3 hash of the total message payload.
