@@ -40,6 +40,9 @@ Please refer to [reference.conf](src/main/resources/reference.conf) for the opti
 
 - To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, we use `sysctl net.core.rmem_max = 1048576`.
 
+- Hole detection is a bit difficult to explain, but worth looking into.
+  It is enabled by default, but can be disabled for performance.
+
 ## Event logging at Airbnb
 
 We use JSON objects with the following fields:
@@ -133,7 +136,9 @@ Note that 1-fragment fragmented messages are perfectly possible.
 - Bytes 02-03: unsigned, big-endian, 16-bit integer. Fragment count for the message (between 1 and 65535).
 - Bytes 04-05: unsigned, big-endian, 16-bit integer. Index of this fragment in the message (between 0 for the first fragment and 65534).
 - Bytes 06-07: unsigned, big-endian, 16-bit integer. Byte length of the payload for each fragment in the message.
-- Bytes 08-11: arbitrary 32-byte integer. Second half of the identifier for the message. Messages are identified by the UDP client port and this second half.
+- Bytes 08-11: big-endian, 32-bit integer. Second half of the identifier for the message.
+               Messages are identified by the UDP client port and this second half.
+               Needs to increment with each message for hole detection.
 - Bytes 12-15: signed, big-endian, 32-bit integer below 2,147,483,647. Total byte length of the message.
 - Bytes 16-19: big-endian, 32-bit MurmurHash3 hash of the total message payload.
 - Bytes 20-23: zeroes. Reserved, might be used in later revisions.
