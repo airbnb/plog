@@ -112,42 +112,42 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     public final String toJSON() {
         StringBuilder builder = new StringBuilder();
-        builder.append("{\"udpSimpleMessages\":");
+        builder.append("{\"udp_simple_messages\":");
         builder.append(this.udpSimpleMessages.get());
-        builder.append(",\"udpInvalidVersion\":");
+        builder.append(",\"udp_invalid_version\":");
         builder.append(this.udpInvalidVersion.get());
-        builder.append(",\"v0InvalidType\":");
+        builder.append(",\"v0_invalid_type\":");
         builder.append(this.v0InvalidType.get());
-        builder.append(",\"unknownCommand\":");
+        builder.append(",\"unknown_command\":");
         builder.append(this.unknownCommand.get());
-        builder.append(",\"v0Commands\":");
+        builder.append(",\"v0_commands\":");
         builder.append(this.v0Commands.get());
-        builder.append(",\"failedToSend\":");
+        builder.append(",\"failed_to_send\":");
         builder.append(this.failedToSend.get());
         builder.append(",\"exceptions\":");
         builder.append(this.exceptions.get());
-        builder.append(",\"holesFromDeadPort\":");
+        builder.append(",\"holes_from_dead_port\":");
         builder.append(this.holesFromDeadPort.get());
-        builder.append(",\"holesFromNewMessage\":");
+        builder.append(",\"holes_from_new_message\":");
         builder.append(this.holesFromNewMessage.get());
 
         builder.append(',');
-        appendLogStats(builder, "v0MultipartMessageFragments", v0MultipartMessageFragments);
+        appendLogStats(builder, "v0_fragments", v0MultipartMessageFragments);
         builder.append(',');
-        appendLogStats(builder, "v0InvalidChecksum", v0InvalidChecksum);
+        appendLogStats(builder, "v0_invalid_checksum", v0InvalidChecksum);
         builder.append(',');
 
-        appendLogLogStats(builder, "v0InvalidFragments", invalidFragments);
+        appendLogLogStats(builder, "v0_invalid_fragments", invalidFragments);
         builder.append(',');
-        appendLogLogStats(builder, "missingFragmentsInDroppedMultipartMessages", droppedFragments);
+        appendLogLogStats(builder, "dropped_fragments", droppedFragments);
 
         if (defragmenter != null) {
             final CacheStats cacheStats = defragmenter.getCacheStats();
             builder.append(",\"cache\":{\"evictions\":");
             builder.append(cacheStats.evictionCount());
-            builder.append(",\"hitCount\":");
+            builder.append(",\"hits\":");
             builder.append(cacheStats.hitCount());
-            builder.append(",\"missCount\":");
+            builder.append(",\"misses\":");
             builder.append(cacheStats.missCount());
             builder.append('}');
         }

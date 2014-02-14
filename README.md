@@ -57,20 +57,20 @@ We use JSON objects with the following fields:
 
 Let's go through all keys in the JSON object exposed by the `STAT` command:
 
-- `failedToSend`: number of times Kafka threw `FailedToSendMessageException` back
+- `failed_to_send`: number of times Kafka threw `FailedToSendMessageException` back
 - `exceptions`: number of unhandled exceptions.
-- `udpSimpleMessages`: number of unboxed UDP messages received.
-- `udpInvalidVersion`: number of UDP messages with version between 1 and 31.
-- `v0InvalidType`: number of UDP messages using version 0 of the protocol and a wrong packet type.
-- `unknownCommand`: number of commands received that aren't known (eg `KLIL` instead of `KILL`).
-- `v0Commands`: number of *valid* commands received.
-- `v0MultipartMessageFragments` (array): count of fragments received, whether valid or not,
+- `udp_simple_messages`: number of unboxed UDP messages received.
+- `udp_invalid_version`: number of UDP messages with version between 1 and 31.
+- `v0_invalid_type`: number of UDP messages using version 0 of the protocol and a wrong packet type.
+- `unknown_command`: number of commands received that aren't known (eg `KLIL` instead of `KILL`).
+- `v0_commands`: number of *valid* commands received.
+- `v0_fragments` (array): count of fragments received, whether valid or not,
   clustered by log2 of their index.
   *Ie*, the first number indicates how many first packets we've received,
   the second number how many second,
   the third number how many 3rd and 4th,
   the fourth how many 5th, 6th, 7th, 8th, etc.
-- v0InvalidFragments (array of arrays): count of invalid fragments received,
+- `v0_invalid_fragments` (array of arrays): count of invalid fragments received,
   clustered first by log2 of (their message's size - 1), then by their fragment index.
   A fragment is considered invalid if:
   - its header provides a fragment size, fragment count, or checksum that doesn't match the values
@@ -78,18 +78,18 @@ Let's go through all keys in the JSON object exposed by the `STAT` command:
   - its length is incorrect: the payload length should always match the fragment size provided in
     the first fragment we processed, unless they're at the end of the message, in which case they
     should exactly match the message length provided in the first fragment we processed.
-- `v0InvalidChecksum` (array): count of messages received where the MurmurHash3 did not match the
+- `v0_invalid_checksum` (array): count of messages received where the MurmurHash3 did not match the
   payload, clustered by log2 of (their fragment count - 1).
-- `missingFragmentsInDroppedMultipartMessages` (array of arrays): count of fragments we expected to
+- `dropped_fragments` (array of arrays): count of fragments we expected to
   receive but didn't before evicting them from the defragmenter,
   clustered first by log2 of (their message's size - 1), then by their fragment index.
 - `cache` (object):
   - `evictions`: count of yet-to-be-completed messages were evicted from the cache,
     either because they expired or we needed to make room for new entries
     (see `defrag.max_size` and `defrag.expire_time` in the config).
-  - `hitCount`: how many times we tried to add fragments to an already known message.
+  - `hits`: how many times we tried to add fragments to an already known message.
     Note that this operation will fail for invalid fragments.
-  - `missCount`: how many times we received fragments for a message that we didn't know about yet
+  - `misses`: how many times we received fragments for a message that we didn't know about yet
     (we don't hit the cache for single-fragment messages).
 - `kafka` (object):
   - Keys: `byteRate`, `messageRate`, `failedSendRate`, `resendRate`, `droppedMessageRate`, `serializationErrorRate`
