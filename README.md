@@ -85,7 +85,7 @@ The choice of JSON could change to MessagePack.
 
 ## Operational tricks
 
-- To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, `sysctl net.core.rmem_max`.
+- To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, we use `sysctl net.core.rmem_max = 1048576`.
 
 ## Event logging at Airbnb
 
