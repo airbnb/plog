@@ -6,7 +6,7 @@ import lombok.ToString;
 import java.net.InetSocketAddress;
 
 @ToString
-public class PlogCommand {
+public class FourLetterCommand {
     public static final String PING = "PING";
     public static final String STAT = "STAT";
     public static final String KILL = "KILL";
@@ -19,7 +19,7 @@ public class PlogCommand {
     @Getter
     private final byte[] trail;
 
-    PlogCommand(String command, InetSocketAddress sender, byte[] trail) {
+    FourLetterCommand(String command, InetSocketAddress sender, byte[] trail) {
         this.command = command.toUpperCase();
         this.sender = sender;
         this.trail = trail;

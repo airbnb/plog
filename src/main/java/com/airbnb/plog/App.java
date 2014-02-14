@@ -45,12 +45,12 @@ public class App {
                 stats);
         final ExecutorService threadPool = Executors.newFixedThreadPool(plogConfig.getInt("threads"));
         final int port = plogConfig.getInt("port");
-        final PlogPDecoder protocolDecoder = new PlogPDecoder(stats);
-        final PlogDefragmenter defragmenter = new PlogDefragmenter(stats,
+        final ProtocolDecoder protocolDecoder = new ProtocolDecoder(stats);
+        final Defragmenter defragmenter = new Defragmenter(stats,
                 plogConfig.getInt("defrag.max_size"),
                 plogConfig.getDuration("defrag.expire_time", TimeUnit.MILLISECONDS));
         stats.withDefrag(defragmenter);
-        final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);
+        final FourLetterCommandHandler commandHandler = new FourLetterCommandHandler(stats, config);
 
         final EventLoopGroup group = new NioEventLoopGroup();
 

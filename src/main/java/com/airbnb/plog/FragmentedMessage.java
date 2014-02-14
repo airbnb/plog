@@ -10,7 +10,7 @@ import java.util.BitSet;
 
 @Slf4j
 @ToString(exclude = {"payload"})
-public class PartialMultiPartMessage {
+public class FragmentedMessage {
     private final ByteBuf payload;
     @Getter
     private final BitSet receivedFragments;
@@ -19,24 +19,24 @@ public class PartialMultiPartMessage {
     @Getter
     private final int fragmentSize;
     @Getter
-    private final int hash;
+    private final int checksum;
     @Getter
     private boolean complete = false;
 
-    private PartialMultiPartMessage(final int totalLength,
-                                    final int fragmentCount,
-                                    final int fragmentSize,
-                                    final int hash) {
+    private FragmentedMessage(final int totalLength,
+                              final int fragmentCount,
+                              final int fragmentSize,
+                              final int hash) {
         this.payload = Unpooled.buffer(totalLength, totalLength);
         this.payload.writerIndex(totalLength);
         this.receivedFragments = new BitSet(fragmentCount);
         this.fragmentCount = fragmentCount;
         this.fragmentSize = fragmentSize;
-        this.hash = hash;
+        this.checksum = hash;
     }
 
-    public static PartialMultiPartMessage fromFragment(final MultiPartMessageFragment fragment, StatisticsReporter stats) {
-        final PartialMultiPartMessage msg = new PartialMultiPartMessage(
+    public static FragmentedMessage fromFragment(final FragmentedMessageFragment fragment, StatisticsReporter stats) {
+        final FragmentedMessage msg = new FragmentedMessage(
                 fragment.getTotalLength(),
                 fragment.getFragmentCount(),
                 fragment.getFragmentSize(),
@@ -45,11 +45,11 @@ public class PartialMultiPartMessage {
         return msg;
     }
 
-    public void ingestFragment(final MultiPartMessageFragment fragment, StatisticsReporter stats) {
+    public void ingestFragment(final FragmentedMessageFragment fragment, StatisticsReporter stats) {
         ingestFragment(fragment, true, stats);
     }
 
-    public void ingestFragment(final MultiPartMessageFragment fragment, boolean shouldCheck, StatisticsReporter stats) {
+    public void ingestFragment(final FragmentedMessageFragment fragment, boolean shouldCheck, StatisticsReporter stats) {
         final int fragmentSize = fragment.getFragmentSize();
         final int fragmentCount = fragment.getFragmentCount();
         final int msgHash = fragment.getMsgHash();
@@ -71,9 +71,9 @@ public class PartialMultiPartMessage {
 
         if (this.getFragmentSize() != fragmentSize ||
                 this.getFragmentCount() != fragmentCount ||
-                this.getHash() != msgHash ||
+                this.getChecksum() != msgHash ||
                 !validFragmentLength) {
-            log.warn("Invalid {} for {}", fragment, this);
+            FragmentedMessage.log.warn("Invalid {} for {}", fragment, this);
             stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
             return;
         }

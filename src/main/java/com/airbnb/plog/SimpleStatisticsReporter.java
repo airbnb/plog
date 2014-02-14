@@ -29,7 +29,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             droppedFragments = new AtomicLongArray(Short.SIZE * Short.SIZE),
             invalidFragments = new AtomicLongArray(Short.SIZE * Short.SIZE);
     private final String kafkaClientId;
-    private PlogDefragmenter defragmenter = null;
+    private Defragmenter defragmenter = null;
 
     private static final int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
@@ -203,10 +203,10 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(']');
     }
 
-    public synchronized void withDefrag(PlogDefragmenter defragmenter) {
+    public synchronized void withDefrag(Defragmenter defragmenter) {
         if (this.defragmenter == null)
             this.defragmenter = defragmenter;
         else
-            throw new IllegalStateException("PlogDefragmenter already provided");
+            throw new IllegalStateException("Defragmenter already provided");
     }
 }
