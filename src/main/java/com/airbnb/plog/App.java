@@ -17,6 +17,7 @@ import java.net.InetSocketAddress;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class App {
@@ -46,8 +47,9 @@ public class App {
         final int port = plogConfig.getInt("port");
         final PlogPDecoder protocolDecoder = new PlogPDecoder(stats);
         final PlogDefragmenter defragmenter = new PlogDefragmenter(stats,
-                plogConfig.getInt("defrag.max_size"));
-        stats.withDefragCacheStats(defragmenter.getCacheStats());
+                plogConfig.getInt("defrag.max_size"),
+                plogConfig.getDuration("defrag.expire_time", TimeUnit.MILLISECONDS));
+        stats.withDefrag(defragmenter);
         final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);
 
         final EventLoopGroup group = new NioEventLoopGroup();
