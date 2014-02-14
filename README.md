@@ -9,7 +9,6 @@ While updates may still be made and we welcome feedback, keep in mind we may not
 
 **Let us know!** If you fork this, or if you use it, or if it helps in anyway, we'd love to hear from you! opensource@airbnb.com
 
-
 ## Getting started
 
     $ ./gladew run
@@ -32,6 +31,67 @@ If unspecified in system properties, we will set those defaults:
 
 Please refer to [reference.conf](src/main/resources/reference.conf) for the options and their default values.
 
+## Building a fat JAR
+
+    $ ./gradlew shadowJar
+    $ ls -l ./build/distributions/plog-1.0-SNAPSHOT-shadow.jar
+
+## Operational tricks
+
+- To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, we use `sysctl net.core.rmem_max = 1048576`.
+
+## Event logging at Airbnb
+
+We use JSON objects with the following fields:
+
+- type: String. Only very few values are acceptable due to our pipeline splitting event streams by type.
+- uuid: String.
+- host: String.
+- timestamp: int64.
+- data: String→String map or String.
+
+## Statistics
+
+Let's go through all keys in the JSON object exposed by the `STAT` command:
+
+- `failedToSend`: number of times Kafka threw `FailedToSendMessageException` back
+- `exceptions`: number of unhandled exceptions.
+- `udpSimpleMessages`: number of unboxed UDP messages received.
+- `udpInvalidVersion`: number of UDP messages with version between 1 and 31.
+- `v0InvalidType`: number of UDP messages using version 0 of the protocol and a wrong packet type.
+- `unknownCommand`: number of commands received that aren't known (eg `KLIL` instead of `KILL`).
+- `v0Commands`: number of *valid* commands received.
+- `v0MultipartMessageFragments` (array): count of fragments received, whether valid or not,
+  clustered by log2 of their index.
+  *Ie*, the first number indicates how many first packets we've received,
+  the second number how many second,
+  the third number how many 3rd and 4th,
+  the fourth how many 5th, 6th, 7th, 8th, etc.
+- v0InvalidFragments (array of arrays): count of invalid fragments received,
+  clustered first by log2 of (their message's size - 1), then by their fragment index.
+  A fragment is considered invalid if:
+  - its header provides a fragment size, fragment count, or checksum that doesn't match the values
+    from the first fragment we processed
+  - its length is incorrect: the payload length should always match the fragment size provided in
+    the first fragment we processed, unless they're at the end of the message, in which case they
+    should exactly match the message length provided in the first fragment we processed.
+- `v0InvalidChecksum` (array): count of messages received where the MurmurHash3 did not match the
+  payload, clustered by log2 of (their fragment count - 1).
+- `missingFragmentsInDroppedMultipartMessages` (array of arrays): count of fragments we expected to
+  receive but didn't before evicting them from the defragmenter,
+  clustered first by log2 of (their message's size - 1), then by their fragment index.
+- `cache` (object):
+  - `evictions`: count of yet-to-be-completed messages were evicted from the cache,
+    either because they expired or we needed to make room for new entries
+    (see `defrag.max_size` and `defrag.expire_time` in the config).
+  - `hitCount`: how many times we tried to add fragments to an already known message.
+    Note that this operation will fail for invalid fragments.
+  - `missCount`: how many times we received fragments for a message that we didn't know about yet
+    (we don't hit the cache for single-fragment messages).
+- `kafka` (object):
+  - Keys: `byteRate`, `messageRate`, `failedSendRate`, `resendRate`, `droppedMessageRate`, `serializationErrorRate`
+  - Values: objects with keys `count` and `rate`, an array offering 1-min, 5-min and 15-min rates.
+
 ## UDP protocol
 
 - If the first byte is outside of the 0-31 range, the message is considered to be unboxed and the whole packet is parsed as a string.
@@ -44,7 +104,7 @@ Please refer to [reference.conf](src/main/resources/reference.conf) for the opti
 - Byte 01: packet type
 
 
-#### Packet type 00
+#### Packet type 00: commands
 
 Command packet. Commands are always 4 ASCII characters, trailing payload can be used. Command matching is case-insensitive.
 
@@ -66,32 +126,15 @@ Command packet. Commands are always 4 ASCII characters, trailing payload can be 
 
 - ENVI returns the environment as a UTF-8-encoded string. The format is not defined further.
 
-#### Packet type 01: multipart message
+#### Packet type 01: fragmented message
 
-- Bytes 02-03: unsigned, big-endian, 16-bit integer. Packet count for the message (between 1 and 65535).
-- Bytes 04-05: unsigned, big-endian, 16-bit integer. Index of this packet in the message (between 0 for the first packet and 65534).
-- Bytes 06-07: unsigned, big-endian, 16-bit integer. Byte length of the payload for each packet in the message.
+Note that 1-fragment fragmented messages are perfectly possible.
+
+- Bytes 02-03: unsigned, big-endian, 16-bit integer. Fragment count for the message (between 1 and 65535).
+- Bytes 04-05: unsigned, big-endian, 16-bit integer. Index of this fragment in the message (between 0 for the first fragment and 65534).
+- Bytes 06-07: unsigned, big-endian, 16-bit integer. Byte length of the payload for each fragment in the message.
 - Bytes 08-11: arbitrary 32-byte integer. Second half of the identifier for the message. Messages are identified by the UDP client port and this second half.
 - Bytes 12-15: signed, big-endian, 32-bit integer below 2,147,483,647. Total byte length of the message.
 - Bytes 16-19: big-endian, 32-bit MurmurHash3 hash of the total message payload.
 - Bytes 20-23: zeroes. Reserved, might be used in later revisions.
 - Bytes 24-: bytes (UTF-8 by default). Payload. Will only read the payload length.
-
-## Building a fat JAR
-
-    $ ./gradlew shadowJar
-    $ ls -l ./build/distributions/plog-1.0-SNAPSHOT-shadow.jar
-
-## Operational tricks
-
-- To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, we use `sysctl net.core.rmem_max = 1048576`.
-
-## Event logging at Airbnb
-
-We use JSON objects with the following fields:
-
-- type: String. Only very few values are acceptable due to our pipeline splitting event streams by type.
-- uuid: String.
-- host: String.
-- timestamp: int64.
-- data: String→String map or String.
