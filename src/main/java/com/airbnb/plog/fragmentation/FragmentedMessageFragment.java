@@ -1,4 +1,4 @@
-package com.airbnb.plog;
+package com.airbnb.plog.fragmentation;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.DatagramPacket;
@@ -28,7 +28,7 @@ public class FragmentedMessageFragment {
     @Getter
     private final ByteBuf payload;
 
-    static FragmentedMessageFragment fromDatagram(DatagramPacket packet) {
+    public static FragmentedMessageFragment fromDatagram(DatagramPacket packet) {
         final ByteBuf content = packet.content().order(ByteOrder.BIG_ENDIAN);
         final int length = content.readableBytes();
         if (length < HEADER_SIZE)

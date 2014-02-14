@@ -1,5 +1,6 @@
-package com.airbnb.plog;
+package com.airbnb.plog.fragmentation;
 
+import com.airbnb.plog.stats.StatisticsReporter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;

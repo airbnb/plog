@@ -1,4 +1,4 @@
-package com.airbnb.plog;
+package com.airbnb.plog.commands;
 
 import lombok.Getter;
 import lombok.ToString;
@@ -19,7 +19,7 @@ public class FourLetterCommand {
     @Getter
     private final byte[] trail;
 
-    FourLetterCommand(String command, InetSocketAddress sender, byte[] trail) {
+    public FourLetterCommand(String command, InetSocketAddress sender, byte[] trail) {
         this.command = command.toUpperCase();
         this.sender = sender;
         this.trail = trail;

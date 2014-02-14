@@ -1,4 +1,4 @@
-package com.airbnb.plog;
+package com.airbnb.plog.stats;
 
 public interface StatisticsReporter {
     long receivedUdpSimpleMessage();

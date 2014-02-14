@@ -1,5 +1,6 @@
-package com.airbnb.plog;
+package com.airbnb.plog.stats;
 
+import com.airbnb.plog.fragmentation.Defragmenter;
 import com.google.common.cache.CacheStats;
 import com.yammer.metrics.core.Meter;
 import kafka.producer.*;
