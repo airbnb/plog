@@ -15,26 +15,26 @@ import java.util.concurrent.TimeUnit;
 /* TODO(pierre): much more instrumentation */
 
 @Slf4j
-public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFragment> {
+public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragment> {
     private final StatisticsReporter stats;
-    private final Cache<Long, PartialMultiPartMessage> incompleteMessages;
+    private final Cache<Long, FragmentedMessage> incompleteMessages;
 
-    public PlogDefragmenter(final StatisticsReporter stats, int maxSize, long expirationTimeInMs) {
+    public Defragmenter(final StatisticsReporter stats, int maxSize, long expirationTimeInMs) {
         this.stats = stats;
         incompleteMessages = CacheBuilder.newBuilder()
                 .maximumWeight(maxSize)
                 .expireAfterAccess(expirationTimeInMs, TimeUnit.MILLISECONDS)
                 .recordStats()
-                .weigher(new Weigher<Long, PartialMultiPartMessage>() {
+                .weigher(new Weigher<Long, FragmentedMessage>() {
                     @Override
-                    public int weigh(Long id, PartialMultiPartMessage msg) {
+                    public int weigh(Long id, FragmentedMessage msg) {
                         return msg.getPayloadLength();
                     }
                 })
-                .removalListener(new RemovalListener<Long, PartialMultiPartMessage>() {
+                .removalListener(new RemovalListener<Long, FragmentedMessage>() {
                     @Override
-                    public void onRemoval(RemovalNotification<Long, PartialMultiPartMessage> notification) {
-                        final PartialMultiPartMessage message = notification.getValue();
+                    public void onRemoval(RemovalNotification<Long, FragmentedMessage> notification) {
+                        final FragmentedMessage message = notification.getValue();
                         if (message != null) {
                             final int fragmentCount = message.getFragmentCount();
                             final BitSet receivedFragments = message.getReceivedFragments();
@@ -55,35 +55,35 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
         return incompleteMessages.stats();
     }
 
-    private synchronized PartialMultiPartMessage ingestIntoIncompleteMessage(MultiPartMessageFragment fragment) {
+    private synchronized FragmentedMessage ingestIntoIncompleteMessage(FragmentedMessageFragment fragment) {
         final long id = fragment.getMsgId();
-        final PartialMultiPartMessage fromMap = incompleteMessages.getIfPresent(id);
+        final FragmentedMessage fromMap = incompleteMessages.getIfPresent(id);
         if (fromMap != null) {
             fromMap.ingestFragment(fragment, this.stats);
             if (fromMap.isComplete()) {
-                log.debug("complete message");
+                Defragmenter.log.debug("complete message");
                 incompleteMessages.invalidate(fragment.getMsgId());
             } else {
-                log.debug("incomplete message");
+                Defragmenter.log.debug("incomplete message");
             }
             return fromMap;
         } else {
-            PartialMultiPartMessage message = PartialMultiPartMessage.fromFragment(fragment, this.stats);
+            FragmentedMessage message = FragmentedMessage.fromFragment(fragment, this.stats);
             incompleteMessages.put(id, message);
             return message;
         }
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, MultiPartMessageFragment fragment, List<Object> out) throws Exception {
-        PartialMultiPartMessage message;
+    protected void decode(ChannelHandlerContext ctx, FragmentedMessageFragment fragment, List<Object> out) throws Exception {
+        FragmentedMessage message;
 
         if (fragment.isAlone()) {
             pushPayloadIfValid(fragment.getPayload(), fragment.getMsgHash(), 1, out);
         } else {
             message = ingestIntoIncompleteMessage(fragment);
             if (message.isComplete())
-                pushPayloadIfValid(message.getPayload(), message.getHash(), message.getFragmentCount(), out);
+                pushPayloadIfValid(message.getPayload(), message.getChecksum(), message.getFragmentCount(), out);
         }
     }
 
@@ -97,7 +97,7 @@ public class PlogDefragmenter extends MessageToMessageDecoder<MultiPartMessageFr
             out.add(new Message(bytes));
             this.stats.receivedV0MultipartMessage();
         } else {
-            log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",
+            Defragmenter.log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",
                     expectedHash, computedHash, BaseEncoding.base16().encode(bytes), fragmentCount);
             this.stats.receivedV0InvalidChecksum(fragmentCount);
         }

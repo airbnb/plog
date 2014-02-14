@@ -10,7 +10,7 @@ import java.nio.ByteOrder;
 
 @ToString(exclude = {"payload"})
 @RequiredArgsConstructor
-public class MultiPartMessageFragment {
+public class FragmentedMessageFragment {
     static final int HEADER_SIZE = 24;
 
     @Getter
@@ -28,7 +28,7 @@ public class MultiPartMessageFragment {
     @Getter
     private final ByteBuf payload;
 
-    static MultiPartMessageFragment fromDatagram(DatagramPacket packet) {
+    static FragmentedMessageFragment fromDatagram(DatagramPacket packet) {
         final ByteBuf content = packet.content().order(ByteOrder.BIG_ENDIAN);
         final int length = content.readableBytes();
         if (length < HEADER_SIZE)
@@ -46,7 +46,7 @@ public class MultiPartMessageFragment {
 
         final int port = packet.sender().getPort();
         final long msgId = (((long) port) << Integer.SIZE) + idRightPart;
-        return new MultiPartMessageFragment(fragmentCount, fragmentIndex, fragmentSize, msgId, totalLength, msgHash, payload);
+        return new FragmentedMessageFragment(fragmentCount, fragmentIndex, fragmentSize, msgId, totalLength, msgHash, payload);
     }
 
     boolean isAlone() {
