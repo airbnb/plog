@@ -1,10 +1,6 @@
 - tests!
 - better documentation
-- dark load tool
-- chefification
 - monitoring plugin for datadog
-- log2 metrics on missing packets for dropped multipart messages
 - keep packet payloads as array in multipart message
-- avoid using String altogether (will probably need custom kafka sharder)
-- clean up & improve logging
 - snappy compression
+- figure out cache stats
