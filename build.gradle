@@ -6,7 +6,7 @@ apply plugin: 'shadow'
 apply plugin: 'project-report'
 
 group = 'com.airbnb.plog'
-version = '1.1'
+version = '1.2'
 mainClassName = 'com.airbnb.plog.App'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
