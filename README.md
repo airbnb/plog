@@ -138,7 +138,7 @@ Note that 1-fragment fragmented messages are perfectly possible.
 - Bytes 06-07: unsigned, big-endian, 16-bit integer. Byte length of the payload for each fragment in the message.
 - Bytes 08-11: big-endian, 32-bit integer. Second half of the identifier for the message.
                Messages are identified by the UDP client port and this second half.
-               Needs to increment with each message for hole detection.
+               Needs to increment with each message for hole detection, and stay away from signedness issues.
 - Bytes 12-15: signed, big-endian, 32-bit integer below 2,147,483,647. Total byte length of the message.
 - Bytes 16-19: big-endian, 32-bit MurmurHash3 hash of the total message payload.
 - Bytes 20-23: zeroes. Reserved, might be used in later revisions.
