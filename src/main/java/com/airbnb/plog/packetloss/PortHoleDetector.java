@@ -6,7 +6,8 @@ public class PortHoleDetector {
     private final int[] entries;
 
     PortHoleDetector(final int capacity) {
-        /* 0 is "absent" */
+        /* we assume 0 is absent from port IDs.
+           we'll have some false negatives */
         this.entries = new int[capacity];
     }
 
