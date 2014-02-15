@@ -30,8 +30,10 @@ public class ServerHoleDetector {
                         final PortHoleDetector detector = notification.getValue();
                         if (detector != null) {
                             final int holesFound = detector.countTotalHoles(maximumHole);
-                            log.warn("Found {} holes on dead port", holesFound);
-                            stats.foundHolesFromDeadPort(holesFound);
+                            if (holesFound > 0) {
+                                log.warn("Found {} holes on dead port", holesFound);
+                                stats.foundHolesFromDeadPort(holesFound);
+                            }
                         }
                     }
                 })
@@ -48,8 +50,10 @@ public class ServerHoleDetector {
         final int clientId = (int) (id & Integer.MAX_VALUE);
         try {
             final int holesFound = this.cache.get(clientPort).ensurePresent(clientId, maximumHole);
-            log.warn("Found {} holes on new message", holesFound);
-            stats.foundHolesFromNewMessage(holesFound);
+            if (holesFound > 0) {
+                log.warn("Found {} holes on new message", holesFound);
+                stats.foundHolesFromNewMessage(holesFound);
+            }
             return holesFound;
         } catch (ExecutionException e) {
             ServerHoleDetector.log.error("impossible is possible");
