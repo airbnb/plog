@@ -1,5 +1,6 @@
-package com.airbnb.plog;
+package com.airbnb.plog.stats;
 
+import com.airbnb.plog.fragmentation.Defragmenter;
 import com.google.common.cache.CacheStats;
 import com.yammer.metrics.core.Meter;
 import kafka.producer.*;
@@ -15,6 +16,8 @@ import java.util.concurrent.atomic.AtomicLongArray;
 @Slf4j
 public final class SimpleStatisticsReporter implements StatisticsReporter {
     private final AtomicLong
+            holesFromDeadPort = new AtomicLong(),
+            holesFromNewMessage = new AtomicLong(),
             udpSimpleMessages = new AtomicLong(),
             udpInvalidVersion = new AtomicLong(),
             v0InvalidType = new AtomicLong(),
@@ -29,7 +32,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             droppedFragments = new AtomicLongArray(Short.SIZE * Short.SIZE),
             invalidFragments = new AtomicLongArray(Short.SIZE * Short.SIZE);
     private final String kafkaClientId;
-    private PlogDefragmenter defragmenter = null;
+    private Defragmenter defragmenter = null;
 
     private static final int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
@@ -76,6 +79,16 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     @Override
+    public long foundHolesFromDeadPort(int holesFound) {
+        return holesFromDeadPort.addAndGet(holesFound);
+    }
+
+    @Override
+    public long foundHolesFromNewMessage(int holesFound) {
+        return holesFromNewMessage.addAndGet(holesFound);
+    }
+
+    @Override
     public final long receivedV0MultipartFragment(final int index) {
         return v0MultipartMessageFragments.incrementAndGet(intLog2(index));
     }
@@ -92,46 +105,49 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     @Override
-    public long missingFragmentInDroppedMultiPartMessage(final int fragmentIndex, final int expectedFragments) {
+    public long missingFragmentInDroppedMessage(final int fragmentIndex, final int expectedFragments) {
         final int target = (Short.SIZE * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
         return droppedFragments.incrementAndGet(target);
     }
 
     public final String toJSON() {
         StringBuilder builder = new StringBuilder();
-        builder.append("{\"udpSimpleMessages\":");
+        builder.append("{\"udp_simple_messages\":");
         builder.append(this.udpSimpleMessages.get());
-        builder.append(",\"udpInvalidVersion\":");
+        builder.append(",\"udp_invalid_version\":");
         builder.append(this.udpInvalidVersion.get());
-        builder.append(",\"v0InvalidType\":");
+        builder.append(",\"v0_invalid_type\":");
         builder.append(this.v0InvalidType.get());
-        builder.append(",\"unknownCommand\":");
+        builder.append(",\"unknown_command\":");
         builder.append(this.unknownCommand.get());
-        builder.append(",\"v0Commands\":");
+        builder.append(",\"v0_commands\":");
         builder.append(this.v0Commands.get());
-
-        builder.append(',');
-        appendLogStats(builder, "v0MultipartMessageFragments", v0MultipartMessageFragments);
-        builder.append(',');
-        appendLogStats(builder, "v0InvalidChecksum", v0InvalidChecksum);
-        builder.append(',');
-
-        appendLogLogStats(builder, "v0InvalidFragments", invalidFragments);
-        builder.append(',');
-        appendLogLogStats(builder, "missingFragmentsInDroppedMultipartMessages", droppedFragments);
-
-        builder.append(",\"failedToSend\":");
+        builder.append(",\"failed_to_send\":");
         builder.append(this.failedToSend.get());
         builder.append(",\"exceptions\":");
         builder.append(this.exceptions.get());
+        builder.append(",\"holes_from_dead_port\":");
+        builder.append(this.holesFromDeadPort.get());
+        builder.append(",\"holes_from_new_message\":");
+        builder.append(this.holesFromNewMessage.get());
+
+        builder.append(',');
+        appendLogStats(builder, "v0_fragments", v0MultipartMessageFragments);
+        builder.append(',');
+        appendLogStats(builder, "v0_invalid_checksum", v0InvalidChecksum);
+        builder.append(',');
+
+        appendLogLogStats(builder, "v0_invalid_fragments", invalidFragments);
+        builder.append(',');
+        appendLogLogStats(builder, "dropped_fragments", droppedFragments);
 
         if (defragmenter != null) {
             final CacheStats cacheStats = defragmenter.getCacheStats();
             builder.append(",\"cache\":{\"evictions\":");
             builder.append(cacheStats.evictionCount());
-            builder.append(",\"hitCount\":");
+            builder.append(",\"hits\":");
             builder.append(cacheStats.hitCount());
-            builder.append(",\"missCount\":");
+            builder.append(",\"misses\":");
             builder.append(cacheStats.missCount());
             builder.append('}');
         }
@@ -203,10 +219,10 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(']');
     }
 
-    public synchronized void withDefrag(PlogDefragmenter defragmenter) {
+    public synchronized void withDefrag(Defragmenter defragmenter) {
         if (this.defragmenter == null)
             this.defragmenter = defragmenter;
         else
-            throw new IllegalStateException("PlogDefragmenter already provided");
+            throw new IllegalStateException("Defragmenter already provided");
     }
 }

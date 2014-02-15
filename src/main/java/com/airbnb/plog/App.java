@@ -1,5 +1,9 @@
 package com.airbnb.plog;
 
+import com.airbnb.plog.commands.FourLetterCommandHandler;
+import com.airbnb.plog.fragmentation.Defragmenter;
+import com.airbnb.plog.kafka.KafkaForwarder;
+import com.airbnb.plog.stats.SimpleStatisticsReporter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.netty.bootstrap.Bootstrap;
@@ -45,12 +49,10 @@ public class App {
                 stats);
         final ExecutorService threadPool = Executors.newFixedThreadPool(plogConfig.getInt("threads"));
         final int port = plogConfig.getInt("port");
-        final PlogPDecoder protocolDecoder = new PlogPDecoder(stats);
-        final PlogDefragmenter defragmenter = new PlogDefragmenter(stats,
-                plogConfig.getInt("defrag.max_size"),
-                plogConfig.getDuration("defrag.expire_time", TimeUnit.MILLISECONDS));
+        final ProtocolDecoder protocolDecoder = new ProtocolDecoder(stats);
+        final Defragmenter defragmenter = new Defragmenter(stats, plogConfig.getConfig("defrag"));
         stats.withDefrag(defragmenter);
-        final PlogCommandHandler commandHandler = new PlogCommandHandler(stats, config);
+        final FourLetterCommandHandler commandHandler = new FourLetterCommandHandler(stats, config);
 
         final EventLoopGroup group = new NioEventLoopGroup();
 

@@ -1,5 +1,6 @@
-package com.airbnb.plog;
+package com.airbnb.plog.commands;
 
+import com.airbnb.plog.stats.SimpleStatisticsReporter;
 import com.google.common.base.Charsets;
 import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;
@@ -12,12 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand> {
+public class FourLetterCommandHandler extends SimpleChannelInboundHandler<FourLetterCommand> {
     private static final byte[] PONG_BYTES = "PONG".getBytes();
     private final SimpleStatisticsReporter stats;
     private final Config config;
 
-    private DatagramPacket pong(PlogCommand ping) {
+    private DatagramPacket pong(FourLetterCommand ping) {
         final byte[] trail = ping.getTrail();
         int respLength = PONG_BYTES.length + trail.length;
         ByteBuf reply = Unpooled.buffer(respLength, respLength);
@@ -27,17 +28,17 @@ public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand>
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, PlogCommand cmd) throws Exception {
-        if (cmd.is(PlogCommand.KILL)) {
-            log.warn("KILL SWITCH!");
+    protected void channelRead0(ChannelHandlerContext ctx, FourLetterCommand cmd) throws Exception {
+        if (cmd.is(FourLetterCommand.KILL)) {
+            FourLetterCommandHandler.log.warn("KILL SWITCH!");
             System.exit(1);
-        } else if (cmd.is(PlogCommand.PING)) {
+        } else if (cmd.is(FourLetterCommand.PING)) {
             stats.receivedV0Command();
             ctx.writeAndFlush(pong(cmd));
-        } else if (cmd.is(PlogCommand.STAT)) {
+        } else if (cmd.is(FourLetterCommand.STAT)) {
             stats.receivedV0Command();
             reply(ctx, cmd, stats.toJSON());
-        } else if (cmd.is(PlogCommand.ENVI)) {
+        } else if (cmd.is(FourLetterCommand.ENVI)) {
             stats.receivedV0Command();
             reply(ctx, cmd, config.toString());
         } else {
@@ -45,7 +46,7 @@ public class PlogCommandHandler extends SimpleChannelInboundHandler<PlogCommand>
         }
     }
 
-    private void reply(ChannelHandlerContext ctx, PlogCommand cmd, String response) {
+    private void reply(ChannelHandlerContext ctx, FourLetterCommand cmd, String response) {
         final ByteBuf payload = Unpooled.wrappedBuffer(response.getBytes(Charsets.UTF_8));
         final DatagramPacket packet = new DatagramPacket(payload, cmd.getSender());
         ctx.writeAndFlush(packet);
