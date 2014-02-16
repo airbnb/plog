@@ -1,7 +1,10 @@
 package com.airbnb.plog.packetloss;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Arrays;
 
+@Slf4j
 public class PortHoleDetector {
     private final int[] entries;
 
@@ -17,12 +20,19 @@ public class PortHoleDetector {
      * @param candidate   The entry we want to track
      * @param maximumHole Larger holes are ignored
      * @return The size of the hole (missing intermediate values)
-     * between the previously smallest and newly smaller entry,
+     * between the previously smallest and newly smallest entry,
      * 0 if none or the previously smallest value was 0
      */
     int ensurePresent(int candidate, int maximumHole) {
         final int purgedOut, newFirst;
         synchronized (this.entries) {
+            // solve port reuse
+            final int first = entries[0];
+            if (first > candidate + maximumHole) {
+                log.info("Reset for {} > {} + {}", first, candidate, maximumHole);
+                Arrays.fill(entries, 0);
+            }
+
             final int index = Arrays.binarySearch(entries, candidate);
 
             if (index >= 0) // found
