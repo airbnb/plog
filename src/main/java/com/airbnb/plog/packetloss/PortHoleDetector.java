@@ -55,7 +55,7 @@ public class PortHoleDetector {
             return 0;
 
         final int hole = newFirst - purgedOut - 1;
-        if (hole < maximumHole) {
+        if (hole > 0 && hole < maximumHole) {
             log.warn("Pushed out hole between {} and {}", purgedOut, newFirst);
             return hole;
         }
@@ -74,7 +74,7 @@ public class PortHoleDetector {
                     continue;
 
                 final long hole = next - current - 1;
-                if (hole < maximumHole) {
+                if (hole > 0 && hole < maximumHole) {
                     log.warn("Scanned hole between {} and {}", hole, current, next);
                     holes += hole;
                 }
