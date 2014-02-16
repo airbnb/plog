@@ -50,12 +50,16 @@ public class PortHoleDetector {
             entries[ipoint - 1] = candidate;
         }
 
-        if (purgedOut != 0 && newFirst > purgedOut + 1) {
-            final int hole = newFirst - purgedOut - 1;
-            return hole > maximumHole ? hole : 0;
-        } else {
+        // magical value
+        if (purgedOut == 0)
             return 0;
+
+        final int hole = newFirst - purgedOut - 1;
+        if (hole < maximumHole) {
+            log.warn("Pushed out hole between {} and {}", purgedOut, newFirst);
+            return hole;
         }
+        return 0;
     }
 
     int countTotalHoles(int maximumHole) {
@@ -64,10 +68,15 @@ public class PortHoleDetector {
             for (int i = 0; i < this.entries.length - 1; i++) {
                 final long current = this.entries[i];
                 final long next = this.entries[i + 1];
-                if (current != 0 && next != 0 && next > current + 1) {
-                    final long hole = next - current - 1;
-                    if (hole > maximumHole)
-                        holes += hole;
+
+                // magical values
+                if (current == 0 || next == 0)
+                    continue;
+
+                final long hole = next - current - 1;
+                if (hole < maximumHole) {
+                    log.warn("Scanned hole between {} and {}", hole, current, next);
+                    holes += hole;
                 }
             }
         }
