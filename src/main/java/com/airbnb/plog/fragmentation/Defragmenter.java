@@ -107,6 +107,7 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
                                     final int fragmentCount,
                                     List<Object> out) {
         final byte[] bytes = ByteBufs.toByteArray(payload);
+        payload.release();
         final int computedHash = Hashing.murmur3_32().hashBytes(bytes).asInt();
         if (computedHash == expectedHash) {
             out.add(new Message(bytes));
