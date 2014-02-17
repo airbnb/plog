@@ -17,7 +17,7 @@ public class Message {
     public static final class ByteBufToMessageDecoder extends MessageToMessageDecoder<ByteBuf> {
         @Override
         protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
-            out.add(ByteBufs.toByteArray(buf));
+            out.add(new Message(ByteBufs.toByteArray(buf)));
         }
     }
 }
