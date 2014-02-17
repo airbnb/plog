@@ -1,6 +1,7 @@
 # plog
 
-Fire and forget unboxed or multipart messages over UDP, have them forwarded to Kafka 0.8.
+Fire and forget unboxed or fragmented messages over UDP, or line-by-line over TCP (disabled by default), have them forwarded to Kafka 0.8.
+That should cover `syslog`.
 
 ## Disclaimer
 
