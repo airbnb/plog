@@ -90,7 +90,7 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
     @Override
     protected void decode(ChannelHandlerContext ctx, FragmentedMessageFragment fragment, List<Object> out) throws Exception {
         FragmentedMessage message;
-
+        log.debug("Defragmenting {}", fragment);
         if (fragment.isAlone()) {
             if (detector != null)
                 detector.reportNewMessage(fragment.getMsgId());
