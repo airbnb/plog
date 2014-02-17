@@ -38,13 +38,21 @@ public class PortHoleDetector {
             if (index >= 0) // found
                 return 0;
 
+            //            index = (-(ipoint) - 1)
+            // <=>    index + 1 = -(ipoint)
+            // <=> -(index + 1) = ipoint
+            final int ipoint = -index - 1;
+
             // Before: a b c d e f g
             // After:  b c X d e f g
             //               ^ ipoint
-            final int ipoint = -1 - index;
 
             purgedOut = entries[0];
+
+            // for (int i = 0; i < ipoint - 1; i++)
+            //   entries[i] = entries[i + 1];
             System.arraycopy(entries, 1, entries, 0, ipoint - 2);
+
             newFirst = entries[0];
 
             entries[ipoint - 1] = candidate;
@@ -55,9 +63,17 @@ public class PortHoleDetector {
             return 0;
 
         final int hole = newFirst - purgedOut - 1;
-        if (hole > 0 && hole < maximumHole) {
-            log.warn("Pushed out hole between {} and {}", purgedOut, newFirst);
-            return hole;
+        if (hole > 0) {
+            if (hole < maximumHole) {
+                log.info("Pushed out hole between {} and {}", purgedOut, newFirst);
+                return hole;
+            } else {
+                log.info("Pushed out and ignored hole between {} and {}", purgedOut, newFirst);
+                return 0;
+            }
+        } else if (hole < 0) {
+            log.warn("Negative hole pushed out between {} and {} ({})",
+                    purgedOut, newFirst, this.entries);
         }
         return 0;
     }
@@ -74,9 +90,16 @@ public class PortHoleDetector {
                     continue;
 
                 final long hole = next - current - 1;
-                if (hole > 0 && hole < maximumHole) {
-                    log.warn("Scanned hole between {} and {}", hole, current, next);
-                    holes += hole;
+                if (hole > 0) {
+                    if (hole < maximumHole) {
+                        log.info("Scanned hole between {} and {}", hole, current, next);
+                        holes += hole;
+                    } else {
+                        log.info("Scanned and ignored hole between {} and {}", current, next);
+                    }
+                } else if (hole < 0) {
+                    log.warn("Scanned through negative hole between {} and {} ({})",
+                            current, next, this.entries);
                 }
             }
         }
