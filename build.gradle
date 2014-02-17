@@ -1,12 +1,12 @@
 apply plugin: 'wrapper'
-apply plugin: 'java'
+apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'application'
 apply plugin: 'shadow'
 apply plugin: 'project-report'
 
 group = 'com.airbnb.plog'
-version = '1.2'
+version = '1.3'
 mainClassName = 'com.airbnb.plog.App'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -29,7 +29,8 @@ dependencies {
         exclude module: 'jmxri'
         exclude module: 'jmxtools'
     }
-    testCompile 'org.codehaus.groovy:groovy-binary:2.2.1'
+    testCompile 'org.codehaus.groovy:groovy-all:2.2.1'
+    testCompile 'junit:junit:4.11'
 }
 
 jar { manifest { attributes 'Main-Class': 'com.airbnb.plog.App' } }
@@ -55,6 +56,7 @@ run {
     systemProperties = [
 // the kafka binary distrib doesn't seem to include snappy support
 //      'compression.codec': 'snappy',
+        'plog.tcp.enabled': true,
         'producer.type': 'async',
         'queue.buffering.max.ms': 500,
         'request.required.acks': 1,

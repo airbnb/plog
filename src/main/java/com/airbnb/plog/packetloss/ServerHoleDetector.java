@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class ServerHoleDetector {
+public final class ServerHoleDetector {
     private final LoadingCache<Integer, PortHoleDetector> cache;
     private final StatisticsReporter stats;
     private final int maximumHole;
@@ -45,7 +45,7 @@ public class ServerHoleDetector {
 
     public int reportNewMessage(final long id) {
         final int clientPort = (int) (id >> Integer.SIZE);
-        final int clientId = (int) (id & Integer.MAX_VALUE);
+        final int clientId = (int) (id & 0xffffffff);
         try {
             final int holesFound = this.cache.get(clientPort).ensurePresent(clientId, maximumHole);
             if (holesFound > 0) {

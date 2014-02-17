@@ -90,7 +90,7 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
     @Override
     protected void decode(ChannelHandlerContext ctx, FragmentedMessageFragment fragment, List<Object> out) throws Exception {
         FragmentedMessage message;
-
+        log.debug("Defragmenting {}", fragment);
         if (fragment.isAlone()) {
             if (detector != null)
                 detector.reportNewMessage(fragment.getMsgId());
@@ -107,6 +107,7 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
                                     final int fragmentCount,
                                     List<Object> out) {
         final byte[] bytes = ByteBufs.toByteArray(payload);
+        payload.release();
         final int computedHash = Hashing.murmur3_32().hashBytes(bytes).asInt();
         if (computedHash == expectedHash) {
             out.add(new Message(bytes));

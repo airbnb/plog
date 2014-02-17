@@ -28,7 +28,8 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
             ProtocolDecoder.log.debug("Unboxed UDP message");
             msg.retain();
             stats.receivedUdpSimpleMessage();
-            out.add(new Message(ByteBufs.toByteArray(msg.content())));
+            out.add(new Message(ByteBufs.toByteArray(content)));
+            content.release();
         } else if (versionIdentifier == 0) {
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {

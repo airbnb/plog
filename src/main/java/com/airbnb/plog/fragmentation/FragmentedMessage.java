@@ -70,13 +70,15 @@ public class FragmentedMessage {
             validFragmentLength = fragmentLength == this.fragmentSize;
         }
 
-        if (this.getFragmentSize() != fragmentSize ||
-                this.getFragmentCount() != fragmentCount ||
-                this.getChecksum() != msgHash ||
-                !validFragmentLength) {
-            FragmentedMessage.log.warn("Invalid {} for {}", fragment, this);
-            stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
-            return;
+        if (shouldCheck) { // first fragment always valid
+            if (this.getFragmentSize() != fragmentSize ||
+                    this.getFragmentCount() != fragmentCount ||
+                    this.getChecksum() != msgHash ||
+                    !validFragmentLength) {
+                FragmentedMessage.log.warn("Invalid {} for {}", fragment, this);
+                stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
+                return;
+            }
         }
 
         // valid fragment
