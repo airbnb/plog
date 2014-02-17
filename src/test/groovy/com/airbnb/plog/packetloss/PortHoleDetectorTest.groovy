@@ -40,7 +40,7 @@ class PortHoleDetectorTest extends GroovyTestCase {
         }
     }
 
-    void testNoHolesWhenOrdered() {
+    void testNoHolesWhenOrderedAndTight() {
         for (baseId in INTERESTING_IDS) {
             final detector = new PortHoleDetector(1)
             for (id in baseId..(baseId + 5)) {
@@ -48,6 +48,17 @@ class PortHoleDetectorTest extends GroovyTestCase {
                 assert detector.entries == [id]
             }
             assert detector.countTotalHoles(1) == 0
+            assert detector.countTotalHoles(10) == 0
+        }
+    }
+
+    void testNoHolesWhenOrderedAndLarge() {
+        for (baseId in INTERESTING_IDS) {
+            final detector = new PortHoleDetector(5)
+            for (id in baseId..(baseId + 10))
+                assert detector.ensurePresent(id, 1) == 0
+            assert detector.countTotalHoles(1) == 0
+            assert detector.countTotalHoles(10) == 0
         }
     }
 
