@@ -41,7 +41,7 @@ Please refer to [reference.conf](src/main/resources/reference.conf) for the opti
 
 - To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, we use `sysctl net.core.rmem_max = 1048576`.
 
-- Hole detection is a bit difficult to explain, but worth looking into.
+- Hole detection is a bit difficult to explain, but worth looking into (the tests should help).
   It is enabled by default, but can be disabled for performance.
 
 ## Event logging at Airbnb
