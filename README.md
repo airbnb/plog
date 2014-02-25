@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/airbnb/plog.png?branch=master)](https://travis-ci.org/airbnb/plog)
+
 # plog
 
 Fire and forget unboxed or fragmented messages over UDP, or line-by-line over TCP (disabled by default), have them forwarded to Kafka 0.8.
