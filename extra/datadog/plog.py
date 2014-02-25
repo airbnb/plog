@@ -30,6 +30,8 @@ class PlogCheck(AgentCheck):
 			def rate(name, val):
 				self.gauge(name, val, tags=tags)
 
+			rate('plog.uptime',
+				stats['uptime'])
 			counter('plog.exceptions',
 				stats['exceptions'])
 			counter('plog.failed_to_send',
