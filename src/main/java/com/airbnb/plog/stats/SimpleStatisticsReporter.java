@@ -33,6 +33,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             invalidFragments = new AtomicLongArray(Short.SIZE * Short.SIZE);
     private final String kafkaClientId;
     private Defragmenter defragmenter = null;
+    private final long startTime = System.currentTimeMillis();
 
     private static final int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
@@ -112,7 +113,9 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     public final String toJSON() {
         StringBuilder builder = new StringBuilder();
-        builder.append("{\"udp_simple_messages\":");
+        builder.append("{\"uptime\":");
+        builder.append(System.currentTimeMillis() - this.startTime);
+        builder.append(",\"udp_simple_messages\":");
         builder.append(this.udpSimpleMessages.get());
         builder.append(",\"udp_invalid_version\":");
         builder.append(this.udpInvalidVersion.get());
@@ -152,6 +155,15 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             builder.append('}');
         }
 
+        if (kafkaClientId != null)
+            appendKafka(builder);
+
+        builder.append("}");
+
+        return builder.toString();
+    }
+
+    private void appendKafka(StringBuilder builder) {
         builder.append(",\"kafka\":{");
 
         final ProducerStats producerStats = ProducerStatsRegistry.getProducerStats(kafkaClientId);
@@ -170,9 +182,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         report(producerAllTopicsStats.droppedMessageRate(), builder);
         builder.append("},\"messageRate\":{");
         report(producerAllTopicsStats.messageRate(), builder);
-        builder.append("}}}");
-
-        return builder.toString();
+        builder.append("}}");
     }
 
     private void appendLogStats(StringBuilder builder, String name, AtomicLongArray data) {
