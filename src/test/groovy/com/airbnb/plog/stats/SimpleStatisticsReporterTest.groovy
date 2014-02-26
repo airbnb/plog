@@ -43,4 +43,83 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
         final parsed = slurper.parseText(stats.toJSON())
         assert parsed instanceof Map
     }
+
+    void testSimpleCounters() {
+        final stats = new SimpleStatisticsReporter(null)
+        final methods = [
+                'receivedUdpSimpleMessage',
+                'receivedUdpInvalidVersion',
+                'receivedV0InvalidType',
+                'receivedV0Command',
+                'receivedUnknownCommand',
+                'receivedV0MultipartMessage',
+                'failedToSend',
+                'exception'
+        ]
+        for (method in methods)
+            assert stats."$method"() == 1
+        // let's make sure we didn't increment more than we wanted...
+        for (method in methods)
+            assert stats."$method"() == 2
+    }
+
+    void testJumpingCounters() {
+        final stats = new SimpleStatisticsReporter(null)
+        for (method in ['foundHolesFromDeadPort', 'foundHolesFromNewMessage']) {
+            assert stats."$method"(0) == 0
+            assert stats."$method"(1) == 1
+            assert stats."$method"(5) == 6
+            assert stats."$method"(0) == 6
+        }
+    }
+
+    void testReceivedV0MultipartFragment() {
+        final stats = new SimpleStatisticsReporter(null)
+        for (exp in 0..<Short.SIZE)
+            assert stats.receivedV0MultipartFragment(2**exp) == 1
+        for (exp in 1..<Short.SIZE) {
+            assert stats.receivedV0MultipartFragment(2**exp + 1) == 2
+            assert stats.receivedV0MultipartFragment(2**(exp + 1) - 1) == 3
+        }
+    }
+
+    void testReceivedV0InvalidChecksum() {
+        final stats = new SimpleStatisticsReporter(null)
+        for (exp in 0..<Short.SIZE)
+            assert stats.receivedV0InvalidChecksum(2**exp + 1) == 1
+        for (exp in 1..<Short.SIZE) {
+            assert stats.receivedV0InvalidChecksum(2**exp + 2) == 2
+            assert stats.receivedV0InvalidChecksum(2**(exp + 1)) == 3
+        }
+    }
+
+    void testCantProvideTwoDefragmenters() {
+        final stats = new SimpleStatisticsReporter(null)
+        stats.withDefrag(new Defragmenter(stats, defragConfig))
+        shouldFail {
+            stats.withDefrag(new Defragmenter(stats, defragConfig))
+        }
+    }
+
+    void testLogLogCounters() {
+        final stats = new SimpleStatisticsReporter(null)
+        for (method in ['receivedV0InvalidMultipartFragment', 'missingFragmentInDroppedMessage']) {
+            for (fragIndexExp in 0..<Short.SIZE) {
+                for (fragmentCountExp in 0..<Short.SIZE)
+                    assert stats."$method"(
+                            2**fragIndexExp,
+                            2**fragmentCountExp + 1) == 1
+                if (fragIndexExp == 0)
+                    continue
+                for (fragmentCountExp in 1..<Short.SIZE) {
+                    assert stats."$method"(
+                            2**fragIndexExp + 1,
+                            2**fragmentCountExp + 2) == 2
+                    assert stats."$method"(
+                            (2**(fragIndexExp + 1) - 1),
+                            2**(fragmentCountExp + 1)) == 3
+                }
+            }
+        }
+    }
 }
