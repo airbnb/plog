@@ -26,10 +26,10 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             failedToSend = new AtomicLong(),
             exceptions = new AtomicLong();
     private final AtomicLongArray
-            v0MultipartMessageFragments = new AtomicLongArray(Short.SIZE),
-            v0InvalidChecksum = new AtomicLongArray(Short.SIZE),
-            droppedFragments = new AtomicLongArray(Short.SIZE * Short.SIZE),
-            invalidFragments = new AtomicLongArray(Short.SIZE * Short.SIZE);
+            v0MultipartMessageFragments = new AtomicLongArray(Short.SIZE + 1),
+            v0InvalidChecksum = new AtomicLongArray(Short.SIZE + 1),
+            droppedFragments = new AtomicLongArray((Short.SIZE + 1) * (Short.SIZE + 1)),
+            invalidFragments = new AtomicLongArray((Short.SIZE + 1) * (Short.SIZE + 1));
     private final String kafkaClientId;
     private Defragmenter defragmenter = null;
     private final long startTime = System.currentTimeMillis();
@@ -95,7 +95,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     @Override
     public final long receivedV0InvalidChecksum(int fragments) {
-        return this.v0InvalidChecksum.incrementAndGet(fragments - 1);
+        return this.v0InvalidChecksum.incrementAndGet(intLog2(fragments - 1));
     }
 
     @Override
@@ -188,11 +188,11 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append('\"');
         builder.append(name);
         builder.append("\":[");
-        for (int i = 0; i < Short.SIZE - 1; i++) {
+        for (int i = 0; i < data.length(); i++) {
             builder.append(data.get(i));
             builder.append(',');
         }
-        builder.append(data.get(Short.SIZE - 1));
+        builder.append(data.get(data.length() - 1));
         builder.append(']');
     }
 
@@ -200,17 +200,17 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append('\"');
         builder.append(name);
         builder.append("\":[");
-        for (int packetCountLog = 0; packetCountLog < Short.SIZE; packetCountLog++) {
+        for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
             builder.append('[');
-            for (int packetIndexLog = 0; packetIndexLog < Short.SIZE; packetIndexLog++) {
-                builder.append(data.get(packetCountLog * Short.SIZE + packetIndexLog));
+            for (int packetIndexLog = 0; packetIndexLog <= Short.SIZE; packetIndexLog++) {
+                builder.append(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
 
-                if (packetIndexLog != Short.SIZE - 1)
+                if (packetIndexLog != Short.SIZE)
                     builder.append(',');
             }
             builder.append(']');
 
-            if (packetCountLog != Short.SIZE - 1)
+            if (packetCountLog != Short.SIZE)
                 builder.append(',');
         }
         builder.append(']');
