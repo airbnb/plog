@@ -43,7 +43,6 @@ class FourLetterCommandHandlerTest extends GroovyTestCase {
     static final private class ExitFailure extends Exception {}
 
     void testKill() {
-        final exited = new Exception()
         System.setSecurityManager(new SecurityManager() {
             @Override
             void checkExit(int status) {
@@ -59,12 +58,27 @@ class FourLetterCommandHandlerTest extends GroovyTestCase {
             void checkPermission(Permission perm) {
             }
         })
+
         shouldFail ExitFailure, {
             runTest { EmbeddedChannel channel ->
-                channel.writeInbound(new FourLetterCommand(FourLetterCommand.KILL, Utils.clientAddr, null))
+                channel.writeInbound(new FourLetterCommand(
+                        FourLetterCommand.KILL,
+                        Utils.clientAddr,
+                        null))
             }
         }
         System.setSecurityManager(null)
+    }
+
+    void testUnknownIsTracked() {
+        runTest { EmbeddedChannel channel ->
+            final before = stats.receivedUnknownCommand()
+            channel.writeInbound(new FourLetterCommand(
+                    'burp',
+                    Utils.clientAddr,
+                    null))
+            assert stats.receivedUnknownCommand() == before + 2
+        }
     }
 
     private void expectAnswer(FourLetterCommand req, Pattern expectedReply) {
