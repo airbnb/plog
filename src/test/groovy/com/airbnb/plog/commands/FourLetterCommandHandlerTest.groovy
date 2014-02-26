@@ -98,6 +98,5 @@ class FourLetterCommandHandlerTest extends GroovyTestCase {
         final channel = new EmbeddedChannel(new FourLetterCommandHandler(stats, config))
         test.call(channel)
         assert !channel.finish()
-        assert channel.readOutbound() == null
     }
 }
