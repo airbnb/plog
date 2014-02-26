@@ -33,14 +33,14 @@ public class FourLetterCommandHandler extends SimpleChannelInboundHandler<FourLe
             FourLetterCommandHandler.log.warn("KILL SWITCH!");
             System.exit(1);
         } else if (cmd.is(FourLetterCommand.PING)) {
-            stats.receivedV0Command();
             ctx.writeAndFlush(pong(cmd));
+            stats.receivedV0Command();
         } else if (cmd.is(FourLetterCommand.STAT)) {
-            stats.receivedV0Command();
             reply(ctx, cmd, stats.toJSON());
-        } else if (cmd.is(FourLetterCommand.ENVI)) {
             stats.receivedV0Command();
+        } else if (cmd.is(FourLetterCommand.ENVI)) {
             reply(ctx, cmd, config.toString());
+            stats.receivedV0Command();
         } else {
             stats.receivedUnknownCommand();
         }
