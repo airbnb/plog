@@ -87,7 +87,7 @@ public class App {
                                 .addLast(new Message.ByteBufToMessageDecoder())
                                 .addLast(forwarder);
                     }
-                }).bind(new InetSocketAddress(config.getInt("plog.tcp.port")));
+                }).bind(new InetSocketAddress(config.getString("plog.tcp.host"), config.getInt("plog.tcp.port")));
     }
 
     private ChannelFuture startUDP(final Config config,
@@ -141,6 +141,6 @@ public class App {
                                 });
                     }
                 })
-                .bind(new InetSocketAddress(config.getInt("plog.udp.port")));
+                .bind(new InetSocketAddress(config.getString("plog.udp.host"), config.getInt("plog.udp.port")));
     }
 }
