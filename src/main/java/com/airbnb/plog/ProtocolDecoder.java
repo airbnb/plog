@@ -57,16 +57,14 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
     }
 
     private FourLetterCommand readCommand(DatagramPacket msg) {
-        final byte[] cmdBuff = new byte[4];
         final ByteBuf content = msg.content();
         final int trailLength = content.readableBytes() - 6;
-        final byte[] trail = new byte[trailLength];
-        try {
-            content.getBytes(2, cmdBuff, 0, 4);
-            content.getBytes(6, trail, 0, trail.length);
-            return new FourLetterCommand(new String(cmdBuff), msg.sender(), trail);
-        } catch (IndexOutOfBoundsException e) {
+        if (trailLength < 0)
             return null;
-        }
+        final byte[] trail = new byte[trailLength];
+        final byte[] cmdBuff = new byte[4];
+        content.getBytes(2, cmdBuff, 0, 4);
+        content.getBytes(6, trail, 0, trail.length);
+        return new FourLetterCommand(new String(cmdBuff), msg.sender(), trail);
     }
 }
