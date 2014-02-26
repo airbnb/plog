@@ -1,3 +1,6 @@
 /out/
 /build/
 /.gradle/
+*.pyc
+*.ipr
+*.iws
