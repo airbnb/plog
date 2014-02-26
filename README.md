@@ -51,11 +51,11 @@ Please refer to [reference.conf](src/main/resources/reference.conf) for the opti
 
 We use JSON objects with the following fields:
 
-- type: String. Only very few values are acceptable due to our pipeline splitting event streams by type.
-- uuid: String.
-- host: String.
-- timestamp: int64.
-- data: String→String map or String.
+- `type`: String. Only very few values are acceptable due to our pipeline splitting event streams by type.
+- `uuid`: String.
+- `host`: String.
+- `timestamp`: Number. Milliseconds since Epoch.
+- `data`: Object. Arbitrary.
 
 ## Statistics
 
