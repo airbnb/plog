@@ -73,7 +73,7 @@ class FourLetterCommandHandlerTest extends GroovyTestCase {
     void testUnknownIsTracked() {
         runTest { EmbeddedChannel channel ->
             final before = stats.receivedUnknownCommand()
-            channel.writeInbound(new FourLetterCommand(
+            assert !channel.writeInbound(new FourLetterCommand(
                     'burp',
                     Utils.clientAddr,
                     null))
