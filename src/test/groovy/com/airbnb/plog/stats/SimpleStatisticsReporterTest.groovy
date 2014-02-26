@@ -1,5 +1,6 @@
 package com.airbnb.plog.stats
 
+import com.airbnb.plog.Utils
 import com.airbnb.plog.fragmentation.Defragmenter
 import com.typesafe.config.ConfigFactory
 import groovy.json.JsonSlurper
@@ -13,7 +14,7 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
     static {
         final props = new Properties()
         props.put('client.id', clientId)
-        props.put('metadata.broker.list', '192.0.2.0:9') // Assigned as "TEST-NET", Discard Protocol
+        props.put('metadata.broker.list', Utils.clientAddr.toString())
         new Producer(new ProducerConfig(props))
     }
 

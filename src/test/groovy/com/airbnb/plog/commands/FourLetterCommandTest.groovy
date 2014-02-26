@@ -1,23 +1,24 @@
 package com.airbnb.plog.commands
 
+import com.airbnb.plog.Utils
+
 class FourLetterCommandTest extends GroovyTestCase {
-    private static final addr = new InetSocketAddress(0)
-    private static final emptyTrail = ''.bytes
+    private final emptyTrail = ''.bytes
     private static final shortTrail = 'foo'.bytes
 
     void testCaseSensitivity() {
         for (cmdStr in ['ping', 'PING', 'PiNg']) {
-            final cmd = new FourLetterCommand(cmdStr, addr, emptyTrail)
+            final cmd = new FourLetterCommand(cmdStr, Utils.clientAddr, emptyTrail)
             assert cmd.is(FourLetterCommand.PING)
         }
     }
 
     void testTrailIsIgnored() {
-        assert new FourLetterCommand('stat', addr, 'foo'.bytes).is('STAT')
+        assert new FourLetterCommand('stat', Utils.clientAddr, 'foo'.bytes).is('STAT')
     }
 
     void testTailPreserved() {
-        assert new FourLetterCommand('PING', addr, shortTrail).trail == shortTrail
-        assert new FourLetterCommand('PING', addr, emptyTrail).trail == emptyTrail
+        assert new FourLetterCommand('PING', Utils.clientAddr, shortTrail).trail == shortTrail
+        assert new FourLetterCommand('PING', Utils.clientAddr, emptyTrail).trail == emptyTrail
     }
 }
