@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/airbnb/plog.png?branch=master)](https://travis-ci.org/airbnb/plog)
+[![Coverage Status](https://coveralls.io/repos/airbnb/plog/badge.png)](https://coveralls.io/r/airbnb/plog)
 
 # plog
 

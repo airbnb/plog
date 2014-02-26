@@ -1,7 +1,15 @@
 ---
 language: java
+
+env:
+  - TERM=dumb
+
 jdk:
   - openjdk6
   - openjdk7
   - oraclejdk7
+
 script: python -m py_compile extra/datadog/plog.py
+
+after_success:
+  - ./gradlew cobertura coveralls
