@@ -106,14 +106,14 @@ final class PortHoleDetector {
         final int hole = newFirst - purgedOut - 1;
         if (hole > 0) {
             if (hole <= maxHole) {
-                PortHoleDetector.log.info("Pushed out hole between {} and {}", purgedOut, newFirst);
+                log.info("Pushed out hole between {} and {}", purgedOut, newFirst);
                 return hole;
             } else {
-                PortHoleDetector.log.info("Pushed out and ignored hole between {} and {}", purgedOut, newFirst);
+                log.info("Pushed out and ignored hole between {} and {}", purgedOut, newFirst);
                 return 0;
             }
         } else if (hole < 0) {
-            PortHoleDetector.log.warn("Negative hole pushed out between {} and {} ({})",
+            log.warn("Negative hole pushed out between {} and {} ({})",
                     purgedOut, newFirst, this.entries);
         }
         return 0;
@@ -136,13 +136,13 @@ final class PortHoleDetector {
                 final long hole = next - current - 1;
                 if (hole > 0) {
                     if (hole <= maxHole) {
-                        PortHoleDetector.log.info("Scanned hole between {} and {}", hole, current, next);
+                        log.info("Scanned hole between {} and {}", hole, current, next);
                         holes += hole;
                     } else {
-                        PortHoleDetector.log.info("Scanned and ignored hole between {} and {}", current, next);
+                        log.info("Scanned and ignored hole between {} and {}", current, next);
                     }
                 } else if (hole < 0) {
-                    PortHoleDetector.log.warn("Scanned through negative hole between {} and {} ({})",
+                    log.warn("Scanned through negative hole between {} and {} ({})",
                             current, next, this.entries);
                 }
             }
