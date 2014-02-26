@@ -28,7 +28,7 @@ The app settings are read using Typesafe Config.
 Please refer to [Kafka's documentation](http://kafka.apache.org/08/configuration.html).
 
 If unspecified in system properties, we will set those defaults:
-- `metadata.broker.list`: `127.0.0.1:9092` (other values untested and probably broken).
+- `metadata.broker.list`: `127.0.0.1:9092`
 - `client.id`: `plog_$HOSTNAME`
 
 ### plog settings
