@@ -35,12 +35,19 @@ public class FragmentedMessageFragment {
             throw new IllegalArgumentException("Packet too short: " + length + " bytes");
 
         final int fragmentCount = content.getUnsignedShort(2);
+        if (fragmentCount == 0)
+            throw new IllegalArgumentException("0 fragment count");
+
         final int fragmentIndex = content.getUnsignedShort(4);
-        if (fragmentIndex > fragmentCount)
+        if (fragmentIndex >= fragmentCount)
             throw new IllegalArgumentException("Index " + fragmentIndex + " < count " + fragmentCount);
+
         final int fragmentSize = content.getUnsignedShort(6);
         final int idRightPart = content.getInt(8);
         final int totalLength = content.getInt(12);
+        if (totalLength < 0)
+            throw new IllegalArgumentException("Cannot support length " + totalLength + " > 2^31");
+
         final int msgHash = content.getInt(16);
         final ByteBuf payload = content.slice(HEADER_SIZE, length - HEADER_SIZE);
 
