@@ -24,6 +24,6 @@ class FourLetterCommandTest extends GroovyTestCase {
 
     void testToString() {
         final repr = new FourLetterCommand('ping', Utils.clientAddr, 'foo'.bytes).toString()
-        assert repr == 'FourLetterCommand(command=PING, sender=/192.0.2.0:9, trail=[102, 111, 111])'
+        assert repr == 'FourLetterCommand(command=PING, sender=/192.0.2.1:9, trail=[102, 111, 111])'
     }
 }
