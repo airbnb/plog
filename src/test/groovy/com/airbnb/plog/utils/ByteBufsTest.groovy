@@ -16,4 +16,8 @@ class ByteBufsTest extends GroovyTestCase {
             assert ByteBufs.toByteArray(buf) == testCase
         }
     }
+
+    void testUselessConstructorForCoverage() {
+        new ByteBufs()
+    }
 }
