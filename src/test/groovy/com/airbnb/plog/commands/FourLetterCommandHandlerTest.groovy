@@ -63,8 +63,7 @@ class FourLetterCommandHandlerTest extends GroovyTestCase {
             runTest { EmbeddedChannel channel ->
                 channel.writeInbound(new FourLetterCommand(
                         FourLetterCommand.KILL,
-                        Utils.clientAddr,
-                        null))
+                        Utils.clientAddr, null))
             }
         }
         System.setSecurityManager(null)
@@ -73,10 +72,7 @@ class FourLetterCommandHandlerTest extends GroovyTestCase {
     void testUnknownIsTracked() {
         runTest { EmbeddedChannel channel ->
             final before = stats.receivedUnknownCommand()
-            assert !channel.writeInbound(new FourLetterCommand(
-                    'burp',
-                    Utils.clientAddr,
-                    null))
+            assert !channel.writeInbound(new FourLetterCommand('burp', Utils.clientAddr, null))
             assert stats.receivedUnknownCommand() == before + 2
         }
     }

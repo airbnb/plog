@@ -42,43 +42,35 @@ public class FragmentedMessage {
                 fragment.getFragmentCount(),
                 fragment.getFragmentSize(),
                 fragment.getMsgHash());
-        msg.ingestFragment(fragment, false, stats);
+        msg.ingestFragment(fragment, stats);
         return msg;
     }
 
     public void ingestFragment(final FragmentedMessageFragment fragment, StatisticsReporter stats) {
-        ingestFragment(fragment, true, stats);
-    }
-
-    public void ingestFragment(final FragmentedMessageFragment fragment, boolean shouldCheck, StatisticsReporter stats) {
         final int fragmentSize = fragment.getFragmentSize();
         final int fragmentCount = fragment.getFragmentCount();
         final int msgHash = fragment.getMsgHash();
         final ByteBuf fragmentPayload = fragment.getPayload();
         final int fragmentIndex = fragment.getFragmentIndex();
-        final boolean fragmentIsLast = fragmentIndex == fragmentCount - 1;
+        final boolean fragmentIsLast = (fragmentIndex == fragmentCount - 1);
         final int foffset = fragmentSize * fragmentIndex;
 
-        final int fragmentLength;
+        final int lengthOfCurrentFragment = fragmentPayload.capacity();
         final boolean validFragmentLength;
 
         if (fragmentIsLast) {
-            fragmentLength = fragmentPayload.capacity();
-            validFragmentLength = this.getPayloadLength() - foffset == fragmentLength;
+            validFragmentLength = (lengthOfCurrentFragment == this.getPayloadLength() - foffset);
         } else {
-            fragmentLength = fragmentSize;
-            validFragmentLength = fragmentLength == this.fragmentSize;
+            validFragmentLength = (lengthOfCurrentFragment == this.fragmentSize);
         }
 
-        if (shouldCheck) { // first fragment always valid
-            if (this.getFragmentSize() != fragmentSize ||
-                    this.getFragmentCount() != fragmentCount ||
-                    this.getChecksum() != msgHash ||
-                    !validFragmentLength) {
-                FragmentedMessage.log.warn("Invalid {} for {}", fragment, this);
-                stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
-                return;
-            }
+        if (this.getFragmentSize() != fragmentSize ||
+                this.getFragmentCount() != fragmentCount ||
+                this.getChecksum() != msgHash ||
+                !validFragmentLength) {
+            FragmentedMessage.log.warn("Invalid {} for {}", fragment, this);
+            stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
+            return;
         }
 
         // valid fragment
@@ -88,7 +80,7 @@ public class FragmentedMessage {
                 this.complete = true;
             }
         }
-        payload.setBytes(foffset, fragmentPayload, 0, fragmentLength);
+        payload.setBytes(foffset, fragmentPayload, 0, lengthOfCurrentFragment);
         fragment.getPayload().release();
     }
 
