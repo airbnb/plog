@@ -1,7 +1,7 @@
 package com.airbnb.plog;
 
 import com.airbnb.plog.commands.FourLetterCommand;
-import com.airbnb.plog.fragmentation.FragmentedMessageFragment;
+import com.airbnb.plog.fragmentation.Fragment;
 import com.airbnb.plog.stats.StatisticsReporter;
 import com.airbnb.plog.utils.ByteBufs;
 import io.netty.buffer.ByteBuf;
@@ -44,7 +44,7 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
                 case 1:
                     ProtocolDecoder.log.debug("v0 multipart message: {}", msg);
                     msg.retain();
-                    final FragmentedMessageFragment fragment = FragmentedMessageFragment.fromDatagram(msg);
+                    final Fragment fragment = Fragment.fromDatagram(msg);
                     stats.receivedV0MultipartFragment(fragment.getFragmentIndex());
                     out.add(fragment);
                     break;

@@ -3,7 +3,7 @@ package com.airbnb.plog.fragmentation
 import com.airbnb.plog.Utils
 import io.netty.buffer.Unpooled
 
-class FragmentedMessageFragmentTest extends GroovyTestCase {
+class FragmentTest extends GroovyTestCase {
     void testRejectsTooSmallForHeader() {
         final validPayload = (0..1) + (5..2) + (6..23)
         fragmentFromPayload(validPayload)
@@ -55,7 +55,7 @@ class FragmentedMessageFragmentTest extends GroovyTestCase {
 
     void testToString() {
         final fragment = fragmentFromPayload((0..1) + (5..2) + (6..24) as byte[])
-        final expected = 'FragmentedMessageFragment(fragmentCount=1284, fragmentIndex=770, fragmentSize=1543, msgId=38789515787, totalLength=202182159, msgHash=269554195)'
+        final expected = 'Fragment(fragmentCount=1284, fragmentIndex=770, fragmentSize=1543, msgId=38789515787, totalLength=202182159, msgHash=269554195)'
         assert fragment.toString() == expected
     }
 
@@ -63,11 +63,11 @@ class FragmentedMessageFragmentTest extends GroovyTestCase {
         new io.netty.channel.socket.DatagramPacket(Unpooled.wrappedBuffer(payload), Utils.localAddr, Utils.clientAddr)
     }
 
-    private static FragmentedMessageFragment fragmentFromPayload(byte[] payload) {
-        FragmentedMessageFragment.fromDatagram(datagramFromPayload(payload))
+    private static Fragment fragmentFromPayload(byte[] payload) {
+        Fragment.fromDatagram(datagramFromPayload(payload))
     }
 
-    private static FragmentedMessageFragment fragmentFromPayload(Collection payload) {
+    private static Fragment fragmentFromPayload(Collection payload) {
         fragmentFromPayload(payload as byte[])
     }
 }

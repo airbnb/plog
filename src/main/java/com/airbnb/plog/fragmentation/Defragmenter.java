@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragment> {
+public class Defragmenter extends MessageToMessageDecoder<Fragment> {
     private final StatisticsReporter stats;
     private final Cache<Long, FragmentedMessage> incompleteMessages;
     private final ServerHoleDetector detector;
@@ -66,7 +66,7 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
         return incompleteMessages.stats();
     }
 
-    private synchronized FragmentedMessage ingestIntoIncompleteMessage(FragmentedMessageFragment fragment) {
+    private synchronized FragmentedMessage ingestIntoIncompleteMessage(Fragment fragment) {
         final long id = fragment.getMsgId();
         final FragmentedMessage fromMap = incompleteMessages.getIfPresent(id);
         if (fromMap != null) {
@@ -88,7 +88,7 @@ public class Defragmenter extends MessageToMessageDecoder<FragmentedMessageFragm
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, FragmentedMessageFragment fragment, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, Fragment fragment, List<Object> out) throws Exception {
         FragmentedMessage message;
         log.debug("Defragmenting {}", fragment);
         if (fragment.isAlone()) {
