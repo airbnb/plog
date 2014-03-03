@@ -11,12 +11,12 @@ class FragmentedMessageTest extends GroovyTestCase {
     // Always go with id=0 & hash=0
     private static create(int count, int index, int fsize, int length, byte[] payload) {
         FragmentedMessage.fromFragment(
-                new FragmentedMessageFragment(count, index, fsize, 0, length, 0, Unpooled.wrappedBuffer(payload)), stats)
+                new Fragment(count, index, fsize, 0, length, 0, Unpooled.wrappedBuffer(payload)), stats)
     }
 
     private
     static ingest(FragmentedMessage msg, int count, int index, int fsize, int length, byte[] payload) {
-        msg.ingestFragment(new FragmentedMessageFragment(count, index, fsize, 0, length, 0, Unpooled.wrappedBuffer(payload)), stats)
+        msg.ingestFragment(new Fragment(count, index, fsize, 0, length, 0, Unpooled.wrappedBuffer(payload)), stats)
     }
 
     private static
@@ -119,9 +119,9 @@ class FragmentedMessageTest extends GroovyTestCase {
     void testCatchesChecksumInconsistency() {
         final long initial = stats.receivedV0InvalidMultipartFragment(2, 5)
         final msg = FragmentedMessage.fromFragment(
-                new FragmentedMessageFragment(5, 2, 10, 0, 45, 42, Unpooled.wrappedBuffer('0123456789'.bytes)), stats)
+                new Fragment(5, 2, 10, 0, 45, 42, Unpooled.wrappedBuffer('0123456789'.bytes)), stats)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 1
-        msg.ingestFragment(new FragmentedMessageFragment(5, 2, 10, 0, 45, 24, Unpooled.wrappedBuffer('0123456789'.bytes)), stats)
+        msg.ingestFragment(new Fragment(5, 2, 10, 0, 45, 24, Unpooled.wrappedBuffer('0123456789'.bytes)), stats)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 3
     }
 }

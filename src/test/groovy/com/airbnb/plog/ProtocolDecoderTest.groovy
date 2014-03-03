@@ -1,7 +1,7 @@
 package com.airbnb.plog
 
 import com.airbnb.plog.commands.FourLetterCommand
-import com.airbnb.plog.fragmentation.FragmentedMessageFragment
+import com.airbnb.plog.fragmentation.Fragment
 import com.airbnb.plog.stats.SimpleStatisticsReporter
 import com.airbnb.plog.stats.StatisticsReporter
 import com.airbnb.plog.utils.ByteBufs
@@ -67,7 +67,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
             // I'm so sad fragment count and index are in this order
             final payload = (0..1) + (5..2) + (6..30)
             insert(payload as byte[], channel)
-            final frag = (FragmentedMessageFragment) channel.readInbound()
+            final frag = (Fragment) channel.readInbound()
             assert frag.fragmentCount == (5 << 8) + 4
             assert frag.fragmentIndex == (3 << 8) + 2
             assert frag.fragmentSize == (6 << 8) + 7

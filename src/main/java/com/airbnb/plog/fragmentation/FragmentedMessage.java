@@ -36,7 +36,7 @@ public class FragmentedMessage {
         this.checksum = hash;
     }
 
-    public static FragmentedMessage fromFragment(final FragmentedMessageFragment fragment, StatisticsReporter stats) {
+    public static FragmentedMessage fromFragment(final Fragment fragment, StatisticsReporter stats) {
         final FragmentedMessage msg = new FragmentedMessage(
                 fragment.getTotalLength(),
                 fragment.getFragmentCount(),
@@ -46,7 +46,7 @@ public class FragmentedMessage {
         return msg;
     }
 
-    public void ingestFragment(final FragmentedMessageFragment fragment, StatisticsReporter stats) {
+    public void ingestFragment(final Fragment fragment, StatisticsReporter stats) {
         final int fragmentSize = fragment.getFragmentSize();
         final int fragmentCount = fragment.getFragmentCount();
         final int msgHash = fragment.getMsgHash();
