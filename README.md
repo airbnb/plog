@@ -15,7 +15,7 @@ While updates may still be made and we welcome feedback, keep in mind we may not
 
 ## Getting started
 
-    $ ./gladew run
+    $ ./gradlew run
     $ printf 'yipee!'|socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
 
 ## Configuration
