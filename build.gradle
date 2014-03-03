@@ -8,7 +8,7 @@ apply plugin: 'cobertura'
 apply plugin: 'coveralls'
 
 group = 'com.airbnb.plog'
-version = '1.3'
+version = '2.0'
 mainClassName = 'com.airbnb.plog.App'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -30,6 +30,7 @@ dependencies {
         exclude module: 'zkclient'
         exclude module: 'jmxri'
         exclude module: 'jmxtools'
+        exclude module: 'slf4j-simple'
     }
     testCompile 'org.codehaus.groovy:groovy-all:2.2.1'
     testCompile 'junit:junit:4.11'
