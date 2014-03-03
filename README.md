@@ -3,7 +3,8 @@
 
 # plog
 
-Fire and forget unboxed or fragmented messages over UDP, or line-by-line over TCP (disabled by default), have them forwarded to Kafka 0.8.
+Fire and forget unboxed or fragmented messages over UDP, or line-by-line over TCP (disabled by default), have them
+forwarded to Kafka 0.8 or the standard output.
 That should cover `syslog`.
 
 ## Disclaimer
@@ -34,6 +35,9 @@ If unspecified in system properties, we will set those defaults:
 ### plog settings
 
 Please refer to [reference.conf](src/main/resources/reference.conf) for the options and their default values.
+
+Note that multiple TCP and UDP ports can be configure and have separate settings,
+but there can only be 0 or 1 Kafka producer.
 
 ## Building a fat JAR
 

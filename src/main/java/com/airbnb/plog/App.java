@@ -2,8 +2,11 @@ package com.airbnb.plog;
 
 import com.airbnb.plog.commands.FourLetterCommandHandler;
 import com.airbnb.plog.fragmentation.Defragmenter;
-import com.airbnb.plog.kafka.KafkaForwarder;
+import com.airbnb.plog.sinks.ConsoleSink;
+import com.airbnb.plog.sinks.KafkaSink;
+import com.airbnb.plog.sinks.Sink;
 import com.airbnb.plog.stats.SimpleStatisticsReporter;
+import com.airbnb.plog.stats.StatisticsReporter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.netty.bootstrap.Bootstrap;
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,6 +35,18 @@ public class App {
     private final static String METADATA_BROKER_LIST = "metadata.broker.list";
     private final static String CLIENT_ID = "client.id";
 
+    private final Properties kafkaProperties;
+    private final Config config;
+    private final SimpleStatisticsReporter stats;
+    // Lazily initialized
+    private Producer<byte[], byte[]> producer = null;
+
+    public App(Properties systemProperties, Config config) {
+        this.kafkaProperties = systemProperties;
+        this.config = config;
+        this.stats = new SimpleStatisticsReporter(kafkaProperties.getProperty(CLIENT_ID));
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException {
         Properties systemProperties = System.getProperties();
         if (systemProperties.getProperty(METADATA_BROKER_LIST) == null)
@@ -38,18 +54,31 @@ public class App {
         if (systemProperties.getProperty(CLIENT_ID) == null)
             systemProperties.setProperty(CLIENT_ID, "plog_" + InetAddress.getLocalHost().getHostName());
 
-        final Config config = ConfigFactory.load();
-        new App().run(systemProperties, config);
+        new App(systemProperties, ConfigFactory.load()).run();
     }
 
-    private void run(final Properties properties, final Config config) {
-        final SimpleStatisticsReporter stats = new SimpleStatisticsReporter(properties.getProperty(CLIENT_ID));
-        final KafkaForwarder forwarder = new KafkaForwarder(
-                config.getString("plog.topic"),
-                new Producer<byte[], byte[]>(new ProducerConfig(properties)),
-                stats);
-        final ExecutorService threadPool = Executors.newFixedThreadPool(config.getInt("plog.threads"));
+    private synchronized Producer<byte[], byte[]> getProducer() {
+        if (producer == null)
+            producer = new Producer<byte[], byte[]>(new ProducerConfig(kafkaProperties));
+        return producer;
+    }
+
+    private Sink getSink(Config config, StatisticsReporter stats) {
+        final String topic = config.getString("topic");
+        if ("STDOUT".equals(topic))
+            return new ConsoleSink();
+        else
+            return new KafkaSink(topic, getProducer(), stats);
+    }
+
+    private void run() {
+        final ExecutorService threadPool =
+                Executors.newFixedThreadPool(config.getInt("plog.threads"));
+
+        final EndOfPipeline eopHandler = new EndOfPipeline(stats);
+
         final EventLoopGroup group = new NioEventLoopGroup();
+
         final ChannelFutureListener futureListener = new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
@@ -60,21 +89,27 @@ public class App {
             }
         };
 
-        if (config.getBoolean("plog.udp.enabled")) {
-            startUDP(config, stats, forwarder, threadPool, group)
-                    .addListener(futureListener);
+        final List<? extends Config> udpConfigs = config.getConfigList("plog.udp");
+        if (!udpConfigs.isEmpty()) {
+            final FourLetterCommandHandler flch = new FourLetterCommandHandler(stats, config);
+            for (Config udpConfig : udpConfigs)
+                startUDP(udpConfig, stats, eopHandler, flch, threadPool, group)
+                        .addListener(futureListener);
         }
 
-        if (config.getBoolean("plog.tcp.enabled"))
-            startTCP(config, forwarder, group)
+
+        for (Config tcpConfig : config.getConfigList("plog.tcp")) {
+            startTCP(tcpConfig, stats, group, eopHandler)
                     .addListener(futureListener);
+        }
 
         log.info("Started");
     }
 
-    private ChannelFuture startTCP(final Config config,
-                                   final KafkaForwarder forwarder,
-                                   final EventLoopGroup group) {
+    private ChannelFuture startTCP(final Config tcpConfig,
+                                   final StatisticsReporter stats,
+                                   final EventLoopGroup group,
+                                   final EndOfPipeline eopHandler) {
         return new ServerBootstrap().group(group).channel(NioServerSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_REUSEADDR, true)
@@ -83,38 +118,41 @@ public class App {
                     @Override
                     protected void initChannel(SocketChannel channel) throws Exception {
                         channel.pipeline()
-                                .addLast(new LineBasedFrameDecoder(config.getInt("plog.tcp.max_line")))
+                                .addLast(new LineBasedFrameDecoder(tcpConfig.getInt("max_line")))
                                 .addLast(new Message.ByteBufToMessageDecoder())
-                                .addLast(forwarder);
+                                .addLast(getSink(tcpConfig, stats))
+                                .addLast(eopHandler);
                     }
-                }).bind(new InetSocketAddress(config.getString("plog.tcp.host"), config.getInt("plog.tcp.port")));
+                }).bind(new InetSocketAddress(tcpConfig.getString("host"), tcpConfig.getInt("port")));
     }
 
-    private ChannelFuture startUDP(final Config config,
+    private ChannelFuture startUDP(final Config udpConfig,
                                    final SimpleStatisticsReporter stats,
-                                   final KafkaForwarder forwarder,
+                                   final EndOfPipeline eopHandler,
+                                   final FourLetterCommandHandler commandHandler,
                                    final ExecutorService threadPool,
                                    final EventLoopGroup group) {
         final ProtocolDecoder protocolDecoder = new ProtocolDecoder(stats);
-        final Defragmenter defragmenter = new Defragmenter(stats, config.getConfig("plog.defrag"));
+        final Defragmenter defragmenter = new Defragmenter(stats, udpConfig.getConfig("defrag"));
         stats.withDefrag(defragmenter);
-        final FourLetterCommandHandler commandHandler = new FourLetterCommandHandler(stats, config);
 
         return new Bootstrap().group(group).channel(NioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_RCVBUF,
-                        config.getInt("plog.udp.SO_RCVBUF"))
+                        udpConfig.getInt("SO_RCVBUF"))
                 .option(ChannelOption.SO_SNDBUF,
-                        config.getInt("plog.udp.SO_SNDBUF"))
+                        udpConfig.getInt("SO_SNDBUF"))
                 .option(ChannelOption.RCVBUF_ALLOCATOR,
-                        new FixedRecvByteBufAllocator(config.getInt("plog.udp.RECV_SIZE")))
+                        new FixedRecvByteBufAllocator(udpConfig.getInt("RECV_SIZE")))
                 .handler(new ChannelInitializer<NioDatagramChannel>() {
                     @Override
                     protected void initChannel(NioDatagramChannel channel) throws Exception {
                         channel.pipeline()
                                 .addLast(new SimpleChannelInboundHandler<DatagramPacket>(false) {
                                     @Override
-                                    protected void channelRead0(final ChannelHandlerContext ctx, final DatagramPacket msg) throws Exception {
+                                    protected void channelRead0(final ChannelHandlerContext ctx,
+                                                                final DatagramPacket msg)
+                                            throws Exception {
                                         threadPool.submit(new Runnable() {
                                             @Override
                                             public void run() {
@@ -126,21 +164,10 @@ public class App {
                                 .addLast(protocolDecoder)
                                 .addLast(defragmenter)
                                 .addLast(commandHandler)
-                                .addLast(forwarder)
-                                .addLast(new SimpleChannelInboundHandler<Void>() {
-                                    @Override
-                                    protected void channelRead0(ChannelHandlerContext ctx, Void msg) throws Exception {
-                                        log.error("Some seriously weird stuff going on here!");
-                                    }
-
-                                    @Override
-                                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                                        log.error("Exception down the UDP pipeline", cause);
-                                        stats.exception();
-                                    }
-                                });
+                                .addLast(getSink(udpConfig, stats))
+                                .addLast(eopHandler);
                     }
                 })
-                .bind(new InetSocketAddress(config.getString("plog.udp.host"), config.getInt("plog.udp.port")));
+                .bind(new InetSocketAddress(udpConfig.getString("host"), udpConfig.getInt("port")));
     }
 }

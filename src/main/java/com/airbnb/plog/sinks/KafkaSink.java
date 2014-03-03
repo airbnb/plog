@@ -1,4 +1,4 @@
-package com.airbnb.plog.kafka;
+package com.airbnb.plog.sinks;
 
 import com.airbnb.plog.Message;
 import com.airbnb.plog.stats.StatisticsReporter;
@@ -16,22 +16,10 @@ import static io.netty.channel.ChannelHandler.Sharable;
 
 @RequiredArgsConstructor
 @Sharable
-public final class KafkaForwarder extends SimpleChannelInboundHandler<Message> {
-    // This makes me excrutiatingly sad
-    private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
-            "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$",
-            Pattern.CASE_INSENSITIVE
-    );
-
+public final class KafkaSink extends Sink {
     private final String topic;
     private final Producer<byte[], byte[]> producer;
     private final StatisticsReporter stats;
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        if (!(cause instanceof IOException && IGNORABLE_ERROR_MESSAGE.matcher(cause.getMessage()).matches()))
-            super.exceptionCaught(ctx, cause);
-    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
