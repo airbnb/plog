@@ -2,12 +2,13 @@ package com.airbnb.plog.stats;
 
 import com.airbnb.plog.fragmentation.Defragmenter;
 import com.google.common.cache.CacheStats;
+import com.google.common.collect.Sets;
 import com.yammer.metrics.core.Meter;
 import kafka.producer.*;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
@@ -31,8 +32,8 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             droppedFragments = new AtomicLongArray((Short.SIZE + 1) * (Short.SIZE + 1)),
             invalidFragments = new AtomicLongArray((Short.SIZE + 1) * (Short.SIZE + 1));
     private final String kafkaClientId;
-    private Defragmenter defragmenter = null;
     private final long startTime = System.currentTimeMillis();
+    private Set<Defragmenter> defragmenters = Sets.newHashSet();
 
     private static final int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
@@ -143,16 +144,14 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(',');
         appendLogLogStats(builder, "dropped_fragments", droppedFragments);
 
-        if (defragmenter != null) {
-            final CacheStats cacheStats = defragmenter.getCacheStats();
-            builder.append(",\"cache\":{\"evictions\":");
-            builder.append(cacheStats.evictionCount());
-            builder.append(",\"hits\":");
-            builder.append(cacheStats.hitCount());
-            builder.append(",\"misses\":");
-            builder.append(cacheStats.missCount());
-            builder.append('}');
-        }
+        final CacheStats cacheStats = this.defragmentersStats();
+        builder.append(",\"cache\":{\"evictions\":");
+        builder.append(cacheStats.evictionCount());
+        builder.append(",\"hits\":");
+        builder.append(cacheStats.hitCount());
+        builder.append(",\"misses\":");
+        builder.append(cacheStats.missCount());
+        builder.append('}');
 
         if (kafkaClientId != null)
             appendKafka(builder);
@@ -228,10 +227,24 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(']');
     }
 
+    private CacheStats defragmentersStats() {
+        long hitCount = 0, missCount = 0, loadSuccessCount = 0, loadExceptionCount = 0,
+                totalLoadTime = 0, evictionCount = 0;
+        for (Defragmenter defragmenter : this.defragmenters) {
+            final CacheStats stats = defragmenter.getCacheStats();
+            hitCount += stats.hitCount();
+            missCount += stats.missCount();
+            loadSuccessCount += stats.loadSuccessCount();
+            loadExceptionCount += stats.loadExceptionCount();
+            totalLoadTime += stats.totalLoadTime();
+            evictionCount += stats.evictionCount();
+        }
+        return new CacheStats(
+                hitCount, missCount, loadSuccessCount, loadExceptionCount,
+                totalLoadTime, evictionCount);
+    }
+
     public synchronized void withDefrag(Defragmenter defragmenter) {
-        if (this.defragmenter == null)
-            this.defragmenter = defragmenter;
-        else
-            throw new IllegalStateException("Defragmenter already provided");
+        this.defragmenters.add(defragmenter);
     }
 }
