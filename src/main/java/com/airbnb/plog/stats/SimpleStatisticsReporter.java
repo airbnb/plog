@@ -202,7 +202,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
             builder.append('[');
             for (int packetIndexLog = 0; packetIndexLog <= Short.SIZE; packetIndexLog++) {
-                builder.append(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
+                builder.append(data.get(packetCountLog * Short.SIZE + packetIndexLog));
 
                 if (packetIndexLog != Short.SIZE)
                     builder.append(',');

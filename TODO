@@ -1,6 +1,0 @@
-- tests!
-- better documentation
-- monitoring plugin for datadog
-- keep packet payloads as array in multipart message
-- snappy compression
-- figure out cache stats
