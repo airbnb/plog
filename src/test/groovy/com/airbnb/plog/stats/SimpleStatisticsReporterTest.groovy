@@ -40,6 +40,32 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
         testValidJSON(stats)
     }
 
+    void testLogLogStatsShape() {
+        final stats = new SimpleStatisticsReporter(null)
+        final droppedStats = slurper.parseText(stats.toJSON())['dropped_fragments']
+        for (i in 0..16)
+            assert droppedStats[i].size == i+1
+    }
+
+    void testLogLogStatsCorrectlyRendered() {
+        final stats = new SimpleStatisticsReporter(null)
+
+        stats.missingFragmentInDroppedMessage(0, 1)
+        2.times { stats.missingFragmentInDroppedMessage(1, 2) }
+        3.times { stats.missingFragmentInDroppedMessage(2, 3) }
+        4.times { stats.missingFragmentInDroppedMessage(2, 4) }
+        5.times { stats.missingFragmentInDroppedMessage(0, 8) }
+        6.times { stats.missingFragmentInDroppedMessage(6, 10) }
+
+        final droppedStats = slurper.parseText(stats.toJSON())['dropped_fragments']
+
+        assert droppedStats[0][0] == 1
+        assert droppedStats[1][1] == 2
+        assert droppedStats[2][2] == 7
+        assert droppedStats[3][0] == 5
+        assert droppedStats[4][3] == 6
+    }
+
     private void testValidJSON(SimpleStatisticsReporter stats) {
         final parsed = slurper.parseText(stats.toJSON())
         assert parsed instanceof Map
@@ -97,9 +123,6 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
     void testCantProvideTwoDefragmenters() {
         final stats = new SimpleStatisticsReporter(null)
         stats.withDefrag(new Defragmenter(stats, defragConfig))
-        shouldFail {
-            stats.withDefrag(new Defragmenter(stats, defragConfig))
-        }
     }
 
     void testLogLogCounters() {
