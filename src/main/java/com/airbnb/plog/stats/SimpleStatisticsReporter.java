@@ -101,13 +101,13 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     @Override
     public long receivedV0InvalidMultipartFragment(final int fragmentIndex, final int expectedFragments) {
-        final int target = (Short.SIZE * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
+        final int target = ((Short.SIZE + 1) * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
         return invalidFragments.incrementAndGet(target);
     }
 
     @Override
     public long missingFragmentInDroppedMessage(final int fragmentIndex, final int expectedFragments) {
-        final int target = (Short.SIZE * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
+        final int target = ((Short.SIZE + 1) * intLog2(expectedFragments - 1)) + intLog2(fragmentIndex);
         return droppedFragments.incrementAndGet(target);
     }
 
@@ -201,10 +201,9 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append("\":[");
         for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
             builder.append('[');
-            for (int packetIndexLog = 0; packetIndexLog <= Short.SIZE; packetIndexLog++) {
-                builder.append(data.get(packetCountLog * Short.SIZE + packetIndexLog));
-
-                if (packetIndexLog != Short.SIZE)
+            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++) {
+                builder.append(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
+                if (packetIndexLog != packetCountLog)
                     builder.append(',');
             }
             builder.append(']');
