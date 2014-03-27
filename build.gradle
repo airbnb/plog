@@ -65,6 +65,11 @@ run {
     ]
 }
 
+test {
+    // gradle screws up SLF4J for that test. Use IntelliJ :)
+    exclude 'com/airbnb/plog/EndOfPipeline*'
+}
+
 cobertura.coverageFormats = ['html', 'xml']
 
 buildscript {
