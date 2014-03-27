@@ -8,7 +8,7 @@ apply plugin: 'cobertura'
 apply plugin: 'coveralls'
 
 group = 'com.airbnb.plog'
-version = '2.0.1'
+version = '2.0.2'
 mainClassName = 'com.airbnb.plog.App'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -23,7 +23,7 @@ dependencies {
     compile 'com.google.guava:guava:16.0.1'
     compile 'com.typesafe:config:1.2.0'
     compile 'org.slf4j:slf4j-api:1.7.6'
-    compile 'log4j:log4j:1.2.17'
+    compile 'org.slf4j:slf4j-log4j12:1.7.6'
     compile 'org.xerial.snappy:snappy-java:1.1.0.1'
     compile('org.apache.kafka:kafka_2.10:0.8.0') {
         exclude module: 'zookeeper'
@@ -63,6 +63,11 @@ run {
         'queue.buffering.max.ms': 500,
         'request.required.acks': 1,
     ]
+}
+
+test {
+    // gradle screws up SLF4J for that test. Use IntelliJ :)
+    exclude 'com/airbnb/plog/EndOfPipeline*'
 }
 
 cobertura.coverageFormats = ['html', 'xml']
