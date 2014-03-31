@@ -55,14 +55,6 @@ run {
         '-XX:+UseFastAccessorMethods',
         '-XX:CompileThreshold=1500',
     ]
-
-    systemProperties = [
-// the kafka binary distrib doesn't seem to include snappy support
-//      'compression.codec': 'snappy',
-        'producer.type': 'async',
-        'queue.buffering.max.ms': 500,
-        'request.required.acks': 1,
-    ]
 }
 
 test {
