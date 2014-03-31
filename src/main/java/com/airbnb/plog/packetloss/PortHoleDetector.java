@@ -9,23 +9,12 @@ import java.util.Arrays;
 
 @Slf4j
 final class PortHoleDetector {
-    @RequiredArgsConstructor
-    static final class MaxHoleTooSmall extends IllegalArgumentException {
-        @Override
-        public String getMessage() {
-            return "Maximum hole too small: " + maximumHole;
-        }
-
-        final int maximumHole;
-    }
-
     @Getter(AccessLevel.PACKAGE)
     private final int[] entries;
     @Getter(AccessLevel.PACKAGE)
     private long minSeen;
     @Getter(AccessLevel.PACKAGE)
     private long maxSeen;
-
     PortHoleDetector(final int capacity) {
         /* we assume Integer.MIN_VALUE is absent from port IDs.
            we'll have some false negatives */
@@ -148,5 +137,15 @@ final class PortHoleDetector {
             }
         }
         return holes;
+    }
+
+    @RequiredArgsConstructor
+    static final class MaxHoleTooSmall extends IllegalArgumentException {
+        final int maximumHole;
+
+        @Override
+        public String getMessage() {
+            return "Maximum hole too small: " + maximumHole;
+        }
     }
 }
