@@ -3,10 +3,7 @@ package com.airbnb.plog.listeners;
 import com.airbnb.plog.Message;
 import com.typesafe.config.Config;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
@@ -31,9 +28,12 @@ public class TCPListener extends Listener {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel channel) throws Exception {
-                        channel.pipeline()
+                        final ChannelPipeline pipeline = channel.pipeline();
+                        pipeline
                                 .addLast(new LineBasedFrameDecoder(config.getInt("max_line")))
-                                .addLast(new Message.ByteBufToMessageDecoder())
+                                .addLast(new Message.ByteBufToMessageDecoder());
+                        appendFilters(pipeline);
+                        pipeline
                                 .addLast(getSink())
                                 .addLast(getEopHandler());
                     }
