@@ -83,6 +83,7 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
                 'receivedV0Command',
                 'receivedUnknownCommand',
                 'receivedV0MultipartMessage',
+                'receivedV0InvalidMultipartHeader',
                 'failedToSend',
                 'exception'
         ]
