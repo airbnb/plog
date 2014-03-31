@@ -8,6 +8,7 @@ jdk:
   - openjdk6
   - openjdk7
   - oraclejdk7
+  - oraclejdk8
 
 script: python -m py_compile extra/datadog/plog.py
 
