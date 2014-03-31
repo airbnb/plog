@@ -9,6 +9,8 @@ class PlogCheck(AgentCheck):
 		tags = instance.get('tags', [])
 		host = instance.get('host', '127.0.0.1')
 		port = instance.get('port', 23456)
+		prefix = instance.get('prefix', 'plog.')
+		suffix = instance.get('suffix', '')
 		timeout = instance.get('timeout', 3)
 		max_size = instance.get('max_size', 65536)
 
@@ -26,51 +28,51 @@ class PlogCheck(AgentCheck):
 			stats = loads(data)
 
 			def counter(name, val):
-				self.rate(name, val, tags=tags)
+				self.rate(prefix + name + suffix, val, tags=tags)
 			def rate(name, val):
-				self.gauge(name, val, tags=tags)
+				self.gauge(prefix + name + suffix, val, tags=tags)
 
-			rate('plog.uptime',
+			rate('uptime',
 				stats['uptime'])
-			counter('plog.exceptions',
+			counter('exceptions',
 				stats['exceptions'])
-			counter('plog.failed_to_send',
+			counter('failed_to_send',
 				stats['failed_to_send'])
-			counter('plog.udp_simple',
+			counter('udp_simple',
 				stats['udp_simple_messages'])
-			counter('plog.holes.from_dead_port',
+			counter('holes.from_dead_port',
 				stats['holes_from_dead_port'])
-			counter('plog.holes.from_new_message',
+			counter('holes.from_new_message',
 				stats['holes_from_new_message'])
-			counter('plog.invalid_checksum',
+			counter('invalid_checksum',
 				sum(stats['v0_invalid_checksum']))
-			counter('plog.fragments',
+			counter('fragments',
 				sum(stats['v0_fragments']))
-			counter('plog.missing_fragments',
+			counter('missing_fragments',
 				sum(sum(a) for a in stats['dropped_fragments']))
-			counter('plog.invalid_fragments',
+			counter('invalid_fragments',
 				sum(sum(a) for a in stats['v0_invalid_fragments']))
 
 			cache = stats['cache']
-			counter('plog.cache.evictions',
+			counter('cache.evictions',
 				cache['evictions'])
-			counter('plog.cache.hits',
+			counter('cache.hits',
 				cache['hits'])
-			counter('plog.cache.miss',
+			counter('cache.miss',
 				cache['misses'])
 
 			kafka = stats['kafka']
-			rate('plog.kafka.messages',
+			rate('kafka.messages',
 				kafka['messageRate']['rate'][0])
-			rate('plog.kafka.dropped',
+			rate('kafka.dropped',
 				kafka['droppedMessageRate']['rate'][0])
-			rate('plog.kafka.bytes',
+			rate('kafka.bytes',
 				kafka['byteRate']['rate'][0])
-			rate('plog.kafka.resends',
+			rate('kafka.resends',
 				kafka['resendRate']['rate'][0])
-			rate('plog.kafka.failed_sends',
+			rate('kafka.failed_sends',
 				kafka['failedSendRate']['rate'][0])
-			rate('plog.kafka.serialization_errors',
+			rate('kafka.serialization_errors',
 				kafka['serializationErrorRate']['rate'][0])
 
 		finally:

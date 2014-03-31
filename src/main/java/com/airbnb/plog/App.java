@@ -37,14 +37,13 @@ public class App {
 
     private final Properties kafkaProperties;
     private final Config config;
-    private final SimpleStatisticsReporter stats;
+
     // Lazily initialized
     private Producer<byte[], byte[]> producer = null;
 
     public App(Properties systemProperties, Config config) {
         this.kafkaProperties = systemProperties;
         this.config = config;
-        this.stats = new SimpleStatisticsReporter(kafkaProperties.getProperty(CLIENT_ID));
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -55,6 +54,10 @@ public class App {
             systemProperties.setProperty(CLIENT_ID, "plog_" + InetAddress.getLocalHost().getHostName());
 
         new App(systemProperties, ConfigFactory.load()).run();
+    }
+
+    private SimpleStatisticsReporter makeStats() {
+        return new SimpleStatisticsReporter(kafkaProperties.getProperty(CLIENT_ID));
     }
 
     private synchronized Producer<byte[], byte[]> getProducer() {
@@ -75,8 +78,6 @@ public class App {
         final ExecutorService threadPool =
                 Executors.newFixedThreadPool(config.getInt("plog.threads"));
 
-        final EndOfPipeline eopHandler = new EndOfPipeline(stats);
-
         final EventLoopGroup group = new NioEventLoopGroup();
 
         final ChannelFutureListener futureListener = new ChannelFutureListener() {
@@ -91,15 +92,16 @@ public class App {
 
         final List<? extends Config> udpConfigs = config.getConfigList("plog.udp");
         if (!udpConfigs.isEmpty()) {
+            final SimpleStatisticsReporter stats = makeStats();
             final FourLetterCommandHandler flch = new FourLetterCommandHandler(stats, config);
             for (Config udpConfig : udpConfigs)
-                startUDP(udpConfig, stats, eopHandler, flch, threadPool, group)
+                startUDP(udpConfig, flch, threadPool, group)
                         .addListener(futureListener);
         }
 
 
         for (Config tcpConfig : config.getConfigList("plog.tcp")) {
-            startTCP(tcpConfig, stats, group, eopHandler)
+            startTCP(tcpConfig, group)
                     .addListener(futureListener);
         }
 
@@ -107,9 +109,9 @@ public class App {
     }
 
     private ChannelFuture startTCP(final Config tcpConfig,
-                                   final StatisticsReporter stats,
-                                   final EventLoopGroup group,
-                                   final EndOfPipeline eopHandler) {
+                                   final EventLoopGroup group) {
+        final SimpleStatisticsReporter stats = makeStats();
+        final EndOfPipeline eopHandler = new EndOfPipeline(stats);
         return new ServerBootstrap().group(group).channel(NioServerSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_REUSEADDR, true)
@@ -127,12 +129,13 @@ public class App {
     }
 
     private ChannelFuture startUDP(final Config udpConfig,
-                                   final SimpleStatisticsReporter stats,
-                                   final EndOfPipeline eopHandler,
                                    final FourLetterCommandHandler commandHandler,
                                    final ExecutorService threadPool,
                                    final EventLoopGroup group) {
+        final SimpleStatisticsReporter stats = makeStats();
+        final EndOfPipeline eopHandler = new EndOfPipeline(stats);
         final ProtocolDecoder protocolDecoder = new ProtocolDecoder(stats);
+
         final Defragmenter defragmenter = new Defragmenter(stats, udpConfig.getConfig("defrag"));
         stats.withDefrag(defragmenter);
 
