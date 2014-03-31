@@ -48,7 +48,8 @@ public class UDPListener extends Listener {
                 .handler(new ChannelInitializer<NioDatagramChannel>() {
                     @Override
                     protected void initChannel(NioDatagramChannel channel) throws Exception {
-                        channel.pipeline()
+                        final ChannelPipeline pipeline = channel.pipeline();
+                        pipeline
                                 .addLast(new SimpleChannelInboundHandler<DatagramPacket>(false) {
                                     @Override
                                     protected void channelRead0(final ChannelHandlerContext ctx,
@@ -64,8 +65,9 @@ public class UDPListener extends Listener {
                                 })
                                 .addLast(protocolDecoder)
                                 .addLast(defragmenter)
-                                .addLast(flch)
-                                .addLast(getSink())
+                                .addLast(flch);
+                        appendFilters(pipeline);
+                        pipeline.addLast(getSink())
                                 .addLast(getEopHandler());
                     }
                 })
