@@ -14,13 +14,12 @@ import java.util.regex.Pattern;
 @Slf4j
 @RequiredArgsConstructor
 public class EndOfPipeline extends SimpleChannelInboundHandler<Void> {
-    private final StatisticsReporter stats;
-
     // This makes me excrutiatingly sad
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
             "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$",
             Pattern.CASE_INSENSITIVE
     );
+    private final StatisticsReporter stats;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Void msg) throws Exception {

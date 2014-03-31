@@ -9,9 +9,12 @@ import kafka.producer.ProducerConfig
 
 class SimpleStatisticsReporterTest extends GroovyTestCase {
     private final static slurper = new JsonSlurper()
+
     private final static defragConfig =
-            ConfigFactory.load().getConfigList('plog.udp').get(0).getConfig('defrag')
+            ConfigFactory.load().getConfig('plog.udp.defaults.defrag')
+
     private final static clientId = 'SimpleStatisticsReporterTestClientId'
+
     static {
         final props = new Properties()
         props.put('client.id', clientId)
