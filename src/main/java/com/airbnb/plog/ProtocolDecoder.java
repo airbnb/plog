@@ -34,19 +34,24 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {
                 case 0:
-                    final FourLetterCommand e = readCommand(msg);
-                    if (e != null) {
+                    final FourLetterCommand cmd = readCommand(msg);
+                    if (cmd != null) {
                         ProtocolDecoder.log.debug("v0 command");
-                        out.add(e);
+                        out.add(cmd);
                     } else
                         stats.receivedUnknownCommand();
                     break;
                 case 1:
                     ProtocolDecoder.log.debug("v0 multipart message: {}", msg);
                     msg.retain();
-                    final Fragment fragment = Fragment.fromDatagram(msg);
-                    stats.receivedV0MultipartFragment(fragment.getFragmentIndex());
-                    out.add(fragment);
+                    try {
+                        final Fragment fragment = Fragment.fromDatagram(msg);
+                        stats.receivedV0MultipartFragment(fragment.getFragmentIndex());
+                        out.add(fragment);
+                    } catch (IllegalArgumentException e) {
+                        log.error("Invalid header", e);
+                        stats.receivedV0InvalidMultipartHeader();
+                    }
                     break;
                 default:
                     stats.receivedV0InvalidType();
