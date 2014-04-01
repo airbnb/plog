@@ -8,7 +8,7 @@ apply plugin: 'cobertura'
 apply plugin: 'coveralls'
 
 group = 'com.airbnb.plog'
-version = '3.0.0-WIP'
+version = '3.0.0'
 mainClassName = 'com.airbnb.plog.App'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
