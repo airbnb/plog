@@ -3,9 +3,8 @@
 
 # plog
 
-Fire and forget unboxed or fragmented messages over UDP, or line-by-line over TCP (disabled by default), have them
-forwarded to Kafka 0.8 or the standard output.
-That should cover `syslog`.
+Fire and forget unboxed or fragmented messages over UDP or TCP, have them forwarded
+to Kafka 0.8 or the standard output. That should cover `syslog`.
 
 ## Disclaimer
 
@@ -101,6 +100,10 @@ Let's go through all keys in the JSON object exposed by the `STAT` command:
 - `kafka` (object):
   - Keys: `byteRate`, `messageRate`, `failedSendRate`, `resendRate`, `droppedMessageRate`, `serializationErrorRate`
   - Values: objects with keys `count` and `rate`, an array offering 1-min, 5-min and 15-min rates.
+
+## TCP protocol
+
+Line-by-line separated, lines starting with `\0` are reserved.
 
 ## UDP protocol
 
