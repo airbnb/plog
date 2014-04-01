@@ -16,7 +16,7 @@ targetCompatibility = 1.6
 repositories { jcenter() }
 
 dependencies {
-    compile 'org.projectlombok:lombok:1.12.4'
+    compile 'org.projectlombok:lombok:1.12.6'
     compile 'io.netty:netty-handler:4.0.17.Final'
     compile 'io.netty:netty-codec:4.0.17.Final'
     compile 'org.javassist:javassist:3.18.1-GA'
@@ -25,14 +25,14 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.6'
     compile 'org.slf4j:slf4j-log4j12:1.7.6'
     compile 'org.xerial.snappy:snappy-java:1.1.0.1'
-    compile('org.apache.kafka:kafka_2.10:0.8.0') {
+    compile('org.apache.kafka:kafka_2.10:0.8.1') {
         exclude module: 'zookeeper'
         exclude module: 'zkclient'
         exclude module: 'jmxri'
         exclude module: 'jmxtools'
         exclude module: 'slf4j-simple'
     }
-    testCompile 'org.codehaus.groovy:groovy-all:2.2.1'
+    testCompile 'org.codehaus.groovy:groovy-all:2.2.2'
     testCompile 'junit:junit:4.11'
 }
 
