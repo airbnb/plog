@@ -15,6 +15,7 @@ final class PortHoleDetector {
     private long minSeen;
     @Getter(AccessLevel.PACKAGE)
     private long maxSeen;
+
     PortHoleDetector(final int capacity) {
         /* we assume Integer.MIN_VALUE is absent from port IDs.
            we'll have some false negatives */
