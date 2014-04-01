@@ -11,6 +11,8 @@ public interface StatisticsReporter {
 
     long receivedUnknownCommand();
 
+    long receivedV0InvalidMultipartHeader();
+
     long receivedV0MultipartMessage();
 
     long failedToSend();

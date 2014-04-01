@@ -3,9 +3,8 @@
 
 # plog
 
-Fire and forget unboxed or fragmented messages over UDP, or line-by-line over TCP (disabled by default), have them
-forwarded to Kafka 0.8 or the standard output.
-That should cover `syslog`.
+Fire and forget unboxed or fragmented messages over UDP or TCP, have them forwarded
+to Kafka 0.8 or the standard output. That should cover `syslog`.
 
 ## Disclaimer
 
@@ -16,8 +15,10 @@ While updates may still be made and we welcome feedback, keep in mind we may not
 
 ## Getting started
 
+    $ printf 'plog.udp.listeners=[{topic=STDOUT}]' > src/main/resources/application.conf
     $ ./gradlew run
-    $ printf 'yipee!'|socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
+    $ printf 'yipee!' | socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
+    $ printf '\0\0statsplz' | socat - UDP-DATAGRAM:127.0.0.1:23456
 
 ## Configuration
 
@@ -28,16 +29,12 @@ The app settings are read using Typesafe Config.
 
 Please refer to [Kafka's documentation](http://kafka.apache.org/08/configuration.html).
 
-If unspecified in system properties, we will set those defaults:
-- `metadata.broker.list`: `127.0.0.1:9092`
-- `client.id`: `plog_$HOSTNAME`
-
 ### plog settings
 
-Please refer to [reference.conf](src/main/resources/reference.conf) for the options and their default values.
+Please refer to [reference.conf](src/main/resources/reference.conf) for all the options and their default values.
 
-Note that multiple TCP and UDP ports can be configure and have separate settings,
-but there can only be 0 or 1 Kafka producer.
+Note that multiple TCP and UDP ports can be configure and have separate settings, and each has their own sink
+(whether Kafka or standard output).
 
 ## Building a fat JAR
 
@@ -46,7 +43,8 @@ but there can only be 0 or 1 Kafka producer.
 
 ## Operational tricks
 
-- To minimize packet loss due to "lacks", increase the kernel socket buffer size. For Linux, we use `sysctl net.core.rmem_max = 1048576`.
+- To minimize packet loss due to "lacks", increase the kernel socket buffer size.
+  For Linux, we use `sysctl net.core.rmem_max = 1048576`.
 
 - Hole detection is a bit difficult to explain, but worth looking into (the tests should help).
   It is enabled by default, but can be disabled for performance.
@@ -103,9 +101,14 @@ Let's go through all keys in the JSON object exposed by the `STAT` command:
   - Keys: `byteRate`, `messageRate`, `failedSendRate`, `resendRate`, `droppedMessageRate`, `serializationErrorRate`
   - Values: objects with keys `count` and `rate`, an array offering 1-min, 5-min and 15-min rates.
 
+## TCP protocol
+
+Line-by-line separated, lines starting with `\0` are reserved.
+
 ## UDP protocol
 
-- If the first byte is outside of the 0-31 range, the message is considered to be unboxed and the whole packet is parsed as a string.
+- If the first byte is outside of the 0-31 range, the message is considered to be unboxed
+  and the whole packet is parsed as a string.
 
 - Otherwise, the first byte indicates the protocol version. Currently, only version `00` is defined.
 
@@ -119,23 +122,26 @@ Let's go through all keys in the JSON object exposed by the `STAT` command:
 
 Command packet. Commands are always 4 ASCII characters, trailing payload can be used. Command matching is case-insensitive.
 
-- KILL crashes the process without any attention for detail or respect for ongoing operations.
+- `KILL` crashes the process without any attention for detail or respect for ongoing operations.
 
         $ printf '\0\0kill'|socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
 
-- PING will cause the process to reply back with PONG. Trailing payload is sent back and can be used for request/reply matching.
+- `PING` will cause the process to reply back with PONG.
+  Trailing payload is sent back and can be used for request/reply matching.
 
         $ printf "\0\0PingFor$$\n\n"|socat - UDP-DATAGRAM:127.0.0.1:23456
         PONGFor17575
         
         $
 
-- STAT is used to request statistics in UTF-8-encoded JSON. Per convention, the trailing payload should be used for politeness.
+- `STAT` is used to request statistics in UTF-8-encoded JSON.
+  By convention, the trailing payload should be used for politeness.
 
         $ printf "\0\0statistics please, gentle service"|socat - UDP-DATAGRAM:127.0.0.1:23456
         {""udpSimpleMessages":0, [...]}
 
-- ENVI returns the environment as a UTF-8-encoded string. The format is not defined further.
+- `ENVI` returns the environment as a UTF-8-encoded string.
+  The format is not defined further.
 
 #### Packet type 01: fragmented message
 

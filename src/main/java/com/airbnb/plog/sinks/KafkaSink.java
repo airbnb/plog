@@ -3,14 +3,10 @@ package com.airbnb.plog.sinks;
 import com.airbnb.plog.Message;
 import com.airbnb.plog.stats.StatisticsReporter;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import kafka.common.FailedToSendMessageException;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import lombok.RequiredArgsConstructor;
-
-import java.io.IOException;
-import java.util.regex.Pattern;
 
 import static io.netty.channel.ChannelHandler.Sharable;
 

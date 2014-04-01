@@ -21,6 +21,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             udpSimpleMessages = new AtomicLong(),
             udpInvalidVersion = new AtomicLong(),
             v0InvalidType = new AtomicLong(),
+            v0InvalidMultipartHeader = new AtomicLong(),
             unknownCommand = new AtomicLong(),
             v0Commands = new AtomicLong(),
             v0MultipartMessages = new AtomicLong(),
@@ -52,6 +53,11 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     @Override
     public final long receivedV0InvalidType() {
         return this.v0InvalidType.incrementAndGet();
+    }
+
+    @Override
+    public final long receivedV0InvalidMultipartHeader() {
+        return this.v0InvalidMultipartHeader.incrementAndGet();
     }
 
     @Override
@@ -121,6 +127,8 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(this.udpInvalidVersion.get());
         builder.append(",\"v0_invalid_type\":");
         builder.append(this.v0InvalidType.get());
+        builder.append(",\"v0_invalid_multipart_header\":");
+        builder.append(this.v0InvalidMultipartHeader.get());
         builder.append(",\"unknown_command\":");
         builder.append(this.unknownCommand.get());
         builder.append(",\"v0_commands\":");
