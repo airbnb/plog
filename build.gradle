@@ -19,6 +19,7 @@ dependencies {
     compile 'org.projectlombok:lombok:1.12.4'
     compile 'io.netty:netty-handler:4.0.17.Final'
     compile 'io.netty:netty-codec:4.0.17.Final'
+    compile 'io.netty:netty-codec-http:4.0.17.Final'
     compile 'org.javassist:javassist:3.18.1-GA'
     compile 'com.google.guava:guava:16.0.1'
     compile 'com.typesafe:config:1.2.0'
