@@ -8,7 +8,7 @@ apply plugin: 'cobertura'
 apply plugin: 'coveralls'
 
 group = 'com.airbnb.plog'
-version = '3.0.1'
+version = '3.0.2'
 mainClassName = 'com.airbnb.plog.App'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -36,7 +36,12 @@ dependencies {
     testCompile 'junit:junit:4.11'
 }
 
-jar { manifest { attributes 'Main-Class': 'com.airbnb.plog.App' } }
+jar {
+  manifest {
+    attributes 'Main-Class': 'com.airbnb.plog.App',
+               'Plog-Version': version
+  }
+}
 
 shadow { artifactSet { exclude '*:lombok:*' } }
 
