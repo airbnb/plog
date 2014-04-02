@@ -63,6 +63,7 @@ We use JSON objects with the following fields:
 
 Let's go through all keys in the JSON object exposed by the `STAT` command:
 
+- `version`: the current version if available from the JAR manifest, or `unknown`
 - `failed_to_send`: number of times Kafka threw `FailedToSendMessageException` back
 - `exceptions`: number of unhandled exceptions.
 - `udp_simple_messages`: number of unboxed UDP messages received.
@@ -70,6 +71,7 @@ Let's go through all keys in the JSON object exposed by the `STAT` command:
 - `v0_invalid_type`: number of UDP messages using version 0 of the protocol and a wrong packet type.
 - `unknown_command`: number of commands received that aren't known (eg `KLIL` instead of `KILL`).
 - `v0_commands`: number of *valid* commands received.
+- `v0_invalid_multipart_header`: number of `v0` fragments received with invalid headers (could not be parsed).
 - `v0_fragments` (array): count of fragments received, whether valid or not,
   clustered by log2 of their index.
   *Ie*, the first number indicates how many first packets we've received,
