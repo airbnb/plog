@@ -8,9 +8,15 @@ import kafka.producer.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -34,9 +40,10 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             invalidFragments = new AtomicLongArray((Short.SIZE + 1) * (Short.SIZE + 1));
     private final String kafkaClientId;
     private final long startTime = System.currentTimeMillis();
+    private String MEMOIZED_PLOG_VERSION = null;
     private Set<Defragmenter> defragmenters = Sets.newHashSet();
 
-    private static final int intLog2(int i) {
+    private static int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
     }
 
@@ -119,7 +126,9 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     public final String toJSON() {
         StringBuilder builder = new StringBuilder();
-        builder.append("{\"uptime\":");
+        builder.append("{\"version\":\"");
+        builder.append(getPlogVersion());
+        builder.append("\",\"uptime\":");
         builder.append(System.currentTimeMillis() - this.startTime);
         builder.append(",\"udp_simple_messages\":");
         builder.append(this.udpSimpleMessages.get());
@@ -249,6 +258,30 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         return new CacheStats(
                 hitCount, missCount, loadSuccessCount, loadExceptionCount,
                 totalLoadTime, evictionCount);
+    }
+
+    private String getPlogVersion() {
+        if (MEMOIZED_PLOG_VERSION == null)
+            try {
+                MEMOIZED_PLOG_VERSION = readVersionFromManifest();
+            } catch (Throwable e) {
+                log.warn("Couldn't get version", e);
+                MEMOIZED_PLOG_VERSION = "unknown";
+            }
+        return MEMOIZED_PLOG_VERSION;
+    }
+
+    private String readVersionFromManifest() throws IOException {
+        final Enumeration<URL> resources = getClass().getClassLoader()
+                .getResources(JarFile.MANIFEST_NAME);
+        while (resources.hasMoreElements()) {
+            final URL url = resources.nextElement();
+            final Attributes mainAttributes = new Manifest(url.openStream()).getMainAttributes();
+            final String version = mainAttributes.getValue("Plog-Version");
+            if (version != null)
+                return version;
+        }
+        throw new NoSuchFieldError();
     }
 
     public synchronized void withDefrag(Defragmenter defragmenter) {
