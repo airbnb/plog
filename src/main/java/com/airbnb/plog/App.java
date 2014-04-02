@@ -8,9 +8,11 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.oio.OioEventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.UnknownHostException;
+import java.util.List;
 
 @Slf4j
 public class App {
@@ -21,8 +23,6 @@ public class App {
 
     private void run(Config config)
             throws UnknownHostException {
-        final EventLoopGroup group = new NioEventLoopGroup();
-
         final ChannelFutureListener futureListener = new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
@@ -45,14 +45,24 @@ public class App {
 
         int listenerId = 0;
 
-        for (final Config cfg : udpConfig.getConfigList("listeners")) {
-            new UDPListener(listenerId, cfg.withFallback(udpDefaults)).start(group).addListener(futureListener);
-            listenerId++;
+
+        final List<? extends Config> udpListeners = udpConfig.getConfigList("listeners");
+        if (!udpListeners.isEmpty()) {
+            final EventLoopGroup udpGroup = new OioEventLoopGroup();
+            for (final Config cfg : udpListeners) {
+                new UDPListener(listenerId, cfg.withFallback(udpDefaults)).start(udpGroup).addListener(futureListener);
+                listenerId++;
+            }
         }
 
-        for (final Config cfg : tcpConfig.getConfigList("listeners")) {
-            new TCPListener(listenerId, cfg.withFallback(tcpDefaults)).start(group).addListener(futureListener);
-            listenerId++;
+
+        final List<? extends Config> tcpListeners = tcpConfig.getConfigList("listeners");
+        if (!tcpListeners.isEmpty()) {
+            final EventLoopGroup tcpGroup = new NioEventLoopGroup();
+            for (final Config cfg : tcpListeners) {
+                new TCPListener(listenerId, cfg.withFallback(tcpDefaults)).start(tcpGroup).addListener(futureListener);
+                listenerId++;
+            }
         }
 
         log.info("Started with config {}", config);

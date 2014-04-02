@@ -8,7 +8,7 @@ import com.typesafe.config.Config;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.DatagramPacket;
-import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.socket.oio.OioDatagramChannel;
 
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -37,7 +37,7 @@ public class UDPListener extends Listener {
         final ExecutorService threadPool =
                 Executors.newFixedThreadPool(config.getInt("threads"));
 
-        return new Bootstrap().group(group).channel(NioDatagramChannel.class)
+        return new Bootstrap().group(group).channel(OioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_RCVBUF,
                         config.getInt("SO_RCVBUF"))
@@ -45,9 +45,9 @@ public class UDPListener extends Listener {
                         config.getInt("SO_SNDBUF"))
                 .option(ChannelOption.RCVBUF_ALLOCATOR,
                         new FixedRecvByteBufAllocator(config.getInt("RECV_SIZE")))
-                .handler(new ChannelInitializer<NioDatagramChannel>() {
+                .handler(new ChannelInitializer<OioDatagramChannel>() {
                     @Override
-                    protected void initChannel(NioDatagramChannel channel) throws Exception {
+                    protected void initChannel(OioDatagramChannel channel) throws Exception {
                         final ChannelPipeline pipeline = channel.pipeline();
                         pipeline
                                 .addLast(new SimpleChannelInboundHandler<DatagramPacket>(false) {
