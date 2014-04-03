@@ -20,7 +20,7 @@ public final class KafkaSink extends Sink {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
         try {
-            producer.send(new KeyedMessage<byte[], byte[]>(topic, msg.getPayload()));
+            producer.send(new KeyedMessage<byte[], byte[]>(topic, msg.asBytes()));
         } catch (FailedToSendMessageException e) {
             stats.failedToSend();
         }

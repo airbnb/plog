@@ -12,14 +12,14 @@ public class ReverseBytesProvider extends FilterProvider {
         return new SimpleChannelInboundHandler<Message>() {
             @Override
             protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-                final byte[] payload = msg.getPayload();
+                final byte[] payload = msg.asBytes();
                 final int length = payload.length;
 
                 final byte[] reverse = new byte[length];
                 for (int i = 0; i < length; i++)
                     reverse[i] = payload[length - i - 1];
 
-                ctx.fireChannelRead(new Message(reverse));
+                ctx.fireChannelRead(Message.fromBytes(ctx.alloc(), reverse));
             }
         };
     }

@@ -2,7 +2,7 @@ package com.airbnb.plog.fragmentation;
 
 import com.airbnb.plog.stats.StatisticsReporter;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBufAllocator;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -24,11 +24,12 @@ public class FragmentedMessage {
     @Getter
     private boolean complete = false;
 
-    private FragmentedMessage(final int totalLength,
+    private FragmentedMessage(ByteBufAllocator alloc,
+                              final int totalLength,
                               final int fragmentCount,
                               final int fragmentSize,
                               final int hash) {
-        this.payload = Unpooled.buffer(totalLength, totalLength);
+        this.payload = alloc.buffer(totalLength, totalLength);
         this.payload.writerIndex(totalLength);
         this.receivedFragments = new BitSet(fragmentCount);
         this.fragmentCount = fragmentCount;
@@ -38,6 +39,7 @@ public class FragmentedMessage {
 
     public static FragmentedMessage fromFragment(final Fragment fragment, StatisticsReporter stats) {
         final FragmentedMessage msg = new FragmentedMessage(
+                fragment.getPayload().alloc(),
                 fragment.getTotalLength(),
                 fragment.getFragmentCount(),
                 fragment.getFragmentSize(),

@@ -3,7 +3,6 @@ package com.airbnb.plog;
 import com.airbnb.plog.commands.FourLetterCommand;
 import com.airbnb.plog.fragmentation.Fragment;
 import com.airbnb.plog.stats.StatisticsReporter;
-import com.airbnb.plog.utils.ByteBufs;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
@@ -26,10 +25,9 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
         // versions are non-printable characters, push down the pipeline send as-is.
         if (versionIdentifier < 0 || versionIdentifier > 31) {
             log.debug("Unboxed UDP message");
-            msg.retain();
+            content.retain();
             stats.receivedUdpSimpleMessage();
-            out.add(new Message(ByteBufs.toByteArray(content)));
-            content.release();
+            out.add(new Message(content));
         } else if (versionIdentifier == 0) {
             final byte typeIdentifier = content.getByte(1);
             switch (typeIdentifier) {

@@ -4,9 +4,8 @@ import io.netty.buffer.ByteBuf;
 
 public final class ByteBufs {
     public static byte[] toByteArray(ByteBuf buf) {
-        final int length = buf.readableBytes();
-        final byte[] payload = new byte[length];
-        buf.getBytes(0, payload, 0, length);
+        final byte[] payload = new byte[buf.readableBytes()];
+        buf.getBytes(0, payload);
         return payload;
     }
 }

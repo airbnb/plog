@@ -6,6 +6,6 @@ import io.netty.channel.ChannelHandlerContext;
 public class ConsoleSink extends Sink {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        System.out.println(new String(msg.getPayload()));
+        System.out.println(new String(msg.asBytes()));
     }
 }

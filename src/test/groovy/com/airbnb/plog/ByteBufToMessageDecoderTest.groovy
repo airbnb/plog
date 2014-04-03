@@ -20,7 +20,7 @@ class ByteBufToMessageDecoderTest extends GroovyTestCase {
         final channel = new EmbeddedChannel(new Message.ByteBufToMessageDecoder())
         assert channel.writeInbound(Unpooled.wrappedBuffer(bytes))
         final message = (Message) channel.readInbound()
-        assert message.payload == bytes
+        assert message.asBytes() == bytes
         assert !channel.finish()
         assert channel.readOutbound() == null
     }

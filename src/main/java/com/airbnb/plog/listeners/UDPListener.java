@@ -6,6 +6,7 @@ import com.airbnb.plog.fragmentation.Defragmenter;
 import com.airbnb.plog.stats.SimpleStatisticsReporter;
 import com.typesafe.config.Config;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
@@ -37,7 +38,9 @@ public class UDPListener extends Listener {
         final ExecutorService threadPool =
                 Executors.newFixedThreadPool(config.getInt("threads"));
 
-        return new Bootstrap().group(group).channel(NioDatagramChannel.class)
+        return new Bootstrap()
+                .group(group)
+                .channel(NioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_RCVBUF,
                         config.getInt("SO_RCVBUF"))
@@ -45,6 +48,7 @@ public class UDPListener extends Listener {
                         config.getInt("SO_SNDBUF"))
                 .option(ChannelOption.RCVBUF_ALLOCATOR,
                         new FixedRecvByteBufAllocator(config.getInt("RECV_SIZE")))
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .handler(new ChannelInitializer<NioDatagramChannel>() {
                     @Override
                     protected void initChannel(NioDatagramChannel channel) throws Exception {
