@@ -25,7 +25,7 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
         final byte versionIdentifier = content.getByte(0);
         // versions are non-printable characters, push down the pipeline send as-is.
         if (versionIdentifier < 0 || versionIdentifier > 31) {
-            ProtocolDecoder.log.debug("Unboxed UDP message");
+            log.debug("Unboxed UDP message");
             msg.retain();
             stats.receivedUdpSimpleMessage();
             out.add(new Message(ByteBufs.toByteArray(content)));
@@ -36,13 +36,13 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
                 case 0:
                     final FourLetterCommand cmd = readCommand(msg);
                     if (cmd != null) {
-                        ProtocolDecoder.log.debug("v0 command");
+                        log.debug("v0 command");
                         out.add(cmd);
                     } else
                         stats.receivedUnknownCommand();
                     break;
                 case 1:
-                    ProtocolDecoder.log.debug("v0 multipart message: {}", msg);
+                    log.debug("v0 multipart message: {}", msg);
                     msg.retain();
                     try {
                         final Fragment fragment = Fragment.fromDatagram(msg);

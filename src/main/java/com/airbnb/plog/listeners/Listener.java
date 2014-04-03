@@ -40,21 +40,22 @@ public abstract class Listener {
             throws UnknownHostException {
         this.config = config;
 
-        final String clientId = "plog_" + InetAddress.getLocalHost().getHostName() + "_" + id;
-
-        this.stats = new SimpleStatisticsReporter(clientId);
-
-        this.eopHandler = new EndOfPipeline(stats);
-
         final String topic = config.getString("topic");
         if ("STDOUT".equals(topic)) {
             log.info("Using STDOUT");
+
+            this.stats = new SimpleStatisticsReporter(null);
+            this.eopHandler = new EndOfPipeline(stats);
             this.sink = new ConsoleSink();
         } else {
             final Properties kafkaProperties = new Properties();
             for (Map.Entry<String, ConfigValue> kv : config.getConfig("kafka").entrySet())
                 kafkaProperties.put(kv.getKey(), kv.getValue().unwrapped().toString());
+
+            final String clientId = "plog_" + InetAddress.getLocalHost().getHostName() + "_" + id;
             kafkaProperties.put("client.id", clientId);
+            this.stats = new SimpleStatisticsReporter(clientId);
+            this.eopHandler = new EndOfPipeline(stats);
 
             log.info("Using Kafka with properties {}", kafkaProperties);
 

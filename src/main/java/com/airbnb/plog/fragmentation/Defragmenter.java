@@ -1,7 +1,7 @@
 package com.airbnb.plog.fragmentation;
 
 import com.airbnb.plog.Message;
-import com.airbnb.plog.packetloss.ServerHoleDetector;
+import com.airbnb.plog.packetloss.ListenerHoleDetector;
 import com.airbnb.plog.stats.StatisticsReporter;
 import com.airbnb.plog.utils.ByteBufs;
 import com.google.common.cache.*;
@@ -21,14 +21,14 @@ import java.util.concurrent.TimeUnit;
 public class Defragmenter extends MessageToMessageDecoder<Fragment> {
     private final StatisticsReporter stats;
     private final Cache<Long, FragmentedMessage> incompleteMessages;
-    private final ServerHoleDetector detector;
+    private final ListenerHoleDetector detector;
 
     public Defragmenter(final StatisticsReporter statisticsReporter, Config config) {
         this.stats = statisticsReporter;
 
         final Config holeConfig = config.getConfig("detect_holes");
         if (holeConfig.getBoolean("enabled"))
-            detector = new ServerHoleDetector(holeConfig, stats);
+            detector = new ListenerHoleDetector(holeConfig, stats);
         else
             detector = null;
 
@@ -72,10 +72,10 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
         if (fromMap != null) {
             fromMap.ingestFragment(fragment, this.stats);
             if (fromMap.isComplete()) {
-                Defragmenter.log.debug("complete message");
+                log.debug("complete message");
                 incompleteMessages.invalidate(fragment.getMsgId());
             } else {
-                Defragmenter.log.debug("incomplete message");
+                log.debug("incomplete message");
             }
             return fromMap;
         } else {
@@ -113,7 +113,7 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
             out.add(new Message(bytes));
             this.stats.receivedV0MultipartMessage();
         } else {
-            Defragmenter.log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",
+            log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",
                     expectedHash, computedHash, BaseEncoding.base16().encode(bytes), fragmentCount);
             this.stats.receivedV0InvalidChecksum(fragmentCount);
         }
