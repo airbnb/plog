@@ -44,7 +44,8 @@ Note that multiple TCP and UDP ports can be configure and have separate settings
 ## Operational tricks
 
 - To minimize packet loss due to "lacks", increase the kernel socket buffer size.
-  For Linux, we use `sysctl net.core.rmem_max = 1048576`.
+  For Linux, we use `sysctl net.core.rmem_max = 4194304`
+  and configure `plog.udp.defaults.SO_RCVBUF` accordingly.
 
 - Hole detection is a bit difficult to explain, but worth looking into (the tests should help).
   It is enabled by default, but can be disabled for performance.
