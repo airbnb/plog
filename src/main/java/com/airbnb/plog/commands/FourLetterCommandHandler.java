@@ -30,7 +30,7 @@ public class FourLetterCommandHandler extends SimpleChannelInboundHandler<FourLe
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FourLetterCommand cmd) throws Exception {
         if (cmd.is(FourLetterCommand.KILL)) {
-            FourLetterCommandHandler.log.warn("KILL SWITCH!");
+            log.warn("KILL SWITCH!");
             System.exit(1);
         } else if (cmd.is(FourLetterCommand.PING)) {
             ctx.writeAndFlush(pong(cmd));

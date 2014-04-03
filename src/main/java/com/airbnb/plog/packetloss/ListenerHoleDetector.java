@@ -9,12 +9,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public final class ServerHoleDetector {
+public final class ListenerHoleDetector {
     private final LoadingCache<Integer, PortHoleDetector> cache;
     private final StatisticsReporter stats;
     private final int maximumHole;
 
-    public ServerHoleDetector(final Config config, final StatisticsReporter stats) {
+    public ListenerHoleDetector(final Config config, final StatisticsReporter stats) {
         final int portDetectorCapacity = config.getInt("ids_per_port");
         maximumHole = config.getInt("maximum_hole");
 
@@ -53,7 +53,7 @@ public final class ServerHoleDetector {
             }
             return holesFound;
         } catch (ExecutionException e) {
-            ServerHoleDetector.log.error("impossible is possible");
+            log.error("impossible is possible");
         }
         return 0; // still impossible
     }
