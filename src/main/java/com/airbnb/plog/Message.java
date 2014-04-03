@@ -13,6 +13,8 @@ import java.util.List;
 
 @Data
 public class Message extends DefaultByteBufHolder {
+    private byte[] memoizedBytes;
+
     public Message(ByteBuf data) {
         super(data);
     }
@@ -24,7 +26,10 @@ public class Message extends DefaultByteBufHolder {
     }
 
     public byte[] asBytes() {
-        return ByteBufs.toByteArray(content());
+        if (memoizedBytes == null)
+            memoizedBytes = ByteBufs.toByteArray(content());
+
+        return memoizedBytes;
     }
 
     @ChannelHandler.Sharable
