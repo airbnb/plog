@@ -58,7 +58,6 @@ run {
         '-XX:+UseCompressedOops',
         '-XX:+UseFastEmptyMethods',
         '-XX:+UseFastAccessorMethods',
-        '-XX:CompileThreshold=1500',
     ]
 }
 
