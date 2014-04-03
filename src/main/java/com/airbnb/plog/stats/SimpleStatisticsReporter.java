@@ -170,8 +170,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         builder.append(cacheStats.missCount());
         builder.append('}');
 
-        if (kafkaClientId != null)
-            appendKafka(builder);
+        appendKafka(builder);
 
         builder.append("}");
 
