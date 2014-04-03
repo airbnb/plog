@@ -68,7 +68,7 @@ public class FragmentedMessage {
                 this.getFragmentCount() != fragmentCount ||
                 this.getChecksum() != msgHash ||
                 !validFragmentLength) {
-            FragmentedMessage.log.warn("Invalid {} for {}", fragment, this);
+            log.warn("Invalid {} for {}", fragment, this);
             stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
             return;
         }
