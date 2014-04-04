@@ -1,18 +1,10 @@
-apply plugin: 'wrapper'
-apply plugin: 'groovy'
-apply plugin: 'application'
-apply plugin: 'shadow'
 apply plugin: 'cobertura'
 apply plugin: 'coveralls'
-
-mainClassName = 'com.airbnb.plog.App'
 
 dependencies {
     compile project(':plog-api')
 
     compile "io.netty:netty-codec:${nettyVersion}"
-
-    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
 
     compile('org.apache.kafka:kafka_2.10:0.8.1') {
         exclude module: 'zookeeper'
@@ -21,34 +13,10 @@ dependencies {
         exclude module: 'jmxtools'
         exclude module: 'slf4j-simple'
     }
-
-    // performance improvements
-    compile 'org.javassist:javassist:3.18.1-GA'
     compile 'org.xerial.snappy:snappy-java:1.1.0.1'
-}
 
-jar {
-    manifest {
-        attributes 'Main-Class': 'com.airbnb.plog.App',
-                   'Plog-Version': version
-    }
-}
-
-shadow {
-    artifactSet {
-        exclude '*:lombok:*'
-    }
-}
-
-run {
-    maxHeapSize = '128M'
-    jvmArgs = [
-        '-XX:+UseConcMarkSweepGC',
-        '-XX:+AggressiveOpts',
-        '-XX:+UseCompressedOops',
-        '-XX:+UseFastEmptyMethods',
-        '-XX:+UseFastAccessorMethods',
-    ]
+    // needed to create a Kafka producer
+    testCompile 'log4j:log4j:1.2.17'
 }
 
 test {
@@ -59,12 +27,8 @@ test {
 cobertura.coverageFormats = ['html', 'xml']
 
 buildscript {
-    repositories {
-        jcenter()
-        mavenCentral()
-    }
+    repositories { jcenter() }
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:0.8'
         classpath 'net.saliman:gradle-cobertura-plugin:2.2.4'
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:0.2.5'
     }
