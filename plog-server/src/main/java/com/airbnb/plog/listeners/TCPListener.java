@@ -1,6 +1,5 @@
 package com.airbnb.plog.listeners;
 
-import com.airbnb.plog.Message;
 import com.typesafe.config.Config;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -35,7 +34,7 @@ public class TCPListener extends Listener {
                         final ChannelPipeline pipeline = channel.pipeline();
                         pipeline
                                 .addLast(new LineBasedFrameDecoder(config.getInt("max_line")))
-                                .addLast(new Message.ByteBufToMessageDecoder());
+                                .addLast(new ByteBufToMessageDecoder());
                         appendFilters(pipeline);
                         pipeline
                                 .addLast(getSink())

@@ -47,7 +47,7 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
         final stats = new SimpleStatisticsReporter(null)
         final droppedStats = slurper.parseText(stats.toJSON())['dropped_fragments']
         for (i in 0..16)
-            assert droppedStats[i].size == i+1
+            assert droppedStats[i].size == i + 1
     }
 
     void testLogLogStatsCorrectlyRendered() {

@@ -1,6 +1,7 @@
 package com.airbnb.plog.filters;
 
 import com.airbnb.plog.Message;
+import com.airbnb.plog.MessageImpl;
 import com.typesafe.config.Config;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,7 +20,7 @@ public class ReverseBytesProvider implements FilterProvider {
                 for (int i = 0; i < length; i++)
                     reverse[i] = payload[length - i - 1];
 
-                ctx.fireChannelRead(Message.fromBytes(ctx.alloc(), reverse));
+                ctx.fireChannelRead(MessageImpl.fromBytes(ctx.alloc(), reverse));
             }
         };
     }

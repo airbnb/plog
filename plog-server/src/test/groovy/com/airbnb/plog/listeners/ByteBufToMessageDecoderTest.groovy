@@ -1,5 +1,6 @@
-package com.airbnb.plog
+package com.airbnb.plog.listeners
 
+import com.airbnb.plog.MessageImpl
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
 
@@ -17,9 +18,9 @@ class ByteBufToMessageDecoderTest extends GroovyTestCase {
     }
 
     private void testPayload(byte[] bytes) {
-        final channel = new EmbeddedChannel(new Message.ByteBufToMessageDecoder())
+        final channel = new EmbeddedChannel(new ByteBufToMessageDecoder())
         assert channel.writeInbound(Unpooled.wrappedBuffer(bytes))
-        final message = (Message) channel.readInbound()
+        final message = (MessageImpl) channel.readInbound()
         assert message.asBytes() == bytes
         assert !channel.finish()
         assert channel.readOutbound() == null
