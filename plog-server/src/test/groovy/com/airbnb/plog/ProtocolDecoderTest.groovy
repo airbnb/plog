@@ -15,7 +15,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
         for (payload in [firstPrintable, startsWitLastASCIIandNulInside]) {
             runTest { EmbeddedChannel channel, StatisticsReporter stats ->
                 insert(payload, channel)
-                final msg = (Message) channel.readInbound()
+                final msg = (MessageImpl) channel.readInbound()
                 assert msg.asBytes() == payload
             }
         }

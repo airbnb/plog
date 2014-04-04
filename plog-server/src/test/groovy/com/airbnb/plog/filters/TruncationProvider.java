@@ -1,6 +1,7 @@
 package com.airbnb.plog.filters;
 
 import com.airbnb.plog.Message;
+import com.airbnb.plog.MessageImpl;
 import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -9,7 +10,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class TruncationProvider extends FilterProvider {
+public class TruncationProvider implements FilterProvider {
     @Override
     public ChannelHandler getFilter(Config config) throws Exception {
         final int maxLength = config.getInt("max_length");
@@ -23,7 +24,7 @@ public class TruncationProvider extends FilterProvider {
                 if (length <= maxLength)
                     ctx.fireChannelRead(msg);
                 else
-                    ctx.fireChannelRead(new Message(msg.content().slice(0, maxLength)));
+                    ctx.fireChannelRead(new MessageImpl(msg.content().slice(0, maxLength)));
             }
         };
     }

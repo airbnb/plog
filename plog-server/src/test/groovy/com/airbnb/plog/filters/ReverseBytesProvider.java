@@ -1,12 +1,13 @@
 package com.airbnb.plog.filters;
 
 import com.airbnb.plog.Message;
+import com.airbnb.plog.MessageImpl;
 import com.typesafe.config.Config;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class ReverseBytesProvider extends FilterProvider {
+public class ReverseBytesProvider implements FilterProvider {
     @Override
     public ChannelHandler getFilter(Config config) throws Exception {
         return new SimpleChannelInboundHandler<Message>() {
@@ -19,7 +20,7 @@ public class ReverseBytesProvider extends FilterProvider {
                 for (int i = 0; i < length; i++)
                     reverse[i] = payload[length - i - 1];
 
-                ctx.fireChannelRead(Message.fromBytes(ctx.alloc(), reverse));
+                ctx.fireChannelRead(MessageImpl.fromBytes(ctx.alloc(), reverse));
             }
         };
     }

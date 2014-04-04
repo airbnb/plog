@@ -1,6 +1,6 @@
 package com.airbnb.plog.fragmentation;
 
-import com.airbnb.plog.Message;
+import com.airbnb.plog.MessageImpl;
 import com.airbnb.plog.packetloss.ListenerHoleDetector;
 import com.airbnb.plog.stats.StatisticsReporter;
 import com.airbnb.plog.utils.ByteBufs;
@@ -109,7 +109,7 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
         final byte[] bytes = ByteBufs.toByteArray(payload);
         final int computedHash = Hashing.murmur3_32().hashBytes(bytes).asInt();
         if (computedHash == expectedHash) {
-            out.add(new Message(payload));
+            out.add(new MessageImpl(payload));
             this.stats.receivedV0MultipartMessage();
         } else {
             log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",
