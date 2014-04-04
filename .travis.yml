@@ -10,7 +10,7 @@ jdk:
   - oraclejdk7
   - oraclejdk8
 
-script: python -m py_compile extra/datadog/plog.py
+script: python -m py_compile third-party/datadog/plog.py
 
 after_success:
   - ./gradlew cobertura coveralls
