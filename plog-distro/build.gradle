@@ -5,6 +5,7 @@ mainClassName = 'com.airbnb.plog.App'
 
 dependencies {
     compile project(':plog-server')
+    compile project(':plog-upshot')
 
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
 

@@ -1,0 +1,5 @@
+dependencies {
+    compile project(':plog-api')
+    compile 'org.msgpack:msgpack:0.6.10'
+    compile 'com.foundationdb:fdb-sql-parser:1.2.0'
+}
