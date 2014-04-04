@@ -30,7 +30,6 @@ public class FragmentedMessage {
                               final int fragmentSize,
                               final int hash) {
         this.payload = alloc.buffer(totalLength, totalLength);
-        this.payload.writerIndex(totalLength);
         this.receivedFragments = new BitSet(fragmentCount);
         this.fragmentCount = fragmentCount;
         this.fragmentSize = fragmentSize;
@@ -48,7 +47,7 @@ public class FragmentedMessage {
         return msg;
     }
 
-    public void ingestFragment(final Fragment fragment, StatisticsReporter stats) {
+    public final void ingestFragment(final Fragment fragment, StatisticsReporter stats) {
         final int fragmentSize = fragment.getFragmentSize();
         final int fragmentCount = fragment.getFragmentCount();
         final int msgHash = fragment.getMsgHash();
@@ -86,14 +85,16 @@ public class FragmentedMessage {
         fragment.getPayload().release();
     }
 
-    public ByteBuf getPayload() {
-        if (isComplete())
-            return payload;
-        else
-            throw new IllegalStateException("Not complete");
+    public final ByteBuf getPayload() {
+        if (!isComplete())
+            throw new IllegalStateException("Incomplete");
+
+        payload.readerIndex(0);
+        payload.writerIndex(getPayloadLength());
+        return payload;
     }
 
-    public int getPayloadLength() {
+    public final int getPayloadLength() {
         return payload.capacity();
     }
 }
