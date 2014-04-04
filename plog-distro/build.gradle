@@ -1,0 +1,45 @@
+apply plugin: 'application'
+apply plugin: 'shadow'
+
+mainClassName = 'com.airbnb.plog.App'
+
+dependencies {
+    compile project(':plog-server')
+
+    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+
+    // performance improvements for netty
+    compile 'org.javassist:javassist:3.18.1-GA'
+
+    compile 'org.xerial.snappy:snappy-java:1.1.0.1'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.airbnb.plog.App',
+                   'Plog-Version': version
+    }
+}
+
+shadow {
+    artifactSet {
+        exclude '*:lombok:*'
+        exclude '*:jsr305:*'
+    }
+}
+
+run {
+    maxHeapSize = '128M'
+    jvmArgs = [
+        '-XX:+UseConcMarkSweepGC',
+        '-XX:+AggressiveOpts',
+        '-XX:+UseCompressedOops',
+        '-XX:+UseFastEmptyMethods',
+        '-XX:+UseFastAccessorMethods',
+    ]
+}
+
+buildscript {
+    repositories { jcenter() }
+    dependencies { classpath 'com.github.jengelman.gradle.plugins:shadow:0.8' }
+}

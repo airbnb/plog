@@ -1,2 +1,4 @@
 rootProject.name = 'plog'
-include 'plog-api', 'plog-server'
+include 'plog-api',
+        'plog-server',
+        'plog-distro'
