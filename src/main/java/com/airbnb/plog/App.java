@@ -16,6 +16,12 @@ import java.net.UnknownHostException;
 public class App {
     public static void main(String[] args)
             throws UnknownHostException {
+        System.err.println(
+                "      _\n" +
+                " _ __| |___  __ _\n" +
+                "| '_ \\ / _ \\/ _` |\n" +
+                "| .__/_\\___/\\__, |\n" +
+                "|_|         |___/");
         new App().run(ConfigFactory.load());
     }
 
