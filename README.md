@@ -15,7 +15,7 @@ While updates may still be made and we welcome feedback, keep in mind we may not
 
 ## Getting started
 
-    $ printf 'plog.udp.listeners=[{topic=STDOUT}]' > src/main/resources/application.conf
+    $ printf 'plog.udp.listeners=[{topic=STDOUT}]' > plog-server/src/main/resources/application.conf
     $ ./gradlew run
     $ printf 'yipee!' | socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
     $ printf '\0\0statsplz' | socat - UDP-DATAGRAM:127.0.0.1:23456
@@ -39,7 +39,7 @@ Note that multiple TCP and UDP ports can be configure and have separate settings
 ## Building a fat JAR
 
     $ ./gradlew shadowJar
-    $ ls -l ./build/distributions/plog-1.0-SNAPSHOT-shadow.jar
+    $ ls -l plog-server/build/distributions/plog-server-*-shadow.jar
 
 ## Operational tricks
 

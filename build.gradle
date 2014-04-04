@@ -1,81 +1,40 @@
 apply plugin: 'wrapper'
-apply plugin: 'groovy'
 apply plugin: 'idea'
-apply plugin: 'application'
-apply plugin: 'shadow'
-apply plugin: 'project-report'
-apply plugin: 'cobertura'
-apply plugin: 'coveralls'
-
-group = 'com.airbnb.plog'
-version = '3.1.0'
-mainClassName = 'com.airbnb.plog.App'
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
-
-repositories { jcenter() }
-
-dependencies {
-    compile 'org.projectlombok:lombok:1.12.6'
-    compile 'io.netty:netty-handler:4.0.17.Final'
-    compile 'io.netty:netty-codec:4.0.17.Final'
-    compile 'org.javassist:javassist:3.18.1-GA'
-    compile 'com.google.guava:guava:16.0.1'
-    compile 'com.typesafe:config:1.2.0'
-    compile 'org.slf4j:slf4j-api:1.7.6'
-    compile 'org.slf4j:slf4j-log4j12:1.7.6'
-    compile 'org.xerial.snappy:snappy-java:1.1.0.1'
-    compile('org.apache.kafka:kafka_2.10:0.8.1') {
-        exclude module: 'zookeeper'
-        exclude module: 'zkclient'
-        exclude module: 'jmxri'
-        exclude module: 'jmxtools'
-        exclude module: 'slf4j-simple'
-    }
-    testCompile 'org.codehaus.groovy:groovy-all:2.2.2'
-    testCompile 'junit:junit:4.11'
-}
-
-jar {
-  manifest {
-    attributes 'Main-Class': 'com.airbnb.plog.App',
-               'Plog-Version': version
-  }
-}
-
-shadow { artifactSet { exclude '*:lombok:*' } }
 
 idea.module {
     downloadJavadoc = true
     downloadSources = true
 }
 
-run {
-    maxHeapSize = '128M'
-    jvmArgs = [
-        '-XX:+UseConcMarkSweepGC',
-        '-XX:+AggressiveOpts',
-        '-XX:+UseCompressedOops',
-        '-XX:+UseFastEmptyMethods',
-        '-XX:+UseFastAccessorMethods',
-    ]
-}
+subprojects {
+    apply plugin: 'groovy'
+    apply plugin: 'maven'
 
-test {
-    // gradle screws up SLF4J for that test. Use IntelliJ :)
-    exclude 'com/airbnb/plog/EndOfPipeline*'
-}
+    version = '3.1.0'
 
-cobertura.coverageFormats = ['html', 'xml']
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
 
-buildscript {
-    repositories {
-        jcenter()
-        mavenCentral()
+    group = 'com.airbnb.plog'
+
+    ext {
+        nettyVersion = '4.0.17.Final'
+        slf4jVersion = '1.7.6'
     }
+
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:0.8'
-        classpath 'net.saliman:gradle-cobertura-plugin:2.2.4'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:0.2.5'
+        compile 'org.projectlombok:lombok:1.12.6'
+        compile 'com.google.guava:guava:16.0.1'
+        compile 'com.typesafe:config:1.2.0'
+        compile "io.netty:netty-handler:${nettyVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+
+        testCompile 'org.codehaus.groovy:groovy-all:2.2.2'
+        testCompile 'junit:junit:4.11'
+    }
+    
+    repositories {
+        mavenLocal()
+        jcenter()
     }
 }
