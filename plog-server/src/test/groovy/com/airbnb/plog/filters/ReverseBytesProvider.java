@@ -6,7 +6,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class ReverseBytesProvider extends FilterProvider {
+public class ReverseBytesProvider implements FilterProvider {
     @Override
     public ChannelHandler getFilter(Config config) throws Exception {
         return new SimpleChannelInboundHandler<Message>() {

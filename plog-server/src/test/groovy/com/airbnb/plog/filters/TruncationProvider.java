@@ -9,7 +9,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class TruncationProvider extends FilterProvider {
+public class TruncationProvider implements FilterProvider {
     @Override
     public ChannelHandler getFilter(Config config) throws Exception {
         final int maxLength = config.getInt("max_length");
