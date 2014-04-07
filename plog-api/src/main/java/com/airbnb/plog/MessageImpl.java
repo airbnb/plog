@@ -12,11 +12,19 @@ import lombok.Getter;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class MessageImpl extends DefaultByteBufHolder implements Message {
+    private final byte[][] tags;
+
     @Getter(AccessLevel.NONE)
     private byte[] memoizedBytes;
 
+    public MessageImpl(ByteBuf data, byte[][] tags) {
+        super(data);
+        this.tags = tags;
+    }
+
     public MessageImpl(ByteBuf data) {
         super(data);
+        tags = null;
     }
 
     public static Message fromBytes(ByteBufAllocator alloc, byte[] bytes) {
@@ -25,7 +33,8 @@ public class MessageImpl extends DefaultByteBufHolder implements Message {
         return new MessageImpl(data);
     }
 
-    @Override public byte[] asBytes() {
+    @Override
+    public byte[] asBytes() {
         if (memoizedBytes == null)
             memoizedBytes = ByteBufs.toByteArray(content());
 
