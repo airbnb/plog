@@ -11,7 +11,7 @@ import java.util.regex.Pattern
 
 class FourLetterCommandHandlerTest extends GroovyTestCase {
     static private final config = ConfigFactory.load()
-    static private final stats = new SimpleStatisticsReporter(null)
+    static private final stats = new SimpleStatisticsReporter()
 
     void testCaseSensitivity() {
         expectAnswer(new FourLetterCommand('PinG', Utils.clientAddr, ''.bytes), ~/PONG/)

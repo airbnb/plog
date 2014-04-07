@@ -4,7 +4,9 @@ apply plugin: 'shadow'
 mainClassName = 'com.airbnb.plog.App'
 
 dependencies {
+    compile project(':plog-kafka')
     compile project(':plog-server')
+    compile project(':plog-console')
 
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
 

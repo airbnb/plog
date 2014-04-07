@@ -1,28 +1,25 @@
-package com.airbnb.plog.sinks;
+package com.airbnb.plog.kafka;
 
 import com.airbnb.plog.Message;
-import com.airbnb.plog.stats.StatisticsReporter;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import kafka.common.FailedToSendMessageException;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import lombok.RequiredArgsConstructor;
 
-import static io.netty.channel.ChannelHandler.Sharable;
-
 @RequiredArgsConstructor
-@Sharable
-public final class KafkaSink extends Sink {
-    private final String topic;
+public class KafkaFilter extends SimpleChannelInboundHandler<Message> {
     private final Producer<byte[], byte[]> producer;
-    private final StatisticsReporter stats;
+    private final String defaultTopic;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
         try {
-            producer.send(new KeyedMessage<byte[], byte[]>(topic, msg.asBytes()));
+            producer.send(new KeyedMessage<byte[], byte[]>(defaultTopic, msg.asBytes()));
         } catch (FailedToSendMessageException e) {
-            stats.failedToSend();
+            // TODO(pierre): reintroduce stats
+            // stats.failedToSend();
         }
     }
 }

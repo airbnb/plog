@@ -4,7 +4,6 @@ import com.airbnb.plog.stats.StatisticsReporter;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import kafka.common.QueueFullException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,8 +28,7 @@ public class EndOfPipeline extends SimpleChannelInboundHandler<Void> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        final boolean ignored = cause instanceof QueueFullException ||
-                (cause instanceof IOException && IGNORABLE_ERROR_MESSAGE.matcher(cause.getMessage()).matches());
+        final boolean ignored = cause instanceof IOException && IGNORABLE_ERROR_MESSAGE.matcher(cause.getMessage()).matches();
 
         if (!ignored) {
             log.error("Exception down the pipeline", cause);

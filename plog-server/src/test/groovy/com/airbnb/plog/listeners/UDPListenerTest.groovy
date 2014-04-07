@@ -36,16 +36,16 @@ class UDPListenerTest extends GroovyTestCase {
 
     void testFilters() {
         final config = [
-                topic  : 'STDOUT',
                 filters: [[provider: 'com.airbnb.plog.filters.ReverseBytesProvider'],
-                          [provider  : 'com.airbnb.plog.filters.TruncationProvider',
-                           max_length: 5]]
+                          [provider: 'com.airbnb.plog.filters.TruncationProvider',
+                           max_length: 5],
+                          [provider: 'com.airbnb.plog.console.ConsoleOutputProvider']]
         ]
         runTest(config, { sendPacket('hello world'.bytes) }, 'dlrow\n')
     }
 
     void testSingleFragment() {
-        final config = [topic: 'STDOUT']
+        final config = [filters: [[provider: 'com.airbnb.plog.console.ConsoleOutputProvider']]]
         final fragment = [
                 0, // version
                 1, // type
@@ -65,7 +65,7 @@ class UDPListenerTest extends GroovyTestCase {
     }
 
     void testMultiFragment() {
-        final config = [topic: 'STDOUT']
+        final config = [filters: [[provider: 'com.airbnb.plog.console.ConsoleOutputProvider']]]
         final fragment1 = [
                 0, // version
                 1, // type
