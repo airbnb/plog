@@ -27,6 +27,7 @@ subprojects {
         compile 'com.google.code.findbugs:jsr305:2.0.3'
         compile 'com.google.guava:guava:16.0.1'
         compile 'com.typesafe:config:1.2.0'
+        compile 'com.eclipsesource.minimal-json:minimal-json:0.9.1'
         compile "io.netty:netty-handler:${nettyVersion}"
         compile "org.slf4j:slf4j-api:${slf4jVersion}"
 
