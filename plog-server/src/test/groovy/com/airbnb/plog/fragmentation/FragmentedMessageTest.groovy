@@ -6,7 +6,7 @@ import com.airbnb.plog.utils.ByteBufs
 import io.netty.buffer.Unpooled
 
 class FragmentedMessageTest extends GroovyTestCase {
-    private static final StatisticsReporter stats = new SimpleStatisticsReporter(null)
+    private static final StatisticsReporter stats = new SimpleStatisticsReporter()
 
     // Always go with id=0 & hash=0
     private static create(int count, int index, int fsize, int length, byte[] payload) {

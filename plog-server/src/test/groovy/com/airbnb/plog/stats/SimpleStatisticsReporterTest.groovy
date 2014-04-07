@@ -1,11 +1,8 @@
 package com.airbnb.plog.stats
 
-import com.airbnb.plog.Utils
 import com.airbnb.plog.fragmentation.Defragmenter
 import com.typesafe.config.ConfigFactory
 import groovy.json.JsonSlurper
-import kafka.javaapi.producer.Producer
-import kafka.producer.ProducerConfig
 
 class SimpleStatisticsReporterTest extends GroovyTestCase {
     private final static slurper = new JsonSlurper()
@@ -13,45 +10,25 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
     private final static defragConfig =
             ConfigFactory.load().getConfig('plog.udp.defaults.defrag')
 
-    private final static clientId = 'SimpleStatisticsReporterTestClientId'
-
-    static {
-        final props = new Properties()
-        props.put('client.id', clientId)
-        props.put('metadata.broker.list', Utils.clientAddr.toString())
-        new Producer(new ProducerConfig(props))
-    }
-
     void testMinimalIsValidJSON() {
-        testValidJSON(new SimpleStatisticsReporter(null))
+        testValidJSON(new SimpleStatisticsReporter())
     }
 
     void testIsValidJSONWithDefrag() {
-        final stats = new SimpleStatisticsReporter(null)
-        stats.withDefrag(new Defragmenter(stats, defragConfig))
-        testValidJSON(stats)
-    }
-
-    void testIsValidJSONWithKafka() {
-        final stats = new SimpleStatisticsReporter(clientId)
-        testValidJSON(stats)
-    }
-
-    void testIsValidJSONWithDefragAndKafka() {
-        final stats = new SimpleStatisticsReporter(clientId)
+        final stats = new SimpleStatisticsReporter()
         stats.withDefrag(new Defragmenter(stats, defragConfig))
         testValidJSON(stats)
     }
 
     void testLogLogStatsShape() {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
         final droppedStats = slurper.parseText(stats.toJSON())['dropped_fragments']
         for (i in 0..16)
             assert droppedStats[i].size == i + 1
     }
 
     void testLogLogStatsCorrectlyRendered() {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
 
         stats.missingFragmentInDroppedMessage(0, 1)
         2.times { stats.missingFragmentInDroppedMessage(1, 2) }
@@ -75,7 +52,7 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
     }
 
     void testSimpleCounters() {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
         final methods = [
                 'receivedUdpSimpleMessage',
                 'receivedUdpInvalidVersion',
@@ -95,7 +72,7 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
     }
 
     void testJumpingCounters() {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
         for (method in ['foundHolesFromDeadPort', 'foundHolesFromNewMessage']) {
             assert stats."$method"(0) == 0
             assert stats."$method"(1) == 1
@@ -105,7 +82,7 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
     }
 
     void testReceivedV0MultipartFragment() {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
         for (exp in 0..<Short.SIZE)
             assert stats.receivedV0MultipartFragment(2**exp) == 1
         for (exp in 1..<Short.SIZE) {
@@ -115,7 +92,7 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
     }
 
     void testReceivedV0InvalidChecksum() {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
         for (exp in 0..<Short.SIZE)
             assert stats.receivedV0InvalidChecksum(2**exp + 1) == 1
         for (exp in 1..<Short.SIZE) {
@@ -125,12 +102,12 @@ class SimpleStatisticsReporterTest extends GroovyTestCase {
     }
 
     void testCantProvideTwoDefragmenters() {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
         stats.withDefrag(new Defragmenter(stats, defragConfig))
     }
 
     void testLogLogCounters() {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
         for (method in ['receivedV0InvalidMultipartFragment', 'missingFragmentInDroppedMessage']) {
             for (fragIndexExp in 0..<Short.SIZE) {
                 for (fragmentCountExp in 0..<Short.SIZE)

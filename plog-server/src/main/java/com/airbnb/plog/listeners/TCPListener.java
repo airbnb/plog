@@ -35,10 +35,7 @@ public class TCPListener extends Listener {
                         pipeline
                                 .addLast(new LineBasedFrameDecoder(config.getInt("max_line")))
                                 .addLast(new ByteBufToMessageDecoder());
-                        appendFilters(pipeline);
-                        pipeline
-                                .addLast(getSink())
-                                .addLast(getEopHandler());
+                        finalizePipeline(pipeline);
                     }
                 }).bind(new InetSocketAddress(config.getString("host"), config.getInt("port")));
     }
