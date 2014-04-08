@@ -17,14 +17,9 @@ public class ConsoleOutputFilter extends SimpleChannelInboundHandler<Message> im
     final AtomicLong logged = new AtomicLong();
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
+    protected final void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
         final byte[][] tags = msg.getTags();
-        if (tags == null) {
-            target.println(new String(msg.asBytes()));
-        } else {
-            final String tagList = Joiner.on(',').join(tags);
-            target.println("[" + tagList + "] " + new String(msg.asBytes()));
-        }
+        target.println(msg.toString());
         logged.incrementAndGet();
     }
 
