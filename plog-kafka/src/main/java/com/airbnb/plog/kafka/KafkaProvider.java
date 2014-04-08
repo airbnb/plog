@@ -1,5 +1,6 @@
 package com.airbnb.plog.kafka;
 
+import com.airbnb.plog.filters.Filter;
 import com.airbnb.plog.filters.FilterProvider;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
@@ -18,7 +19,7 @@ public class KafkaProvider implements FilterProvider {
     private final static AtomicInteger clientId = new AtomicInteger();
 
     @Override
-    public ChannelHandler getFilter(Config config) throws Exception {
+    public Filter getFilter(Config config) throws Exception {
         final String defaultTopic = config.getString("default_topic");
 
         final Properties properties = new Properties();

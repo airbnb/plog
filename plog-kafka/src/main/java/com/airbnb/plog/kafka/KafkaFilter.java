@@ -1,6 +1,7 @@
 package com.airbnb.plog.kafka;
 
 import com.airbnb.plog.Message;
+import com.airbnb.plog.filters.Filter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import kafka.common.FailedToSendMessageException;
@@ -9,7 +10,7 @@ import kafka.producer.KeyedMessage;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class KafkaFilter extends SimpleChannelInboundHandler<Message> {
+public class KafkaFilter extends SimpleChannelInboundHandler<Message> implements Filter {
     private final Producer<byte[], byte[]> producer;
     private final String defaultTopic;
 
