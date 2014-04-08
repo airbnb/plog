@@ -149,41 +149,40 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     public final String toJSON() {
-        final JsonObject result = new JsonObject();
-        result.add("version", getPlogVersion());
-        result.add("uptime", System.currentTimeMillis() - startTime);
-        result.add("udp_simple_messages", udpSimpleMessages.get());
-        result.add("udp_invalid_version", udpInvalidVersion.get());
-        result.add("v0_invalid_type", v0InvalidType.get());
-        result.add("v0_invalid_multipart_header", v0InvalidMultipartHeader.get());
-        result.add("unknown_command", unknownCommand.get());
-        result.add("v0_commands", v0Commands.get());
-        result.add("failed_to_send", failedToSend.get());
-        result.add("exceptions", exceptions.get());
-        result.add("unhandled_objects", unhandledObjects.get());
-        result.add("holes_from_dead_port", holesFromDeadPort.get());
-        result.add("holes_from_new_message", holesFromNewMessage.get());
-
-
-        result.add("v0_fragments", arrayForLogStats(v0MultipartMessageFragments));
-        result.add("v0_invalid_checksum", arrayForLogStats(v0InvalidChecksum));
-
-        result.add("v0_invalid_fragments", arrayForLogLogStats(invalidFragments));
-        result.add("dropped_fragments", arrayForLogLogStats(droppedFragments));
+        final JsonObject result = new JsonObject()
+                .add("version", getPlogVersion())
+                .add("uptime", System.currentTimeMillis() - startTime)
+                .add("udp_simple_messages", udpSimpleMessages.get())
+                .add("udp_invalid_version", udpInvalidVersion.get())
+                .add("v0_invalid_type", v0InvalidType.get())
+                .add("v0_invalid_multipart_header", v0InvalidMultipartHeader.get())
+                .add("unknown_command", unknownCommand.get())
+                .add("v0_commands", v0Commands.get())
+                .add("failed_to_send", failedToSend.get())
+                .add("exceptions", exceptions.get())
+                .add("unhandled_objects", unhandledObjects.get())
+                .add("holes_from_dead_port", holesFromDeadPort.get())
+                .add("holes_from_new_message", holesFromNewMessage.get())
+                .add("v0_fragments", arrayForLogStats(v0MultipartMessageFragments))
+                .add("v0_invalid_checksum", arrayForLogStats(v0InvalidChecksum))
+                .add("v0_invalid_fragments", arrayForLogLogStats(invalidFragments))
+                .add("dropped_fragments", arrayForLogLogStats(droppedFragments));
 
         if (defragmenter != null) {
             final CacheStats cacheStats = defragmenter.getCacheStats();
-            final JsonObject cacheJSON = new JsonObject();
-            result.add("cache", cacheJSON);
-            cacheJSON.add("evictions", cacheStats.evictionCount());
-            cacheJSON.add("hits", cacheStats.hitCount());
-            cacheJSON.add("misses", cacheStats.missCount());
+            result.add("cache", new JsonObject()
+                    .add("evictions", cacheStats.evictionCount())
+                    .add("hits", cacheStats.hitCount())
+                    .add("misses", cacheStats.missCount()));
         }
 
-        final JsonArray filterStats = new JsonArray();
-        result.add("filters", filterStats);
-        for (Filter filter : filters)
-            filterStats.add(filter.getStats());
+        final JsonArray filtersStats = new JsonArray();
+        result.add("filters", filtersStats);
+        for (Filter filter : filters) {
+            final JsonObject filterStatsCandidate = filter.getStats();
+            final JsonObject stats = (filterStatsCandidate == null) ? new JsonObject() : filterStatsCandidate;
+            filtersStats.add(stats.set("name", filter.getName()));
+        }
 
         return result.toString();
     }

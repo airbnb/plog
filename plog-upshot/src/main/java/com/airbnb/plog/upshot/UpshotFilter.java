@@ -73,10 +73,14 @@ class UpshotFilter extends SimpleChannelInboundHandler<Message> implements Filte
 
     @Override
     public JsonObject getStats() {
-        final JsonObject stats = new JsonObject();
-        stats.add("invalid_format", invalidFormat.get());
-        stats.add("invalid_version", invalidVersion.get());
-        stats.add("parsing_failed", parsingFailed.get());
-        return stats;
+        return new JsonObject()
+                .add("invalid_format", invalidFormat.get())
+                .add("invalid_version", invalidVersion.get())
+                .add("parsing_failed", parsingFailed.get());
+    }
+
+    @Override
+    public String getName() {
+        return "upshot";
     }
 }
