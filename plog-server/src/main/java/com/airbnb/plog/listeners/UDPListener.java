@@ -70,9 +70,7 @@ public class UDPListener extends Listener {
                                 .addLast(protocolDecoder)
                                 .addLast(defragmenter)
                                 .addLast(flch);
-                        appendFilters(pipeline);
-                        pipeline.addLast(getSink())
-                                .addLast(getEopHandler());
+                        finalizePipeline(pipeline);
                     }
                 })
                 .bind(new InetSocketAddress(config.getString("host"), config.getInt("port")));

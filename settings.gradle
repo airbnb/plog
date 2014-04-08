@@ -1,4 +1,8 @@
 rootProject.name = 'plog'
 include 'plog-api',
+        'plog-console',
+        'plog-distro',
+        'plog-kafka',
         'plog-server',
+        'plog-upshot',
         'plog-distro'

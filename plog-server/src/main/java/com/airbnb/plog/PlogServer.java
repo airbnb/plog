@@ -13,16 +13,19 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.UnknownHostException;
 
 @Slf4j
-public class App {
+public class PlogServer {
     public static void main(String[] args)
             throws UnknownHostException {
+        log.info("Starting...");
+
         System.err.println(
                 "      _\n" +
-                " _ __| |___  __ _\n" +
-                "| '_ \\ / _ \\/ _` |\n" +
-                "| .__/_\\___/\\__, |\n" +
-                "|_|         |___/");
-        new App().run(ConfigFactory.load());
+                        " _ __| |___  __ _\n" +
+                        "| '_ \\ / _ \\/ _` |\n" +
+                        "| .__/_\\___/\\__, |\n" +
+                        "|_|         |___/"
+        );
+        new PlogServer().run(ConfigFactory.load());
     }
 
     private void run(Config config)

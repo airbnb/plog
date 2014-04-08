@@ -80,7 +80,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
     }
 
     private void runTest(Closure test) {
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
         final channel = new EmbeddedChannel(new ProtocolDecoder(stats))
         test.call(channel, stats)
         assert !channel.finish()
