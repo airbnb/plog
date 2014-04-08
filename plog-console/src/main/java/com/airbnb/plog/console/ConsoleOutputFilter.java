@@ -3,7 +3,6 @@ package com.airbnb.plog.console;
 import com.airbnb.plog.Message;
 import com.airbnb.plog.filters.Filter;
 import com.eclipsesource.json.JsonObject;
-import com.google.common.base.Joiner;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +23,12 @@ public class ConsoleOutputFilter extends SimpleChannelInboundHandler<Message> im
     }
 
     @Override
-    public JsonObject getStats() {
-        final JsonObject stats = new JsonObject();
-        stats.add("logged", logged.get());
-        return stats;
+    public final JsonObject getStats() {
+        return new JsonObject().add("logged", logged.get());
+    }
+
+    @Override
+    public final String getName() {
+        return "console";
     }
 }

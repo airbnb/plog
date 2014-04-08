@@ -33,14 +33,12 @@ public class KafkaFilter extends SimpleChannelInboundHandler<Message> implements
     }
 
     private static JsonObject meterToJsonObject(Meter meter) {
-        final JsonObject result = new JsonObject();
-        result.add("count", meter.count());
-        final JsonArray rates = new JsonArray();
-        result.add("rate", rates);
-        rates.add(meter.oneMinuteRate());
-        rates.add(meter.fiveMinuteRate());
-        rates.add(meter.fifteenMinuteRate());
-        return result;
+        return new JsonObject()
+                .add("count", meter.count())
+                .add("rate", new JsonArray()
+                        .add(meter.oneMinuteRate())
+                        .add(meter.fiveMinuteRate())
+                        .add(meter.fifteenMinuteRate()));
     }
 
     @Override
@@ -55,18 +53,19 @@ public class KafkaFilter extends SimpleChannelInboundHandler<Message> implements
 
     @Override
     public JsonObject getStats() {
-        final JsonObject stats = new JsonObject();
+        return new JsonObject()
+                .add("default_topic", defaultTopic)
+                .add("failed_to_send", failedToSendMessageExceptions.get())
+                .add("failed_send_rate", meterToJsonObject(producerStats.failedSendRate()))
+                .add("resend_rate", meterToJsonObject(producerStats.resendRate()))
+                .add("serialization_error_rate", meterToJsonObject(producerStats.serializationErrorRate()))
+                .add("message_rate", meterToJsonObject(producerAllTopicsStats.messageRate()))
+                .add("dropped_message_rate", meterToJsonObject(producerAllTopicsStats.droppedMessageRate()))
+                .add("byte_rate", meterToJsonObject(producerAllTopicsStats.byteRate()));
+    }
 
-        stats.add("failed_to_send", failedToSendMessageExceptions.get());
-
-        stats.add("failed_send_rate", meterToJsonObject(producerStats.failedSendRate()));
-        stats.add("resend_rate", meterToJsonObject(producerStats.resendRate()));
-        stats.add("serialization_error_rate", meterToJsonObject(producerStats.serializationErrorRate()));
-
-        stats.add("message_rate", meterToJsonObject(producerAllTopicsStats.messageRate()));
-        stats.add("dropped_message_rate", meterToJsonObject(producerAllTopicsStats.droppedMessageRate()));
-        stats.add("byte_rate", meterToJsonObject(producerAllTopicsStats.byteRate()));
-
-        return stats;
+    @Override
+    public final String getName() {
+        return "kafka";
     }
 }

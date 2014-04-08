@@ -38,7 +38,12 @@ public class TruncationProvider implements FilterProvider {
 
         @Override
         public JsonObject getStats() {
-            return null;
+            return new JsonObject().add("max_length", maxLength);
+        }
+
+        @Override
+        public String getName() {
+            return "truncate";
         }
     }
 }

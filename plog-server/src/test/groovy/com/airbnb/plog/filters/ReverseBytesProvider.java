@@ -30,5 +30,10 @@ public class ReverseBytesProvider implements FilterProvider {
         public JsonObject getStats() {
             return null;
         }
+
+        @Override
+        public String getName() {
+            return "reverse";
+        }
     }
 }
