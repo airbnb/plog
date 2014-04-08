@@ -25,7 +25,7 @@ public final class SQLPrinter extends NodeToString {
     }
 
     public int[] getCardinalities() {
-        return Arrays.copyOfRange(cardinalities, 0, cardinalitiesIndex + 1);
+        return Arrays.copyOfRange(cardinalities, 0, cardinalitiesIndex);
     }
 
     @Override
@@ -35,6 +35,9 @@ public final class SQLPrinter extends NodeToString {
 
     @Override
     protected String rowCtorNode(RowConstructorNode row) throws StandardException {
+        if (row.getDepth() == 0)
+            return super.rowCtorNode(row);
+
         final ValueNodeList nodeList = row.getNodeList();
 
         cardinalities[cardinalitiesIndex] = nodeList.size();

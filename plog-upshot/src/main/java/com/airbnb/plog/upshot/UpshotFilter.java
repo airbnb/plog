@@ -6,6 +6,7 @@ import com.airbnb.plog.filters.Filter;
 import com.eclipsesource.json.JsonObject;
 import com.foundationdb.sql.StandardException;
 import com.foundationdb.sql.parser.SQLParser;
+import com.foundationdb.sql.parser.SQLParserFeature;
 import com.foundationdb.sql.parser.StatementNode;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -15,35 +16,60 @@ import org.msgpack.type.RawValue;
 import org.msgpack.type.Value;
 import org.msgpack.type.ValueFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 class UpshotFilter extends SimpleChannelInboundHandler<Message> implements Filter {
     private static final RawValue UNKNOWN_SIGNATURE = ValueFactory.createRawValue("???");
     private static final int[] EMPTY_CARDINALITIES = new int[0];
     private static final MessagePack msgpack = new MessagePack();
-
+    private static final int MINIMAL_FIELDS = 15;
+    private final SQLParser parser = new SQLParser();
     private final AtomicLong invalidFormat = new AtomicLong(),
             invalidVersion = new AtomicLong(),
             parsingFailed = new AtomicLong();
 
+    protected UpshotFilter() {
+        super();
+        parser.getFeatures().addAll(EnumSet.of(
+                SQLParserFeature.INFIX_BIT_OPERATORS,
+                SQLParserFeature.INFIX_LOGICAL_OPERATORS,
+                SQLParserFeature.MYSQL_COLUMN_AS_FUNCS
+        ));
+    }
+
+    private synchronized StatementNode parse(String sql) throws StandardException {
+        return parser.parseStatement(sql);
+    }
+
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Message msg)
-            throws FormatException, IOException {
+    protected void channelRead0(ChannelHandlerContext ctx, Message msg) {
+        try {
+            final Message transformed = transform(ctx, msg);
+
+            if (transformed != null)
+                ctx.fireChannelRead(transformed);
+        } catch (IOException e) {
+            invalidFormat.incrementAndGet();
+        }
+    }
+
+    @Nullable
+    protected Message transform(ChannelHandlerContext ctx, Message msg) throws IOException {
         final byte[] payload = msg.asBytes();
 
         final Value[] pack = msgpack.read(payload).asArrayValue().getElementArray();
 
-        final SQLParser parser = new SQLParser();
-
-        if (pack.length < 15) {
+        if (pack.length < MINIMAL_FIELDS) {
             invalidFormat.incrementAndGet();
-            return;
+            return null;
         }
 
         if (pack[0].asIntegerValue().getInt() != 0) {
             invalidVersion.incrementAndGet();
-            return;
+            return null;
         }
 
         final String sql = pack[14].asRawValue().getString();
@@ -52,14 +78,13 @@ class UpshotFilter extends SimpleChannelInboundHandler<Message> implements Filte
         int[] cardinalities;
 
         try {
-            final StatementNode rootNode = parser.parseStatement(sql);
             final SQLPrinter sqlPrinter = new SQLPrinter();
-            signature = ValueFactory.createRawValue(sqlPrinter.toString(rootNode));
+            signature = ValueFactory.createRawValue(sqlPrinter.toString(parse(sql)));
             cardinalities = sqlPrinter.getCardinalities();
         } catch (StandardException e) {
             signature = UNKNOWN_SIGNATURE;
             cardinalities = EMPTY_CARDINALITIES;
-            parsingFailed.incrementAndGet();
+            parsingFailed.getAndIncrement();
         }
 
         pack[14] = signature;
@@ -68,7 +93,7 @@ class UpshotFilter extends SimpleChannelInboundHandler<Message> implements Filte
         packer.write(pack);
         packer.write(cardinalities);
 
-        ctx.fireChannelRead(MessageImpl.fromBytes(ctx.alloc(), packer.toByteArray()));
+        return MessageImpl.fromBytes(ctx.alloc(), packer.toByteArray());
     }
 
     @Override
