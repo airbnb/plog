@@ -4,13 +4,11 @@ import com.airbnb.plog.fragmentation.Defragmenter;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.cache.CacheStats;
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.jar.Attributes;
@@ -40,10 +38,28 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     private final long startTime = System.currentTimeMillis();
     private String MEMOIZED_PLOG_VERSION = null;
-    private Set<Defragmenter> defragmenters = Sets.newHashSet();
+    private Defragmenter defragmenter = null;
 
     private static int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
+    }
+
+    private static JsonArray arrayForLogStats(AtomicLongArray data) {
+        final JsonArray result = new JsonArray();
+        for (int i = 0; i < data.length(); i++)
+            result.add(data.get(i));
+        return result;
+    }
+
+    private static JsonArray arrayForLogLogStats(AtomicLongArray data) {
+        final JsonArray result = new JsonArray();
+        for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
+            final JsonArray entry = new JsonArray();
+            result.add(entry);
+            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++)
+                entry.add(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
+        }
+        return result;
     }
 
     @Override
@@ -151,50 +167,16 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         result.add("v0_invalid_fragments", arrayForLogLogStats(invalidFragments));
         result.add("dropped_fragments", arrayForLogLogStats(droppedFragments));
 
-        final CacheStats cacheStats = this.defragmentersStats();
-        final JsonObject cacheJSON = new JsonObject();
-        result.add("cache", cacheJSON);
-
-        cacheJSON.add("evictions", cacheStats.evictionCount());
-        cacheJSON.add("hits", cacheStats.hitCount());
-        cacheJSON.add("misses", cacheStats.missCount());
+        if (defragmenter != null) {
+            final CacheStats cacheStats = defragmenter.getCacheStats();
+            final JsonObject cacheJSON = new JsonObject();
+            result.add("cache", cacheJSON);
+            cacheJSON.add("evictions", cacheStats.evictionCount());
+            cacheJSON.add("hits", cacheStats.hitCount());
+            cacheJSON.add("misses", cacheStats.missCount());
+        }
 
         return result.toString();
-    }
-
-    private static JsonArray arrayForLogStats(AtomicLongArray data) {
-        final JsonArray result = new JsonArray();
-        for (int i = 0; i < data.length(); i++)
-            result.add(data.get(i));
-        return result;
-    }
-
-    private static JsonArray arrayForLogLogStats(AtomicLongArray data) {
-        final JsonArray result = new JsonArray();
-        for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
-            final JsonArray entry = new JsonArray();
-            result.add(entry);
-            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++)
-                entry.add(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
-        }
-        return result;
-    }
-
-    private CacheStats defragmentersStats() {
-        long hitCount = 0, missCount = 0, loadSuccessCount = 0, loadExceptionCount = 0,
-                totalLoadTime = 0, evictionCount = 0;
-        for (Defragmenter defragmenter : this.defragmenters) {
-            final CacheStats stats = defragmenter.getCacheStats();
-            hitCount += stats.hitCount();
-            missCount += stats.missCount();
-            loadSuccessCount += stats.loadSuccessCount();
-            loadExceptionCount += stats.loadExceptionCount();
-            totalLoadTime += stats.totalLoadTime();
-            evictionCount += stats.evictionCount();
-        }
-        return new CacheStats(
-                hitCount, missCount, loadSuccessCount, loadExceptionCount,
-                totalLoadTime, evictionCount);
     }
 
     private String getPlogVersion() {
@@ -222,6 +204,9 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     public synchronized void withDefrag(Defragmenter defragmenter) {
-        this.defragmenters.add(defragmenter);
+        if (this.defragmenter == null)
+            this.defragmenter = defragmenter;
+        else
+            throw new IllegalStateException("Defragmenter already provided!");
     }
 }
