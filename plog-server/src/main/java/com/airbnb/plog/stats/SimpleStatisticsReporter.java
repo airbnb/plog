@@ -30,7 +30,8 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             v0Commands = new AtomicLong(),
             v0MultipartMessages = new AtomicLong(),
             failedToSend = new AtomicLong(),
-            exceptions = new AtomicLong();
+            exceptions = new AtomicLong(),
+            unhandledObjects = new AtomicLong();
     private final AtomicLongArray
             v0MultipartMessageFragments = new AtomicLongArray(Short.SIZE + 1),
             v0InvalidChecksum = new AtomicLongArray(Short.SIZE + 1),
@@ -122,6 +123,11 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         return droppedFragments.incrementAndGet(target);
     }
 
+    @Override
+    public long unhandledObject() {
+        return unhandledObjects.incrementAndGet();
+    }
+
     public final String toJSON() {
         final JsonObject result = new JsonObject();
         result.add("version", getPlogVersion());
@@ -134,6 +140,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         result.add("v0_commands", v0Commands.get());
         result.add("failed_to_send", failedToSend.get());
         result.add("exceptions", exceptions.get());
+        result.add("unhandled_objects", unhandledObjects.get());
         result.add("holes_from_dead_port", holesFromDeadPort.get());
         result.add("holes_from_new_message", holesFromNewMessage.get());
 

@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 @ChannelHandler.Sharable
 @Slf4j
 @RequiredArgsConstructor
-public class EndOfPipeline extends SimpleChannelInboundHandler<Void> {
+public class EndOfPipeline extends SimpleChannelInboundHandler<Object> {
     // This makes me excrutiatingly sad
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
             "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$",
@@ -22,8 +22,9 @@ public class EndOfPipeline extends SimpleChannelInboundHandler<Void> {
     private final StatisticsReporter stats;
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Void msg) throws Exception {
-        log.error("Some seriously weird stuff going on here!");
+    protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+        log.warn("Unhandled object down the pipeline: {}", msg);
+        stats.unhandledObject();
     }
 
     @Override
