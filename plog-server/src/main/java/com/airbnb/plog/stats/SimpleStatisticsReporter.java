@@ -1,6 +1,8 @@
 package com.airbnb.plog.stats;
 
 import com.airbnb.plog.fragmentation.Defragmenter;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import com.google.common.cache.CacheStats;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
@@ -121,85 +123,54 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     public final String toJSON() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("{\"version\":\"");
-        builder.append(getPlogVersion());
-        builder.append("\",\"uptime\":");
-        builder.append(System.currentTimeMillis() - this.startTime);
-        builder.append(",\"udp_simple_messages\":");
-        builder.append(this.udpSimpleMessages.get());
-        builder.append(",\"udp_invalid_version\":");
-        builder.append(this.udpInvalidVersion.get());
-        builder.append(",\"v0_invalid_type\":");
-        builder.append(this.v0InvalidType.get());
-        builder.append(",\"v0_invalid_multipart_header\":");
-        builder.append(this.v0InvalidMultipartHeader.get());
-        builder.append(",\"unknown_command\":");
-        builder.append(this.unknownCommand.get());
-        builder.append(",\"v0_commands\":");
-        builder.append(this.v0Commands.get());
-        builder.append(",\"failed_to_send\":");
-        builder.append(this.failedToSend.get());
-        builder.append(",\"exceptions\":");
-        builder.append(this.exceptions.get());
-        builder.append(",\"holes_from_dead_port\":");
-        builder.append(this.holesFromDeadPort.get());
-        builder.append(",\"holes_from_new_message\":");
-        builder.append(this.holesFromNewMessage.get());
+        final JsonObject result = new JsonObject();
+        result.add("version", getPlogVersion());
+        result.add("uptime", System.currentTimeMillis() - startTime);
+        result.add("udp_simple_messages", udpSimpleMessages.get());
+        result.add("udp_invalid_version", udpInvalidVersion.get());
+        result.add("v0_invalid_type", v0InvalidType.get());
+        result.add("v0_invalid_multipart_header", v0InvalidMultipartHeader.get());
+        result.add("unknown_command", unknownCommand.get());
+        result.add("v0_commands", v0Commands.get());
+        result.add("failed_to_send", failedToSend.get());
+        result.add("exceptions", exceptions.get());
+        result.add("holes_from_dead_port", holesFromDeadPort.get());
+        result.add("holes_from_new_message", holesFromNewMessage.get());
 
-        builder.append(',');
-        appendLogStats(builder, "v0_fragments", v0MultipartMessageFragments);
-        builder.append(',');
-        appendLogStats(builder, "v0_invalid_checksum", v0InvalidChecksum);
-        builder.append(',');
 
-        appendLogLogStats(builder, "v0_invalid_fragments", invalidFragments);
-        builder.append(',');
-        appendLogLogStats(builder, "dropped_fragments", droppedFragments);
+        result.add("v0_fragments", arrayForLogStats(v0MultipartMessageFragments));
+        result.add("v0_invalid_checksum", arrayForLogStats(v0InvalidChecksum));
+
+        result.add("v0_invalid_fragments", arrayForLogLogStats(invalidFragments));
+        result.add("dropped_fragments", arrayForLogLogStats(droppedFragments));
 
         final CacheStats cacheStats = this.defragmentersStats();
-        builder.append(",\"cache\":{\"evictions\":");
-        builder.append(cacheStats.evictionCount());
-        builder.append(",\"hits\":");
-        builder.append(cacheStats.hitCount());
-        builder.append(",\"misses\":");
-        builder.append(cacheStats.missCount());
-        builder.append('}');
+        final JsonObject cacheJSON = new JsonObject();
+        result.add("cache", cacheJSON);
 
-        builder.append("}");
+        cacheJSON.add("evictions", cacheStats.evictionCount());
+        cacheJSON.add("hits", cacheStats.hitCount());
+        cacheJSON.add("misses", cacheStats.missCount());
 
-        return builder.toString();
+        return result.toString();
     }
 
-    private void appendLogStats(StringBuilder builder, String name, AtomicLongArray data) {
-        builder.append('\"');
-        builder.append(name);
-        builder.append("\":[");
-        for (int i = 0; i < data.length(); i++) {
-            builder.append(data.get(i));
-            builder.append(',');
-        }
-        builder.append(data.get(data.length() - 1));
-        builder.append(']');
+    private static JsonArray arrayForLogStats(AtomicLongArray data) {
+        final JsonArray result = new JsonArray();
+        for (int i = 0; i < data.length(); i++)
+            result.add(data.get(i));
+        return result;
     }
 
-    private void appendLogLogStats(StringBuilder builder, String name, AtomicLongArray data) {
-        builder.append('\"');
-        builder.append(name);
-        builder.append("\":[");
+    private static JsonArray arrayForLogLogStats(AtomicLongArray data) {
+        final JsonArray result = new JsonArray();
         for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
-            builder.append('[');
-            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++) {
-                builder.append(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
-                if (packetIndexLog != packetCountLog)
-                    builder.append(',');
-            }
-            builder.append(']');
-
-            if (packetCountLog != Short.SIZE)
-                builder.append(',');
+            final JsonArray entry = new JsonArray();
+            result.add(entry);
+            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++)
+                entry.add(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
         }
-        builder.append(']');
+        return result;
     }
 
     private CacheStats defragmentersStats() {
