@@ -16,6 +16,8 @@ import java.net.UnknownHostException;
 public class PlogServer {
     public static void main(String[] args)
             throws UnknownHostException {
+        log.info("Starting...");
+
         System.err.println(
                 "      _\n" +
                         " _ __| |___  __ _\n" +
