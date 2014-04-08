@@ -1,11 +1,11 @@
 package com.airbnb.plog.upshot;
 
+import com.airbnb.plog.filters.Filter;
 import com.typesafe.config.Config;
-import io.netty.channel.ChannelHandler;
 
 public class FilterProvider implements com.airbnb.plog.filters.FilterProvider {
     @Override
-    public ChannelHandler getFilter(Config config) throws Exception {
-        return new Filter();
+    public Filter getFilter(Config config) throws Exception {
+        return new UpshotFilter();
     }
 }

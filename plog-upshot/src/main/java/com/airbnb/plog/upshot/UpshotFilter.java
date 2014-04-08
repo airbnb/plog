@@ -2,6 +2,7 @@ package com.airbnb.plog.upshot;
 
 import com.airbnb.plog.Message;
 import com.airbnb.plog.MessageImpl;
+import com.airbnb.plog.filters.Filter;
 import com.foundationdb.sql.StandardException;
 import com.foundationdb.sql.parser.SQLParser;
 import com.foundationdb.sql.parser.StatementNode;
@@ -15,7 +16,7 @@ import org.msgpack.type.ValueFactory;
 
 import java.io.IOException;
 
-class Filter extends SimpleChannelInboundHandler<Message> {
+class UpshotFilter extends SimpleChannelInboundHandler<Message> implements Filter {
     private static final RawValue UNKNOWN_SIGNATURE = ValueFactory.createRawValue("???");
     private static final int[] EMPTY_CARDINALITIES = new int[0];
     private static final MessagePack msgpack = new MessagePack();
