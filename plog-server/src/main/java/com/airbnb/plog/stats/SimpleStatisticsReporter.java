@@ -1,14 +1,17 @@
 package com.airbnb.plog.stats;
 
+import com.airbnb.plog.filters.Filter;
 import com.airbnb.plog.fragmentation.Defragmenter;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.cache.CacheStats;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.jar.Attributes;
@@ -39,6 +42,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     private final long startTime = System.currentTimeMillis();
     private String MEMOIZED_PLOG_VERSION = null;
     private Defragmenter defragmenter = null;
+    private List<Filter> filters = Lists.newArrayList();
 
     private static int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
@@ -176,6 +180,11 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             cacheJSON.add("misses", cacheStats.missCount());
         }
 
+        final JsonArray filterStats = new JsonArray();
+        result.add("filters", filterStats);
+        for (Filter filter : filters)
+            filterStats.add(filter.getStats());
+
         return result.toString();
     }
 
@@ -208,5 +217,9 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             this.defragmenter = defragmenter;
         else
             throw new IllegalStateException("Defragmenter already provided!");
+    }
+
+    public synchronized void appendFilter(Filter filter) {
+        this.filters.add(filter);
     }
 }

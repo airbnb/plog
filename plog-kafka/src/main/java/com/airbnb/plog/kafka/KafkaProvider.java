@@ -4,7 +4,6 @@ import com.airbnb.plog.filters.Filter;
 import com.airbnb.plog.filters.FilterProvider;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
-import io.netty.channel.ChannelHandler;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +36,6 @@ public class KafkaProvider implements FilterProvider {
         final ProducerConfig producerConfig = new ProducerConfig(properties);
         final Producer<byte[], byte[]> producer = new Producer<byte[], byte[]>(producerConfig);
 
-        return new KafkaFilter(producer, defaultTopic);
+        return new KafkaFilter(clientId, defaultTopic, producer);
     }
 }

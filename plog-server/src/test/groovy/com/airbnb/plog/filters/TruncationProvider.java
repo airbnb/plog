@@ -2,6 +2,7 @@ package com.airbnb.plog.filters;
 
 import com.airbnb.plog.Message;
 import com.airbnb.plog.MessageImpl;
+import com.eclipsesource.json.JsonObject;
 import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -33,6 +34,11 @@ public class TruncationProvider implements FilterProvider {
                 ctx.fireChannelRead(msg);
             else
                 ctx.fireChannelRead(new MessageImpl(msg.content().slice(0, maxLength)));
+        }
+
+        @Override
+        public JsonObject getStats() {
+            return null;
         }
     }
 }
