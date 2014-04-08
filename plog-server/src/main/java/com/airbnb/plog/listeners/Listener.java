@@ -1,6 +1,7 @@
 package com.airbnb.plog.listeners;
 
 import com.airbnb.plog.EndOfPipeline;
+import com.airbnb.plog.filters.Filter;
 import com.airbnb.plog.filters.FilterProvider;
 import com.airbnb.plog.stats.SimpleStatisticsReporter;
 import com.typesafe.config.Config;
@@ -43,8 +44,10 @@ public abstract class Listener {
             final Class<?> providerClass = Class.forName(providerName);
             final Constructor<?> providerConstructor = providerClass.getConstructor();
             final FilterProvider provider = (FilterProvider) providerConstructor.newInstance();
+            final Filter filter = provider.getFilter(filterConfig);
 
-            pipeline.addLast(provider.getFilter(filterConfig));
+            pipeline.addLast(filter);
+            stats.appendFilter(filter);
         }
 
         pipeline.addLast(eopHandler);

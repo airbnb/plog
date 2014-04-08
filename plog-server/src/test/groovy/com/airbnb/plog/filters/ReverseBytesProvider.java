@@ -2,6 +2,7 @@ package com.airbnb.plog.filters;
 
 import com.airbnb.plog.Message;
 import com.airbnb.plog.MessageImpl;
+import com.eclipsesource.json.JsonObject;
 import com.typesafe.config.Config;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -23,6 +24,11 @@ public class ReverseBytesProvider implements FilterProvider {
                 reverse[i] = payload[length - i - 1];
 
             ctx.fireChannelRead(MessageImpl.fromBytes(ctx.alloc(), reverse));
+        }
+
+        @Override
+        public JsonObject getStats() {
+            return null;
         }
     }
 }
