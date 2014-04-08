@@ -34,7 +34,7 @@ subprojects {
         testCompile 'org.codehaus.groovy:groovy-all:2.2.2'
         testCompile 'junit:junit:4.11'
     }
-    
+
     repositories {
         mavenLocal()
         jcenter()

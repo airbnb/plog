@@ -37,7 +37,7 @@ class UDPListenerTest extends GroovyTestCase {
     void testFilters() {
         final config = [
                 filters: [[provider: 'com.airbnb.plog.filters.ReverseBytesProvider'],
-                          [provider: 'com.airbnb.plog.filters.TruncationProvider',
+                          [provider  : 'com.airbnb.plog.filters.TruncationProvider',
                            max_length: 5],
                           [provider: 'com.airbnb.plog.console.ConsoleOutputProvider']]
         ]
