@@ -8,7 +8,9 @@ dependencies {
     compile project(':plog-server')
     compile project(':plog-console')
 
-    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+    // We love logback at Airbnb. Kill log4j.
+    compile 'ch.qos.logback:logback-classic:1.1.2'
+    compile 'org.slf4j:log4j-over-slf4j:1.7.7'
 
     // performance improvements for netty
     compile 'org.javassist:javassist:3.18.1-GA'
