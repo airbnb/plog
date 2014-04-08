@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.UnknownHostException;
 
 @Slf4j
-public class App {
+public class PlogServer {
     public static void main(String[] args)
             throws UnknownHostException {
         System.err.println(
@@ -23,7 +23,7 @@ public class App {
                         "| .__/_\\___/\\__, |\n" +
                         "|_|         |___/"
         );
-        new App().run(ConfigFactory.load());
+        new PlogServer().run(ConfigFactory.load());
     }
 
     private void run(Config config)

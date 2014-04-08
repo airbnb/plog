@@ -1,7 +1,7 @@
 apply plugin: 'application'
 apply plugin: 'shadow'
 
-mainClassName = 'com.airbnb.plog.App'
+mainClassName = 'com.airbnb.plog.PlogServer'
 
 dependencies {
     compile project(':plog-kafka')
@@ -18,7 +18,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'com.airbnb.plog.App',
+        attributes 'Main-Class': 'com.airbnb.plog.PlogServer',
                 'Plog-Version': version
     }
 }
