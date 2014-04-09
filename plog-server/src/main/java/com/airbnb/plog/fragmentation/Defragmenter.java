@@ -109,7 +109,7 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
         final byte[] bytes = ByteBufs.toByteArray(payload);
         final int computedHash = Hashing.murmur3_32().hashBytes(bytes).asInt();
         if (computedHash == expectedHash) {
-            out.add(new MessageImpl(payload));
+            out.add(new MessageImpl(payload, null));
             this.stats.receivedV0MultipartMessage();
         } else {
             log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",

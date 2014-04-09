@@ -33,7 +33,7 @@ public class TruncationProvider implements HandlerProvider {
             if (length <= maxLength)
                 ctx.fireChannelRead(msg);
             else
-                ctx.fireChannelRead(new MessageImpl(msg.content().slice(0, maxLength)));
+                ctx.fireChannelRead(new MessageImpl(msg.content().slice(0, maxLength), msg.getTags()));
         }
 
         @Override

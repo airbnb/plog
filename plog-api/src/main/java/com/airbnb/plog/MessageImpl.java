@@ -23,15 +23,10 @@ public class MessageImpl extends DefaultByteBufHolder implements Message {
         this.tags = tags;
     }
 
-    public MessageImpl(ByteBuf data) {
-        super(data);
-        tags = null;
-    }
-
-    public static Message fromBytes(ByteBufAllocator alloc, byte[] bytes) {
+    public static Message fromBytes(ByteBufAllocator alloc, byte[] bytes, byte[][] tags) {
         final ByteBuf data = alloc.buffer(bytes.length, bytes.length);
         data.writeBytes(bytes);
-        return new MessageImpl(data);
+        return new MessageImpl(data, tags);
     }
 
     @Override
