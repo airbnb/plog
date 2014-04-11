@@ -9,6 +9,8 @@ idea.module {
 subprojects {
     apply plugin: 'groovy'
     apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'bintray'
 
     version = '4.0.0-ALPHA'
 
@@ -38,8 +40,34 @@ subprojects {
         println project.sourceSets.test.runtimeClasspath.asPath
     }
 
+    publishing.publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+
+    bintray {
+        user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : null
+        key  = project.hasProperty('bintrayKey')  ? project.getProperty('bintrayKey')  : null
+
+        publications = ['mavenJava']
+
+        pkg {
+            userOrg = 'airbnb'
+            repo = 'jars'
+            name = 'plog'
+            licenses = ['Apache-2.0']
+        }
+    }
+
     repositories {
         mavenLocal()
         jcenter()
     }
+
+}
+
+buildscript {
+    repositories { jcenter() }
+    dependencies { classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3' }
 }
