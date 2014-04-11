@@ -34,6 +34,10 @@ subprojects {
         testCompile 'junit:junit:4.11'
     }
 
+    task cp << {
+        println project.sourceSets.test.runtimeClasspath.asPath
+    }
+
     repositories {
         mavenLocal()
         jcenter()
