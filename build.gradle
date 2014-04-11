@@ -6,13 +6,24 @@ idea.module {
     downloadSources = true
 }
 
+ext {
+    gitVersion = new ByteArrayOutputStream().with { out ->
+        exec {
+            commandLine 'git', 'describe', '--tags', '--dirty'
+            standardOutput = out
+        }
+        final full = out.toString().trim()
+        full.startsWith('v') ? full.substring(1) : full
+    }
+}
+
 subprojects {
     apply plugin: 'groovy'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'bintray'
 
-    version = '4.0.0-ALPHA'
+    version = rootProject.ext.gitVersion
 
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
