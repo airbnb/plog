@@ -12,9 +12,9 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 public class TCPListener extends Listener {
-    public TCPListener(int id, Config config)
+    public TCPListener(Config config)
             throws UnknownHostException {
-        super(id, config);
+        super(config);
     }
 
     @Override
@@ -35,10 +35,7 @@ public class TCPListener extends Listener {
                         pipeline
                                 .addLast(new LineBasedFrameDecoder(config.getInt("max_line")))
                                 .addLast(new ByteBufToMessageDecoder());
-                        appendFilters(pipeline);
-                        pipeline
-                                .addLast(getSink())
-                                .addLast(getEopHandler());
+                        finalizePipeline(pipeline);
                     }
                 }).bind(new InetSocketAddress(config.getString("host"), config.getInt("port")));
     }

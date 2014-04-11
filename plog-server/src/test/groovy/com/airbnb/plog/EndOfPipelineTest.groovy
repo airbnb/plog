@@ -18,7 +18,7 @@ class EndOfPipelineTest extends GroovyTestCase {
             }
         }
 
-        final stats = new SimpleStatisticsReporter(null)
+        final stats = new SimpleStatisticsReporter()
 
         final pipeline = new EmbeddedChannel(thrower, new EndOfPipeline(stats))
 

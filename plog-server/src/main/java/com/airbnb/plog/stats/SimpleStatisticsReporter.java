@@ -1,24 +1,23 @@
 package com.airbnb.plog.stats;
 
+import com.airbnb.plog.handlers.Handler;
 import com.airbnb.plog.fragmentation.Defragmenter;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import com.google.common.cache.CacheStats;
-import com.google.common.collect.Sets;
-import com.yammer.metrics.core.Meter;
-import kafka.producer.*;
-import lombok.RequiredArgsConstructor;
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-@RequiredArgsConstructor
 @Slf4j
 public final class SimpleStatisticsReporter implements StatisticsReporter {
     private final AtomicLong
@@ -32,19 +31,39 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             v0Commands = new AtomicLong(),
             v0MultipartMessages = new AtomicLong(),
             failedToSend = new AtomicLong(),
-            exceptions = new AtomicLong();
+            exceptions = new AtomicLong(),
+            unhandledObjects = new AtomicLong();
     private final AtomicLongArray
             v0MultipartMessageFragments = new AtomicLongArray(Short.SIZE + 1),
             v0InvalidChecksum = new AtomicLongArray(Short.SIZE + 1),
             droppedFragments = new AtomicLongArray((Short.SIZE + 1) * (Short.SIZE + 1)),
             invalidFragments = new AtomicLongArray((Short.SIZE + 1) * (Short.SIZE + 1));
-    private final String kafkaClientId;
+
     private final long startTime = System.currentTimeMillis();
     private String MEMOIZED_PLOG_VERSION = null;
-    private Set<Defragmenter> defragmenters = Sets.newHashSet();
+    private Defragmenter defragmenter = null;
+    private List<Handler> handlers = Lists.newArrayList();
 
     private static int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
+    }
+
+    private static JsonArray arrayForLogStats(AtomicLongArray data) {
+        final JsonArray result = new JsonArray();
+        for (int i = 0; i < data.length(); i++)
+            result.add(data.get(i));
+        return result;
+    }
+
+    private static JsonArray arrayForLogLogStats(AtomicLongArray data) {
+        final JsonArray result = new JsonArray();
+        for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
+            final JsonArray entry = new JsonArray();
+            result.add(entry);
+            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++)
+                entry.add(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
+        }
+        return result;
     }
 
     @Override
@@ -124,140 +143,48 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         return droppedFragments.incrementAndGet(target);
     }
 
+    @Override
+    public long unhandledObject() {
+        return unhandledObjects.incrementAndGet();
+    }
+
     public final String toJSON() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("{\"version\":\"");
-        builder.append(getPlogVersion());
-        builder.append("\",\"uptime\":");
-        builder.append(System.currentTimeMillis() - this.startTime);
-        builder.append(",\"udp_simple_messages\":");
-        builder.append(this.udpSimpleMessages.get());
-        builder.append(",\"udp_invalid_version\":");
-        builder.append(this.udpInvalidVersion.get());
-        builder.append(",\"v0_invalid_type\":");
-        builder.append(this.v0InvalidType.get());
-        builder.append(",\"v0_invalid_multipart_header\":");
-        builder.append(this.v0InvalidMultipartHeader.get());
-        builder.append(",\"unknown_command\":");
-        builder.append(this.unknownCommand.get());
-        builder.append(",\"v0_commands\":");
-        builder.append(this.v0Commands.get());
-        builder.append(",\"failed_to_send\":");
-        builder.append(this.failedToSend.get());
-        builder.append(",\"exceptions\":");
-        builder.append(this.exceptions.get());
-        builder.append(",\"holes_from_dead_port\":");
-        builder.append(this.holesFromDeadPort.get());
-        builder.append(",\"holes_from_new_message\":");
-        builder.append(this.holesFromNewMessage.get());
+        final JsonObject result = new JsonObject()
+                .add("version", getPlogVersion())
+                .add("uptime", System.currentTimeMillis() - startTime)
+                .add("udp_simple_messages", udpSimpleMessages.get())
+                .add("udp_invalid_version", udpInvalidVersion.get())
+                .add("v0_invalid_type", v0InvalidType.get())
+                .add("v0_invalid_multipart_header", v0InvalidMultipartHeader.get())
+                .add("unknown_command", unknownCommand.get())
+                .add("v0_commands", v0Commands.get())
+                .add("failed_to_send", failedToSend.get())
+                .add("exceptions", exceptions.get())
+                .add("unhandled_objects", unhandledObjects.get())
+                .add("holes_from_dead_port", holesFromDeadPort.get())
+                .add("holes_from_new_message", holesFromNewMessage.get())
+                .add("v0_fragments", arrayForLogStats(v0MultipartMessageFragments))
+                .add("v0_invalid_checksum", arrayForLogStats(v0InvalidChecksum))
+                .add("v0_invalid_fragments", arrayForLogLogStats(invalidFragments))
+                .add("dropped_fragments", arrayForLogLogStats(droppedFragments));
 
-        builder.append(',');
-        appendLogStats(builder, "v0_fragments", v0MultipartMessageFragments);
-        builder.append(',');
-        appendLogStats(builder, "v0_invalid_checksum", v0InvalidChecksum);
-        builder.append(',');
-
-        appendLogLogStats(builder, "v0_invalid_fragments", invalidFragments);
-        builder.append(',');
-        appendLogLogStats(builder, "dropped_fragments", droppedFragments);
-
-        final CacheStats cacheStats = this.defragmentersStats();
-        builder.append(",\"cache\":{\"evictions\":");
-        builder.append(cacheStats.evictionCount());
-        builder.append(",\"hits\":");
-        builder.append(cacheStats.hitCount());
-        builder.append(",\"misses\":");
-        builder.append(cacheStats.missCount());
-        builder.append('}');
-
-        if (kafkaClientId != null)
-            appendKafka(builder);
-
-        builder.append("}");
-
-        return builder.toString();
-    }
-
-    private void appendKafka(StringBuilder builder) {
-        builder.append(",\"kafka\":{");
-
-        final ProducerStats producerStats = ProducerStatsRegistry.getProducerStats(kafkaClientId);
-        final ProducerTopicStats producerTopicStats = ProducerTopicStatsRegistry.getProducerTopicStats(kafkaClientId);
-        final ProducerTopicMetrics producerAllTopicsStats = producerTopicStats.getProducerAllTopicsStats();
-
-        builder.append("\"serializationErrorRate\":{");
-        report(producerStats.serializationErrorRate(), builder);
-        builder.append("},\"failedSendRate\":{");
-        report(producerStats.failedSendRate(), builder);
-        builder.append("},\"resendRate\":{");
-        report(producerStats.resendRate(), builder);
-        builder.append("},\"byteRate\":{");
-        report(producerAllTopicsStats.byteRate(), builder);
-        builder.append("},\"droppedMessageRate\":{");
-        report(producerAllTopicsStats.droppedMessageRate(), builder);
-        builder.append("},\"messageRate\":{");
-        report(producerAllTopicsStats.messageRate(), builder);
-        builder.append("}}");
-    }
-
-    private void appendLogStats(StringBuilder builder, String name, AtomicLongArray data) {
-        builder.append('\"');
-        builder.append(name);
-        builder.append("\":[");
-        for (int i = 0; i < data.length(); i++) {
-            builder.append(data.get(i));
-            builder.append(',');
+        if (defragmenter != null) {
+            final CacheStats cacheStats = defragmenter.getCacheStats();
+            result.add("cache", new JsonObject()
+                    .add("evictions", cacheStats.evictionCount())
+                    .add("hits", cacheStats.hitCount())
+                    .add("misses", cacheStats.missCount()));
         }
-        builder.append(data.get(data.length() - 1));
-        builder.append(']');
-    }
 
-    private void appendLogLogStats(StringBuilder builder, String name, AtomicLongArray data) {
-        builder.append('\"');
-        builder.append(name);
-        builder.append("\":[");
-        for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
-            builder.append('[');
-            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++) {
-                builder.append(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
-                if (packetIndexLog != packetCountLog)
-                    builder.append(',');
-            }
-            builder.append(']');
-
-            if (packetCountLog != Short.SIZE)
-                builder.append(',');
+        final JsonArray handlersStats = new JsonArray();
+        result.add("handlers", handlersStats);
+        for (Handler handler : handlers) {
+            final JsonObject statsCandidate = handler.getStats();
+            final JsonObject stats = (statsCandidate == null) ? new JsonObject() : statsCandidate;
+            handlersStats.add(stats.set("name", handler.getName()));
         }
-        builder.append(']');
-    }
 
-    private void report(Meter meter, StringBuilder builder) {
-        builder.append("\"count\":");
-        builder.append(meter.count());
-        builder.append(",\"rate\":[");
-        builder.append(meter.oneMinuteRate());
-        builder.append(',');
-        builder.append(meter.fiveMinuteRate());
-        builder.append(',');
-        builder.append(meter.fifteenMinuteRate());
-        builder.append(']');
-    }
-
-    private CacheStats defragmentersStats() {
-        long hitCount = 0, missCount = 0, loadSuccessCount = 0, loadExceptionCount = 0,
-                totalLoadTime = 0, evictionCount = 0;
-        for (Defragmenter defragmenter : this.defragmenters) {
-            final CacheStats stats = defragmenter.getCacheStats();
-            hitCount += stats.hitCount();
-            missCount += stats.missCount();
-            loadSuccessCount += stats.loadSuccessCount();
-            loadExceptionCount += stats.loadExceptionCount();
-            totalLoadTime += stats.totalLoadTime();
-            evictionCount += stats.evictionCount();
-        }
-        return new CacheStats(
-                hitCount, missCount, loadSuccessCount, loadExceptionCount,
-                totalLoadTime, evictionCount);
+        return result.toString();
     }
 
     private String getPlogVersion() {
@@ -285,6 +212,13 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     public synchronized void withDefrag(Defragmenter defragmenter) {
-        this.defragmenters.add(defragmenter);
+        if (this.defragmenter == null)
+            this.defragmenter = defragmenter;
+        else
+            throw new IllegalStateException("Defragmenter already provided!");
+    }
+
+    public synchronized void appendHandler(Handler handler) {
+        this.handlers.add(handler);
     }
 }

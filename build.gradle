@@ -10,7 +10,7 @@ subprojects {
     apply plugin: 'groovy'
     apply plugin: 'maven'
 
-    version = '3.1.0'
+    version = '4.0.0-ALPHA'
 
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
@@ -26,13 +26,14 @@ subprojects {
         compile 'org.projectlombok:lombok:1.12.6'
         compile 'com.google.guava:guava:16.0.1'
         compile 'com.typesafe:config:1.2.0'
+        compile 'com.eclipsesource.minimal-json:minimal-json:0.9.1'
         compile "io.netty:netty-handler:${nettyVersion}"
         compile "org.slf4j:slf4j-api:${slf4jVersion}"
 
         testCompile 'org.codehaus.groovy:groovy-all:2.2.2'
         testCompile 'junit:junit:4.11'
     }
-    
+
     repositories {
         mavenLocal()
         jcenter()

@@ -17,9 +17,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class UDPListener extends Listener {
-    public UDPListener(int id, Config config)
+    public UDPListener(Config config)
             throws UnknownHostException {
-        super(id, config);
+        super(config);
     }
 
     @Override
@@ -70,9 +70,7 @@ public class UDPListener extends Listener {
                                 .addLast(protocolDecoder)
                                 .addLast(defragmenter)
                                 .addLast(flch);
-                        appendFilters(pipeline);
-                        pipeline.addLast(getSink())
-                                .addLast(getEopHandler());
+                        finalizePipeline(pipeline);
                     }
                 })
                 .bind(new InetSocketAddress(config.getString("host"), config.getInt("port")));

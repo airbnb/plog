@@ -13,6 +13,6 @@ class ByteBufToMessageDecoder extends MessageToMessageDecoder<ByteBuf> {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
         buf.retain();
-        out.add(new MessageImpl(buf));
+        out.add(new MessageImpl(buf, null));
     }
 }

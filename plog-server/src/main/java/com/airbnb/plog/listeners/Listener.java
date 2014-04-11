@@ -1,26 +1,18 @@
 package com.airbnb.plog.listeners;
 
 import com.airbnb.plog.EndOfPipeline;
-import com.airbnb.plog.filters.FilterProvider;
-import com.airbnb.plog.sinks.ConsoleSink;
-import com.airbnb.plog.sinks.KafkaSink;
-import com.airbnb.plog.sinks.Sink;
+import com.airbnb.plog.handlers.Handler;
+import com.airbnb.plog.handlers.HandlerProvider;
 import com.airbnb.plog.stats.SimpleStatisticsReporter;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigValue;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
-import kafka.javaapi.producer.Producer;
-import kafka.producer.ProducerConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Constructor;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Map;
-import java.util.Properties;
 
 @Slf4j
 public abstract class Listener {
@@ -28,55 +20,36 @@ public abstract class Listener {
     private final Config config;
 
     @Getter
-    private final Sink sink;
-
-    @Getter
     private final SimpleStatisticsReporter stats;
 
-    @Getter
     private final EndOfPipeline eopHandler;
 
-    public Listener(int id, Config config)
+    public Listener(Config config)
             throws UnknownHostException {
         this.config = config;
 
-        final String topic = config.getString("topic");
-        if ("STDOUT".equals(topic)) {
-            log.info("Using STDOUT");
-
-            this.stats = new SimpleStatisticsReporter(null);
-            this.eopHandler = new EndOfPipeline(stats);
-            this.sink = new ConsoleSink();
-        } else {
-            final Properties kafkaProperties = new Properties();
-            for (Map.Entry<String, ConfigValue> kv : config.getConfig("kafka").entrySet())
-                kafkaProperties.put(kv.getKey(), kv.getValue().unwrapped().toString());
-
-            final String clientId = "plog_" + InetAddress.getLocalHost().getHostName() + "_" + id;
-            kafkaProperties.put("client.id", clientId);
-            this.stats = new SimpleStatisticsReporter(clientId);
-            this.eopHandler = new EndOfPipeline(stats);
-
-            log.info("Using Kafka with properties {}", kafkaProperties);
-
-            final Producer<byte[], byte[]> producer = new Producer<byte[], byte[]>(new ProducerConfig(kafkaProperties));
-            this.sink = new KafkaSink(topic, producer, stats);
-        }
+        this.stats = new SimpleStatisticsReporter();
+        this.eopHandler = new EndOfPipeline(stats);
     }
 
     public abstract ChannelFuture start(final EventLoopGroup group);
 
-    void appendFilters(ChannelPipeline pipeline)
+    void finalizePipeline(ChannelPipeline pipeline)
             throws Exception {
-        for (Config filterConfig : config.getConfigList("filters")) {
-            final String providerName = filterConfig.getString("provider");
+
+        for (Config handlerConfig : config.getConfigList("handlers")) {
+            final String providerName = handlerConfig.getString("provider");
             log.debug("Loading provider for {}", providerName);
 
             final Class<?> providerClass = Class.forName(providerName);
             final Constructor<?> providerConstructor = providerClass.getConstructor();
-            final FilterProvider provider = (FilterProvider) providerConstructor.newInstance();
+            final HandlerProvider provider = (HandlerProvider) providerConstructor.newInstance();
+            final Handler handler = provider.getHandler(handlerConfig);
 
-            pipeline.addLast(provider.getFilter(filterConfig));
+            pipeline.addLast(handler.getName(), handler);
+            stats.appendHandler(handler);
         }
+
+        pipeline.addLast(eopHandler);
     }
 }
