@@ -12,9 +12,9 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
 public class TCPListener extends Listener {
-    public TCPListener(int id, Config config)
+    public TCPListener(Config config)
             throws UnknownHostException {
-        super(id, config);
+        super(config);
     }
 
     @Override

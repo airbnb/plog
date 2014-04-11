@@ -1,6 +1,6 @@
 package com.airbnb.plog.stats;
 
-import com.airbnb.plog.filters.Filter;
+import com.airbnb.plog.handlers.Handler;
 import com.airbnb.plog.fragmentation.Defragmenter;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -42,7 +42,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     private final long startTime = System.currentTimeMillis();
     private String MEMOIZED_PLOG_VERSION = null;
     private Defragmenter defragmenter = null;
-    private List<Filter> filters = Lists.newArrayList();
+    private List<Handler> handlers = Lists.newArrayList();
 
     private static int intLog2(int i) {
         return Integer.SIZE - Integer.numberOfLeadingZeros(i);
@@ -176,12 +176,12 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
                     .add("misses", cacheStats.missCount()));
         }
 
-        final JsonArray filtersStats = new JsonArray();
-        result.add("filters", filtersStats);
-        for (Filter filter : filters) {
-            final JsonObject filterStatsCandidate = filter.getStats();
-            final JsonObject stats = (filterStatsCandidate == null) ? new JsonObject() : filterStatsCandidate;
-            filtersStats.add(stats.set("name", filter.getName()));
+        final JsonArray handlersStats = new JsonArray();
+        result.add("handlers", handlersStats);
+        for (Handler handler : handlers) {
+            final JsonObject statsCandidate = handler.getStats();
+            final JsonObject stats = (statsCandidate == null) ? new JsonObject() : statsCandidate;
+            handlersStats.add(stats.set("name", handler.getName()));
         }
 
         return result.toString();
@@ -218,7 +218,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             throw new IllegalStateException("Defragmenter already provided!");
     }
 
-    public synchronized void appendFilter(Filter filter) {
-        this.filters.add(filter);
+    public synchronized void appendHandler(Handler handler) {
+        this.handlers.add(handler);
     }
 }

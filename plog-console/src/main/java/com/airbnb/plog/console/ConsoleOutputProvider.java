@@ -1,15 +1,15 @@
 package com.airbnb.plog.console;
 
-import com.airbnb.plog.filters.Filter;
-import com.airbnb.plog.filters.FilterProvider;
+import com.airbnb.plog.handlers.Handler;
+import com.airbnb.plog.handlers.HandlerProvider;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 
 import java.io.PrintStream;
 
-public class ConsoleOutputProvider implements FilterProvider {
+public class ConsoleOutputProvider implements HandlerProvider {
     @Override
-    public Filter getFilter(Config config) throws Exception {
+    public Handler getHandler(Config config) throws Exception {
         PrintStream target = System.out;
         try {
             final String targetDescription = config.getString("target");
@@ -18,6 +18,6 @@ public class ConsoleOutputProvider implements FilterProvider {
         } catch (ConfigException.Missing ignored) {
         }
 
-        return new ConsoleOutputFilter(target);
+        return new ConsoleOutputHandler(target);
     }
 }

@@ -1,7 +1,7 @@
 package com.airbnb.plog.kafka;
 
 import com.airbnb.plog.Message;
-import com.airbnb.plog.filters.Filter;
+import com.airbnb.plog.handlers.Handler;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.yammer.metrics.core.Meter;
@@ -17,14 +17,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @RequiredArgsConstructor
 @Slf4j
-public class KafkaFilter extends SimpleChannelInboundHandler<Message> implements Filter {
+public class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     private final String defaultTopic;
     private final Producer<byte[], byte[]> producer;
     private final AtomicLong failedToSendMessageExceptions = new AtomicLong();
     private final ProducerStats producerStats;
     private final ProducerTopicMetrics producerAllTopicsStats;
 
-    protected KafkaFilter(final String clientId, final String defaultTopic, final Producer<byte[], byte[]> producer) {
+    protected KafkaHandler(final String clientId, final String defaultTopic, final Producer<byte[], byte[]> producer) {
         super();
         this.producerStats = ProducerStatsRegistry.getProducerStats(clientId);
         this.producerAllTopicsStats = ProducerTopicStatsRegistry.getProducerTopicStats(clientId).getProducerAllTopicsStats();

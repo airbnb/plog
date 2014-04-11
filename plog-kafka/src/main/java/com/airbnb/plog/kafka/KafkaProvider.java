@@ -1,7 +1,7 @@
 package com.airbnb.plog.kafka;
 
-import com.airbnb.plog.filters.Filter;
-import com.airbnb.plog.filters.FilterProvider;
+import com.airbnb.plog.handlers.Handler;
+import com.airbnb.plog.handlers.HandlerProvider;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
 import kafka.javaapi.producer.Producer;
@@ -14,11 +14,11 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-public class KafkaProvider implements FilterProvider {
+public class KafkaProvider implements HandlerProvider {
     private final static AtomicInteger clientId = new AtomicInteger();
 
     @Override
-    public Filter getFilter(Config config) throws Exception {
+    public Handler getHandler(Config config) throws Exception {
         final String defaultTopic = config.getString("default_topic");
 
         final Properties properties = new Properties();
@@ -36,6 +36,6 @@ public class KafkaProvider implements FilterProvider {
         final ProducerConfig producerConfig = new ProducerConfig(properties);
         final Producer<byte[], byte[]> producer = new Producer<byte[], byte[]>(producerConfig);
 
-        return new KafkaFilter(clientId, defaultTopic, producer);
+        return new KafkaHandler(clientId, defaultTopic, producer);
     }
 }

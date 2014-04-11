@@ -1,4 +1,4 @@
-package com.airbnb.plog.filters;
+package com.airbnb.plog.handlers;
 
 import com.airbnb.plog.Message;
 import com.airbnb.plog.MessageImpl;
@@ -7,13 +7,13 @@ import com.typesafe.config.Config;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class ReverseBytesProvider implements FilterProvider {
+public class ReverseBytesProvider implements HandlerProvider {
     @Override
-    public Filter getFilter(Config config) throws Exception {
-        return new ReverseBytesFilter();
+    public Handler getHandler(Config config) throws Exception {
+        return new ReverseBytesHandler();
     }
 
-    private static class ReverseBytesFilter extends SimpleChannelInboundHandler<Message> implements Filter {
+    private static class ReverseBytesHandler extends SimpleChannelInboundHandler<Message> implements Handler {
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
             final byte[] payload = msg.asBytes();

@@ -52,17 +52,11 @@ public class PlogServer {
         final Config tcpConfig = plogConfig.getConfig("tcp");
         final Config tcpDefaults = tcpConfig.getConfig("defaults").withFallback(globalDefaults);
 
-        int listenerId = 0;
+        for (final Config cfg : udpConfig.getConfigList("listeners"))
+            new UDPListener(cfg.withFallback(udpDefaults)).start(group).addListener(futureListener);
 
-        for (final Config cfg : udpConfig.getConfigList("listeners")) {
-            new UDPListener(listenerId, cfg.withFallback(udpDefaults)).start(group).addListener(futureListener);
-            listenerId++;
-        }
-
-        for (final Config cfg : tcpConfig.getConfigList("listeners")) {
-            new TCPListener(listenerId, cfg.withFallback(tcpDefaults)).start(group).addListener(futureListener);
-            listenerId++;
-        }
+        for (final Config cfg : tcpConfig.getConfigList("listeners"))
+            new TCPListener(cfg.withFallback(tcpDefaults)).start(group).addListener(futureListener);
 
         log.info("Started with config {}", config);
     }

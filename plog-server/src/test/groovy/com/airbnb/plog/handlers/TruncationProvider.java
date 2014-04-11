@@ -1,4 +1,4 @@
-package com.airbnb.plog.filters;
+package com.airbnb.plog.handlers;
 
 import com.airbnb.plog.Message;
 import com.airbnb.plog.MessageImpl;
@@ -10,15 +10,15 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class TruncationProvider implements FilterProvider {
+public class TruncationProvider implements HandlerProvider {
     @Override
-    public Filter getFilter(Config config) throws Exception {
+    public Handler getHandler(Config config) throws Exception {
         final int maxLength = config.getInt("max_length");
 
         return new MessageSimpleChannelInboundHandler(maxLength);
     }
 
-    private static class MessageSimpleChannelInboundHandler extends SimpleChannelInboundHandler<Message> implements Filter {
+    private static class MessageSimpleChannelInboundHandler extends SimpleChannelInboundHandler<Message> implements Handler {
         private final int maxLength;
 
         public MessageSimpleChannelInboundHandler(int maxLength) {

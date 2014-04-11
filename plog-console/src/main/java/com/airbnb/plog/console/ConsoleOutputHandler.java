@@ -1,7 +1,7 @@
 package com.airbnb.plog.console;
 
 import com.airbnb.plog.Message;
-import com.airbnb.plog.filters.Filter;
+import com.airbnb.plog.handlers.Handler;
 import com.eclipsesource.json.JsonObject;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -11,7 +11,7 @@ import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RequiredArgsConstructor
-public class ConsoleOutputFilter extends SimpleChannelInboundHandler<Message> implements Filter {
+public class ConsoleOutputHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     final PrintStream target;
     final AtomicLong logged = new AtomicLong();
 

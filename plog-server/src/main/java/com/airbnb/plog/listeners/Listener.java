@@ -1,8 +1,8 @@
 package com.airbnb.plog.listeners;
 
 import com.airbnb.plog.EndOfPipeline;
-import com.airbnb.plog.filters.Filter;
-import com.airbnb.plog.filters.FilterProvider;
+import com.airbnb.plog.handlers.Handler;
+import com.airbnb.plog.handlers.HandlerProvider;
 import com.airbnb.plog.stats.SimpleStatisticsReporter;
 import com.typesafe.config.Config;
 import io.netty.channel.ChannelFuture;
@@ -24,7 +24,7 @@ public abstract class Listener {
 
     private final EndOfPipeline eopHandler;
 
-    public Listener(int id, Config config)
+    public Listener(Config config)
             throws UnknownHostException {
         this.config = config;
 
@@ -37,17 +37,17 @@ public abstract class Listener {
     void finalizePipeline(ChannelPipeline pipeline)
             throws Exception {
 
-        for (Config filterConfig : config.getConfigList("filters")) {
-            final String providerName = filterConfig.getString("provider");
+        for (Config handlerConfig : config.getConfigList("handlers")) {
+            final String providerName = handlerConfig.getString("provider");
             log.debug("Loading provider for {}", providerName);
 
             final Class<?> providerClass = Class.forName(providerName);
             final Constructor<?> providerConstructor = providerClass.getConstructor();
-            final FilterProvider provider = (FilterProvider) providerConstructor.newInstance();
-            final Filter filter = provider.getFilter(filterConfig);
+            final HandlerProvider provider = (HandlerProvider) providerConstructor.newInstance();
+            final Handler handler = provider.getHandler(handlerConfig);
 
-            pipeline.addLast(filter);
-            stats.appendFilter(filter);
+            pipeline.addLast(handler.getName(), handler);
+            stats.appendHandler(handler);
         }
 
         pipeline.addLast(eopHandler);

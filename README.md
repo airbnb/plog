@@ -15,7 +15,7 @@ While updates may still be made and we welcome feedback, keep in mind we may not
 
 ## Getting started
 
-    $ printf 'plog.udp.listeners=[{filters=[{provider="com.airbnb.plog.console.ConsoleOutputProvider"}]}]' > plog-distro/src/main/resources/application.conf
+    $ printf 'plog.udp.listeners=[{handlers=[{provider="com.airbnb.plog.console.ConsoleOutputProvider"}]}]' > plog-distro/src/main/resources/application.conf
     $ ./gradlew run
     $ printf 'yipee!' | socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
     $ printf '\0\0statsplz' | socat - UDP-DATAGRAM:127.0.0.1:23456
