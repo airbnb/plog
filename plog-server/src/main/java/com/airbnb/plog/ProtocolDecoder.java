@@ -41,7 +41,6 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
                     break;
                 case 1:
                     log.debug("v0 multipart message: {}", msg);
-                    msg.retain();
                     try {
                         final Fragment fragment = Fragment.fromDatagram(msg);
                         stats.receivedV0MultipartFragment(fragment.getFragmentIndex());

@@ -34,7 +34,9 @@ public class Fragment extends DefaultByteBufHolder {
     }
 
     public static Fragment fromDatagram(DatagramPacket packet) {
+        packet.content().retain();
         final ByteBuf content = packet.content().order(ByteOrder.BIG_ENDIAN);
+
         final int length = content.readableBytes();
         if (length < HEADER_SIZE)
             throw new IllegalArgumentException("Packet too short: " + length + " bytes");
