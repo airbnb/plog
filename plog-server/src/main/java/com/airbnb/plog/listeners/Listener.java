@@ -7,7 +7,6 @@ import com.airbnb.plog.stats.SimpleStatisticsReporter;
 import com.typesafe.config.Config;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +31,7 @@ public abstract class Listener {
         this.eopHandler = new EndOfPipeline(stats);
     }
 
-    public abstract ChannelFuture start(final EventLoopGroup group);
+    public abstract ChannelFuture start();
 
     void finalizePipeline(ChannelPipeline pipeline)
             throws Exception {

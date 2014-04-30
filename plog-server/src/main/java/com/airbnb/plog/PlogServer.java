@@ -30,8 +30,6 @@ public class PlogServer {
 
     private void run(Config config)
             throws UnknownHostException {
-        final EventLoopGroup group = new NioEventLoopGroup();
-
         final ChannelFutureListener futureListener = new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
@@ -53,10 +51,10 @@ public class PlogServer {
         final Config tcpDefaults = tcpConfig.getConfig("defaults").withFallback(globalDefaults);
 
         for (final Config cfg : udpConfig.getConfigList("listeners"))
-            new UDPListener(cfg.withFallback(udpDefaults)).start(group).addListener(futureListener);
+            new UDPListener(cfg.withFallback(udpDefaults)).start().addListener(futureListener);
 
         for (final Config cfg : tcpConfig.getConfigList("listeners"))
-            new TCPListener(cfg.withFallback(tcpDefaults)).start(group).addListener(futureListener);
+            new TCPListener(cfg.withFallback(tcpDefaults)).start().addListener(futureListener);
 
         log.info("Started with config {}", config);
     }

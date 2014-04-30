@@ -4,6 +4,7 @@ import com.typesafe.config.Config;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
@@ -18,11 +19,11 @@ public class TCPListener extends Listener {
     }
 
     @Override
-    public ChannelFuture start(final EventLoopGroup group) {
+    public ChannelFuture start() {
         final Config config = getConfig();
 
         return new ServerBootstrap()
-                .group(group)
+                .group(new NioEventLoopGroup())
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_REUSEADDR, true)
