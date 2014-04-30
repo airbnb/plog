@@ -170,7 +170,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
         if (defragmenter != null) {
             final CacheStats cacheStats = defragmenter.getCacheStats();
-            result.add("cache", new JsonObject()
+            result.add("defragmenter", new JsonObject()
                     .add("evictions", cacheStats.evictionCount())
                     .add("hits", cacheStats.hitCount())
                     .add("misses", cacheStats.missCount()));
