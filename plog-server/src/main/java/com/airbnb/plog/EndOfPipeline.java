@@ -23,7 +23,7 @@ public class EndOfPipeline extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-        log.warn("Unhandled object down the pipeline: {}", msg);
+        log.warn("Unhandled {} down the pipeline: {}", msg.getClass().getName(), msg);
         stats.unhandledObject();
     }
 
