@@ -38,7 +38,7 @@ public class FragmentedMessage {
 
     public static FragmentedMessage fromFragment(final Fragment fragment, StatisticsReporter stats) {
         final FragmentedMessage msg = new FragmentedMessage(
-                fragment.getPayload().alloc(),
+                fragment.content().alloc(),
                 fragment.getTotalLength(),
                 fragment.getFragmentCount(),
                 fragment.getFragmentSize(),
@@ -51,7 +51,7 @@ public class FragmentedMessage {
         final int fragmentSize = fragment.getFragmentSize();
         final int fragmentCount = fragment.getFragmentCount();
         final int msgHash = fragment.getMsgHash();
-        final ByteBuf fragmentPayload = fragment.getPayload();
+        final ByteBuf fragmentPayload = fragment.content();
         final int fragmentIndex = fragment.getFragmentIndex();
         final boolean fragmentIsLast = (fragmentIndex == fragmentCount - 1);
         final int foffset = fragmentSize * fragmentIndex;
@@ -60,7 +60,7 @@ public class FragmentedMessage {
         final boolean validFragmentLength;
 
         if (fragmentIsLast) {
-            validFragmentLength = (lengthOfCurrentFragment == this.getPayloadLength() - foffset);
+            validFragmentLength = (lengthOfCurrentFragment == this.getContentLength() - foffset);
         } else {
             validFragmentLength = (lengthOfCurrentFragment == this.fragmentSize);
         }
@@ -82,7 +82,6 @@ public class FragmentedMessage {
             }
         }
         payload.setBytes(foffset, fragmentPayload, 0, lengthOfCurrentFragment);
-        fragment.getPayload().release();
     }
 
     public final ByteBuf getPayload() {
@@ -90,11 +89,11 @@ public class FragmentedMessage {
             throw new IllegalStateException("Incomplete");
 
         payload.readerIndex(0);
-        payload.writerIndex(getPayloadLength());
+        payload.writerIndex(getContentLength());
         return payload;
     }
 
-    public final int getPayloadLength() {
+    public final int getContentLength() {
         return payload.capacity();
     }
 }

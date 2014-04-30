@@ -75,7 +75,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
                     (8 << 24) + (9 << 16) + (10 << 8) + 11
             assert frag.totalLength == (12 << 24) + (13 << 16) + (14 << 8) + 15
             assert frag.msgHash == (16 << 24) + (17 << 16) + (18 << 8) + 19
-            assert ByteBufs.toByteArray(frag.payload) == 24..30
+            assert ByteBufs.toByteArray(frag.content()) == 24..30
         }
     }
 
