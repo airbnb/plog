@@ -1,7 +1,5 @@
 package com.airbnb.plog.listeners
-
 import com.typesafe.config.ConfigFactory
-import io.netty.channel.nio.NioEventLoopGroup
 
 class UDPListenerTest extends GroovyTestCase {
     final refConfig = ConfigFactory.defaultReference().getConfig('plog')
@@ -10,9 +8,8 @@ class UDPListenerTest extends GroovyTestCase {
 
     private void runTest(Map config, Closure test, String expectation) {
         final compiledConfig = ConfigFactory.parseMap(config).withFallback(defaultUDPConfig)
-        final group = new NioEventLoopGroup()
         final listener = new UDPListener(0, compiledConfig)
-        listener.start(group)
+        listener.start()
 
         final oldOut = System.out
         final newOut = new ByteArrayOutputStream()

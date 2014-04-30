@@ -8,6 +8,7 @@ import com.typesafe.config.Config;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 
@@ -23,7 +24,7 @@ public class UDPListener extends Listener {
     }
 
     @Override
-    public ChannelFuture start(EventLoopGroup group) {
+    public ChannelFuture start() {
         final Config config = getConfig();
 
         final SimpleStatisticsReporter stats = getStats();
@@ -39,7 +40,7 @@ public class UDPListener extends Listener {
                 Executors.newFixedThreadPool(config.getInt("threads"));
 
         return new Bootstrap()
-                .group(group)
+                .group(new NioEventLoopGroup(1))
                 .channel(NioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_RCVBUF,
