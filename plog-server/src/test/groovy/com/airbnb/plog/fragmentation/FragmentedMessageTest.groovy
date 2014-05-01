@@ -27,7 +27,7 @@ class FragmentedMessageTest extends GroovyTestCase {
     void testSurvivesEmptiness() {
         final msg = create(1, 0, 0, 0, ''.bytes)
         assert msg.isComplete()
-        assert msg.payloadLength == 0
+        assert msg.contentLength == 0
         assert read(msg) == []
     }
 

@@ -8,7 +8,7 @@ class UDPListenerTest extends GroovyTestCase {
 
     private void runTest(Map config, Closure test, String expectation) {
         final compiledConfig = ConfigFactory.parseMap(config).withFallback(defaultUDPConfig)
-        final listener = new UDPListener(0, compiledConfig)
+        final listener = new UDPListener(compiledConfig)
         listener.start()
 
         final oldOut = System.out

@@ -1,16 +1,13 @@
 package com.airbnb.plog.fragmentation;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DefaultByteBufHolder;
 import io.netty.channel.socket.DatagramPacket;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 import java.nio.ByteOrder;
 
-@ToString(exclude = {"payload"})
-@RequiredArgsConstructor
-public class Fragment {
+public class Fragment extends DefaultByteBufHolder {
     static final int HEADER_SIZE = 24;
 
     @Getter
@@ -25,11 +22,21 @@ public class Fragment {
     private final int totalLength;
     @Getter
     private final int msgHash;
-    @Getter
-    private final ByteBuf payload;
+
+    public Fragment(int fragmentCount, int fragmentIndex, int fragmentSize, long msgId, int totalLength, int msgHash, ByteBuf data) {
+        super(data);
+        this.fragmentCount = fragmentCount;
+        this.fragmentIndex = fragmentIndex;
+        this.fragmentSize = fragmentSize;
+        this.msgId = msgId;
+        this.totalLength = totalLength;
+        this.msgHash = msgHash;
+    }
 
     public static Fragment fromDatagram(DatagramPacket packet) {
+        packet.content().retain();
         final ByteBuf content = packet.content().order(ByteOrder.BIG_ENDIAN);
+
         final int length = content.readableBytes();
         if (length < HEADER_SIZE)
             throw new IllegalArgumentException("Packet too short: " + length + " bytes");

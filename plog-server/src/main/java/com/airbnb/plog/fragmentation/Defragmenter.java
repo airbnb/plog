@@ -39,7 +39,7 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
                 .weigher(new Weigher<Long, FragmentedMessage>() {
                     @Override
                     public int weigh(Long id, FragmentedMessage msg) {
-                        return msg.getPayloadLength();
+                        return msg.getContentLength();
                     }
                 })
                 .removalListener(new RemovalListener<Long, FragmentedMessage>() {
@@ -94,7 +94,7 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
         if (fragment.isAlone()) {
             if (detector != null)
                 detector.reportNewMessage(fragment.getMsgId());
-            pushPayloadIfValid(fragment.getPayload(), fragment.getMsgHash(), 1, out);
+            pushPayloadIfValid(fragment.content(), fragment.getMsgHash(), 1, out);
         } else {
             message = ingestIntoIncompleteMessage(fragment);
             if (message.isComplete())
