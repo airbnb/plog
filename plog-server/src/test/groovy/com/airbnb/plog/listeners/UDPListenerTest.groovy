@@ -4,7 +4,7 @@ import com.airbnb.plog.handlers.MessageQueueProvider
 import com.typesafe.config.ConfigFactory
 
 class UDPListenerTest extends GroovyTestCase {
-    final static LOOPBACK_ADDR = Inet4Address.getLoopbackAddress()
+    final static LOOPBACK_ADDR = Inet4Address.getByAddress([127, 0, 0, 1] as byte[])
     public static final int PORT = 23456
 
     final refConfig = ConfigFactory.defaultReference().getConfig('plog')
