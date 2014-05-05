@@ -44,6 +44,7 @@ public class Fragment extends DefaultByteBufHolder implements Tagged {
                     ByteBuf data,
                     ByteBuf tagsBuffer) {
         super(data);
+
         this.fragmentCount = fragmentCount;
         this.fragmentIndex = fragmentIndex;
         this.fragmentSize = fragmentSize;
@@ -54,7 +55,6 @@ public class Fragment extends DefaultByteBufHolder implements Tagged {
     }
 
     public static Fragment fromDatagram(DatagramPacket packet) {
-        packet.content().retain();
         final ByteBuf content = packet.content().order(ByteOrder.BIG_ENDIAN);
 
         final int length = content.readableBytes();

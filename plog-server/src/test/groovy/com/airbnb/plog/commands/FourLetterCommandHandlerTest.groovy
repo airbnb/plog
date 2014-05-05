@@ -87,6 +87,7 @@ class FourLetterCommandHandlerTest extends GroovyTestCase {
             assert reply.recipient() == Utils.clientAddr
             final commandsAfter = stats.receivedV0Command()
             assert commandsAfter == commandsBefore + 2
+            reply.release()
         }
     }
 

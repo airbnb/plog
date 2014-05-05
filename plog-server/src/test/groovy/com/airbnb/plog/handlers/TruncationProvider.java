@@ -22,6 +22,7 @@ public class TruncationProvider implements HandlerProvider {
         private final int maxLength;
 
         public MessageSimpleChannelInboundHandler(int maxLength) {
+            super(false);
             this.maxLength = maxLength;
         }
 
@@ -30,10 +31,12 @@ public class TruncationProvider implements HandlerProvider {
             final ByteBuf orig = msg.content();
             final int length = orig.readableBytes();
 
-            if (length <= maxLength)
+            if (length <= maxLength) {
                 ctx.fireChannelRead(msg);
-            else
-                ctx.fireChannelRead(new MessageImpl(msg.content().slice(0, maxLength), msg.getTags()));
+            } else {
+                final ByteBuf content = msg.content().slice(0, maxLength);
+                ctx.fireChannelRead(new MessageImpl(content, msg.getTags()));
+            }
         }
 
         @Override

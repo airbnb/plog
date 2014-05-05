@@ -30,6 +30,7 @@ class FragmentedMessageTest extends GroovyTestCase {
         assert msg.isComplete()
         assert msg.contentLength == 0
         assert read(msg) == []
+        msg.release()
     }
 
     void testProtectsIntermediateStateAndReconstitutesInOrder() {
@@ -47,6 +48,7 @@ class FragmentedMessageTest extends GroovyTestCase {
                 ingest(msg, length, indices[-1], 1, length, indices[-1].toString().bytes)
                 final content = read(msg)
                 assert content.length == length && '01234'.startsWith(new String(content))
+                msg.release()
             }
         }
     }
@@ -55,28 +57,34 @@ class FragmentedMessageTest extends GroovyTestCase {
         // last can come first, how convenient :)
         final long initial = stats.receivedV0InvalidMultipartFragment(4, 5)
 
-        create(5, 4, 10, 45, '0123'.bytes) // too short
+        final msg1 = create(5, 4, 10, 45, '0123'.bytes) // too short
         assert stats.receivedV0InvalidMultipartFragment(4, 5) == initial + 2
+        msg1.release()
 
-        create(5, 4, 10, 45, '01234'.bytes) // correct
+        final msg2 = create(5, 4, 10, 45, '01234'.bytes) // correct
         assert stats.receivedV0InvalidMultipartFragment(4, 5) == initial + 3
+        msg2.release()
 
-        create(5, 4, 10, 45, '012345'.bytes) // too long
+        final msg3 = create(5, 4, 10, 45, '012345'.bytes) // too long
         assert stats.receivedV0InvalidMultipartFragment(4, 5) == initial + 5
+        msg3.release()
     }
 
     void testCatchesInvalidLengthForMiddle() {
         // last can come first, how convenient :)
         final long initial = stats.receivedV0InvalidMultipartFragment(2, 5)
 
-        create(5, 2, 10, 45, '012345678'.bytes) // too short
+        final msg1 = create(5, 2, 10, 45, '012345678'.bytes) // too short
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 2
+        msg1.release()
 
-        create(5, 2, 10, 45, '0123456789'.bytes) // correct
+        final msg2 = create(5, 2, 10, 45, '0123456789'.bytes) // correct
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 3
+        msg2.release()
 
-        create(5, 2, 10, 45, '01234567890'.bytes) // too long
+        final msg3 = create(5, 2, 10, 45, '01234567890'.bytes) // too long
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 5
+        msg3.release()
     }
 
     void testCatchesInvalidLengthForSecondArrived() {
@@ -87,11 +95,13 @@ class FragmentedMessageTest extends GroovyTestCase {
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 1
         ingest(getsTooLittle, 5, 2, 10, 45, '012345678'.bytes)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 3
+        getsTooLittle.release()
 
         final getsTooMuch = create(5, 2, 10, 45, '0123456789'.bytes) // too short
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 4
         ingest(getsTooMuch, 5, 2, 10, 45, '01234567890'.bytes) // too long
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 6
+        getsTooMuch.release()
     }
 
     void testReconstitutesInOrder() {
@@ -99,6 +109,7 @@ class FragmentedMessageTest extends GroovyTestCase {
         ingest(msg, 2, 0, 1, 2, [2] as byte[])
         assert msg.isComplete()
         assert ByteBufs.toByteArray(msg.payload) == [2, 1]
+        msg.release()
     }
 
     void testCatchesFragmentSizeInconsistency() {
@@ -107,14 +118,16 @@ class FragmentedMessageTest extends GroovyTestCase {
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 1
         ingest(seesInconsistentSizes, 5, 3, 12, 45, '0123456789'.bytes)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 3
+        seesInconsistentSizes.release()
     }
 
     void testCatchesFragmentCountInconsistency() {
         final long initial = stats.receivedV0InvalidMultipartFragment(2, 5)
-        final seesInconsistentSizes = create(5, 2, 10, 45, '0123456789'.bytes)
+        final seesInconsistentFragmentCount = create(5, 2, 10, 45, '0123456789'.bytes)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 1
-        ingest(seesInconsistentSizes, 4, 3, 10, 45, '0123456789'.bytes)
+        ingest(seesInconsistentFragmentCount, 4, 3, 10, 45, '0123456789'.bytes)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 3
+        seesInconsistentFragmentCount.release()
     }
 
     void testCatchesChecksumInconsistency() {
@@ -124,5 +137,6 @@ class FragmentedMessageTest extends GroovyTestCase {
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 1
         msg.ingestFragment(new Fragment(5, 2, 10, 0, 45, 24, Unpooled.wrappedBuffer('0123456789'.bytes), Unpooled.EMPTY_BUFFER), stats)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 3
+        msg.release()
     }
 }

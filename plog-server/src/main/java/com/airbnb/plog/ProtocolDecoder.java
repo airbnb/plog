@@ -25,8 +25,8 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
         // versions are non-printable characters, push down the pipeline send as-is.
         if (versionIdentifier < 0 || versionIdentifier > 31) {
             log.debug("Unboxed UDP message");
-            content.retain();
             stats.receivedUdpSimpleMessage();
+            msg.retain();
             out.add(new MessageImpl(content, null));
         } else if (versionIdentifier == 0) {
             final byte typeIdentifier = content.getByte(1);
@@ -44,6 +44,7 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
                     try {
                         final Fragment fragment = Fragment.fromDatagram(msg);
                         stats.receivedV0MultipartFragment(fragment.getFragmentIndex());
+                        msg.retain();
                         out.add(fragment);
                     } catch (IllegalArgumentException e) {
                         log.error("Invalid header", e);

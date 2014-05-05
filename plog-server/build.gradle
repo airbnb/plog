@@ -6,13 +6,15 @@ dependencies {
 
     compile "io.netty:netty-codec:${nettyVersion}"
 
-    // needed for integration tests
     testCompile project(':plog-console')
+    testCompile 'ch.qos.logback:logback-classic:1.1.2'
 }
 
 test {
     // gradle screws up SLF4J for that test. Use IntelliJ :)
     exclude 'com/airbnb/plog/EndOfPipeline*'
+
+    systemProperty 'io.netty.leakDetectionLevel', 'paranoid'
 }
 
 cobertura.coverageFormats = ['html', 'xml']
