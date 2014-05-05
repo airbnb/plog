@@ -192,7 +192,6 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             try {
                 MEMOIZED_PLOG_VERSION = readVersionFromManifest();
             } catch (Throwable e) {
-                log.warn("Couldn't get version", e);
                 MEMOIZED_PLOG_VERSION = "unknown";
             }
         return MEMOIZED_PLOG_VERSION;
