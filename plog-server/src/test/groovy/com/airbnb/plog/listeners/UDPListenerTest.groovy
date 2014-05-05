@@ -11,7 +11,7 @@ class UDPListenerTest extends GroovyTestCase {
     final defaultUDPConfig = refConfig.getConfig('udp.defaults')
             .withFallback(refConfig.getConfig('defaults'))
 
-    private void runTest(Map config, Closure test, byte[] expectation) {
+    private void runTest(Map config, Closure test, byte[] payloadExpectation, Collection<String> tagExpectation = []) {
         final compiledConfig = ConfigFactory.parseMap(config).withFallback(defaultUDPConfig)
         final listener = new UDPListener(compiledConfig)
         listener.start().await()
@@ -22,12 +22,12 @@ class UDPListenerTest extends GroovyTestCase {
 
         def grabbed = null
         while (System.currentTimeMillis() - start < 5000 && grabbed == null) {
-            Thread.sleep(100)
+            Thread.sleep(10)
             grabbed = MessageQueueProvider.queue.poll()
         }
 
         assert grabbed != null
-        assert grabbed.asBytes() == expectation
+        assert grabbed.asBytes() == payloadExpectation
         grabbed.release()
 
         listener.group.shutdownGracefully().await()
@@ -66,6 +66,29 @@ class UDPListenerTest extends GroovyTestCase {
         }, 'hello'.bytes)
     }
 
+    void testTags() {
+        final config = [handlers: [[provider: 'com.airbnb.plog.handlers.MessageQueueProvider']]]
+        final fragment = [
+                0, // version
+                1, // type
+                0, 1, // fragment count
+                0, 0, // fragment index
+                0, 5, // fragment length
+                0, 0, 0, 0, // identifier
+                0, 0, 0, 5, // message length
+                0x24, 0x8b, 0xfa, 0x47, // checksum
+                0, 7, // tag lengths
+                0, 0, // zeroes
+                102, 111, 111, 0, 98, 97, 114, // 'foo\0bar'
+                104, 101, 108, 108, 111] as byte[]
+
+        runTest(config, {
+            final socket = new DatagramSocket()
+            sendPacket(socket, fragment)
+            socket.close()
+        }, 'hello'.bytes, ['foo', 'bar'])
+    }
+
     void testMultiFragment() {
         final config = [handlers: [[provider: 'com.airbnb.plog.handlers.MessageQueueProvider']]]
         final fragment1 = [
@@ -102,7 +125,7 @@ class UDPListenerTest extends GroovyTestCase {
 
     static void sendPacket(DatagramSocket socket, byte[] payload) {
         final packet = new DatagramPacket(payload, payload.length, LOOPBACK_ADDR, PORT)
-        Thread.sleep(100)
+        Thread.sleep(10)
         socket.send(packet)
     }
 }
