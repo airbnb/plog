@@ -59,6 +59,12 @@ class FragmentTest extends GroovyTestCase {
         assert fragment.toString() == expected
     }
 
+    void testTags() {
+        assert fragmentFromPayload((0..1) + (5..2) + (6..19) + [0, 0, 0, 0] as byte[]).tags.empty
+        assert fragmentFromPayload((0..1) + (5..2) + (6..19) + [0, 4, 0, 0] + Arrays.asList('foo\0'.bytes) as byte[]).tags == ['foo']
+        assert fragmentFromPayload((0..1) + (5..2) + (6..19) + [0, 7, 0, 0] + Arrays.asList('foo\0bar'.bytes) as byte[]).tags == ['foo', 'bar']
+    }
+
     private static io.netty.channel.socket.DatagramPacket datagramFromPayload(byte[] payload) {
         new io.netty.channel.socket.DatagramPacket(Unpooled.wrappedBuffer(payload), Utils.localAddr, Utils.clientAddr)
     }
