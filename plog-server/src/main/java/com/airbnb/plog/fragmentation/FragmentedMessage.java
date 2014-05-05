@@ -1,18 +1,20 @@
 package com.airbnb.plog.fragmentation;
 
+import com.airbnb.plog.Tagged;
 import com.airbnb.plog.stats.StatisticsReporter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.DefaultByteBufHolder;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
+import java.util.Collection;
 
 @Slf4j
-@ToString(exclude = {"payload"})
-public class FragmentedMessage {
-    private final ByteBuf payload;
+@ToString
+public class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
     @Getter
     private final BitSet receivedFragments;
     @Getter
@@ -23,13 +25,15 @@ public class FragmentedMessage {
     private final int checksum;
     @Getter
     private boolean complete = false;
+    @Getter
+    private Collection<String> tags;
 
     private FragmentedMessage(ByteBufAllocator alloc,
                               final int totalLength,
                               final int fragmentCount,
                               final int fragmentSize,
                               final int hash) {
-        this.payload = alloc.buffer(totalLength, totalLength);
+        super(alloc.buffer(totalLength, totalLength));
         this.receivedFragments = new BitSet(fragmentCount);
         this.fragmentCount = fragmentCount;
         this.fragmentSize = fragmentSize;
@@ -55,6 +59,7 @@ public class FragmentedMessage {
         final int fragmentIndex = fragment.getFragmentIndex();
         final boolean fragmentIsLast = (fragmentIndex == fragmentCount - 1);
         final int foffset = fragmentSize * fragmentIndex;
+        final ByteBuf fragmentTagsBuffer = fragment.getTagsBuffer();
 
         final int lengthOfCurrentFragment = fragmentPayload.capacity();
         final boolean validFragmentLength;
@@ -74,6 +79,9 @@ public class FragmentedMessage {
             return;
         }
 
+        if (fragmentTagsBuffer != null)
+            this.tags = fragment.getTags();
+
         // valid fragment
         synchronized (receivedFragments) {
             receivedFragments.set(fragmentIndex);
@@ -81,19 +89,19 @@ public class FragmentedMessage {
                 this.complete = true;
             }
         }
-        payload.setBytes(foffset, fragmentPayload, 0, lengthOfCurrentFragment);
+        content().setBytes(foffset, fragmentPayload, 0, lengthOfCurrentFragment);
     }
 
     public final ByteBuf getPayload() {
         if (!isComplete())
             throw new IllegalStateException("Incomplete");
 
-        payload.readerIndex(0);
-        payload.writerIndex(getContentLength());
-        return payload;
+        content().readerIndex(0);
+        content().writerIndex(getContentLength());
+        return content();
     }
 
     public final int getContentLength() {
-        return payload.capacity();
+        return content().capacity();
     }
 }

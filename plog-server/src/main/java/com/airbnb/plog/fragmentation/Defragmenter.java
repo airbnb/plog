@@ -14,6 +14,7 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -52,6 +53,7 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
                             for (int idx = 0; idx < fragmentCount; idx++)
                                 if (!receivedFragments.get(idx))
                                     stats.missingFragmentInDroppedMessage(idx, fragmentCount);
+                            message.release();
                         } else {
                             // let's use the magic value fragment 0, expected fragments 0 if the message was GC'ed,
                             // as it wouldn't happen otherwise
@@ -82,34 +84,39 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
             if (detector != null)
                 detector.reportNewMessage(fragment.getMsgId());
             FragmentedMessage message = FragmentedMessage.fromFragment(fragment, this.stats);
+
+            message.retain();
             incompleteMessages.put(id, message);
+
             return message;
         }
     }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, Fragment fragment, List<Object> out) throws Exception {
-        FragmentedMessage message;
         log.debug("Defragmenting {}", fragment);
         if (fragment.isAlone()) {
             if (detector != null)
                 detector.reportNewMessage(fragment.getMsgId());
-            pushPayloadIfValid(fragment.content(), fragment.getMsgHash(), 1, out);
+            final ByteBuf content = fragment.content();
+            pushPayloadIfValid(content, fragment.getMsgHash(), 1, fragment.getTags(), out);
         } else {
-            message = ingestIntoIncompleteMessage(fragment);
+            FragmentedMessage message = ingestIntoIncompleteMessage(fragment);
             if (message.isComplete())
-                pushPayloadIfValid(message.getPayload(), message.getChecksum(), message.getFragmentCount(), out);
+                pushPayloadIfValid(message.getPayload(), message.getChecksum(), message.getFragmentCount(), message.getTags(), out);
         }
     }
 
     private void pushPayloadIfValid(final ByteBuf payload,
                                     final int expectedHash,
                                     final int fragmentCount,
+                                    Collection<String> tags,
                                     List<Object> out) {
         final byte[] bytes = ByteBufs.toByteArray(payload);
         final int computedHash = Hashing.murmur3_32().hashBytes(bytes).asInt();
         if (computedHash == expectedHash) {
-            out.add(new MessageImpl(payload, null));
+            payload.retain();
+            out.add(new MessageImpl(payload, tags));
             this.stats.receivedV0MultipartMessage();
         } else {
             log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",

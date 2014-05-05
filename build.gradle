@@ -32,13 +32,13 @@ subprojects {
     group = 'com.airbnb.plog'
 
     ext {
-        nettyVersion = '4.0.17.Final'
-        slf4jVersion = '1.7.6'
+        nettyVersion = '4.0.19.Final'
+        slf4jVersion = '1.7.7'
     }
 
     dependencies {
         compile 'org.projectlombok:lombok:1.12.6'
-        compile 'com.google.guava:guava:16.0.1'
+        compile 'com.google.guava:guava:17.0'
         compile 'com.typesafe:config:1.2.0'
         compile 'com.eclipsesource.minimal-json:minimal-json:0.9.1'
         compile "io.netty:netty-handler:${nettyVersion}"

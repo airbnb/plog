@@ -10,20 +10,22 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Collection;
+
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class MessageImpl extends DefaultByteBufHolder implements Message {
-    private final byte[][] tags;
+    private final Collection<String> tags;
 
     @Getter(AccessLevel.NONE)
     private byte[] memoizedBytes;
 
-    public MessageImpl(ByteBuf data, byte[][] tags) {
+    public MessageImpl(ByteBuf data, Collection<String> tags) {
         super(data);
         this.tags = tags;
     }
 
-    public static Message fromBytes(ByteBufAllocator alloc, byte[] bytes, byte[][] tags) {
+    public static Message fromBytes(ByteBufAllocator alloc, byte[] bytes, Collection<String> tags) {
         final ByteBuf data = alloc.buffer(bytes.length, bytes.length);
         data.writeBytes(bytes);
         return new MessageImpl(data, tags);

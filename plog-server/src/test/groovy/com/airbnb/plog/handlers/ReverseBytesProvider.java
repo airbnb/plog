@@ -23,7 +23,9 @@ public class ReverseBytesProvider implements HandlerProvider {
             for (int i = 0; i < length; i++)
                 reverse[i] = payload[length - i - 1];
 
-            ctx.fireChannelRead(MessageImpl.fromBytes(ctx.alloc(), reverse, msg.getTags()));
+            final Message reversed = MessageImpl.fromBytes(ctx.alloc(), reverse, msg.getTags());
+            reversed.retain();
+            ctx.fireChannelRead(reversed);
         }
 
         @Override

@@ -11,6 +11,7 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import lombok.Getter;
 
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -18,6 +19,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class UDPListener extends Listener {
+    @Getter
+    private NioEventLoopGroup group = new NioEventLoopGroup(1);
+
     public UDPListener(Config config)
             throws UnknownHostException {
         super(config);
@@ -40,7 +44,7 @@ public class UDPListener extends Listener {
                 Executors.newFixedThreadPool(config.getInt("threads"));
 
         return new Bootstrap()
-                .group(new NioEventLoopGroup(1))
+                .group(group)
                 .channel(NioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_RCVBUF,

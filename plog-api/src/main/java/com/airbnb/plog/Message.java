@@ -2,8 +2,6 @@ package com.airbnb.plog;
 
 import io.netty.buffer.ByteBufHolder;
 
-public interface Message extends ByteBufHolder {
+public interface Message extends ByteBufHolder, Tagged {
     byte[] asBytes();
-
-    byte[][] getTags();
 }

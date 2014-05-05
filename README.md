@@ -158,5 +158,7 @@ Note that 1-fragment fragmented messages are perfectly possible.
                Needs to increment with each message for hole detection.
 - Bytes 12-15: signed, big-endian, 32-bit integer below 2,147,483,647. Total byte length of the message.
 - Bytes 16-19: big-endian, 32-bit MurmurHash3 hash of the total message payload.
-- Bytes 20-23: zeroes. Reserved, might be used in later revisions.
-- Bytes 24-: bytes (UTF-8 by default). Payload. Will only read the payload length.
+- Bytes 20-21: unsigned, big-endian, 16-bit integer. `taglength`: Size used to represent tags.
+- Bytes 22-23: zeroes. Reserved, might be used in later revisions.
+- Bytes 24-(24+taglength): Bytes. List of tags (`\0`-separated UTF-8 strings; can be `\0`-terminated or not).
+- Bytes (24+taglength)-: Bytes. Payload. Will only read the payload length.

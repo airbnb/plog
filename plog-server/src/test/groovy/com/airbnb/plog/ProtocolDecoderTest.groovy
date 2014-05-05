@@ -17,6 +17,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
                 insert(payload, channel)
                 final msg = (MessageImpl) channel.readInbound()
                 assert msg.asBytes() == payload
+                msg.release()
             }
         }
     }
@@ -65,7 +66,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
     void testForwardsFragments() {
         runTest { EmbeddedChannel channel, StatisticsReporter stats ->
             // I'm so sad fragment count and index are in this order
-            final payload = (0..1) + (5..2) + (6..30)
+            final payload = (0..1) + (5..2) + (6..19) + [0, 0, 0, 0] + (24 .. 30)
             insert(payload as byte[], channel)
             final frag = (Fragment) channel.readInbound()
             assert frag.fragmentCount == (5 << 8) + 4
@@ -76,6 +77,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
             assert frag.totalLength == (12 << 24) + (13 << 16) + (14 << 8) + 15
             assert frag.msgHash == (16 << 24) + (17 << 16) + (18 << 8) + 19
             assert ByteBufs.toByteArray(frag.content()) == 24..30
+            frag.release()
         }
     }
 

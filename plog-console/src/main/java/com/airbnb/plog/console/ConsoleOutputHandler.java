@@ -17,7 +17,6 @@ public class ConsoleOutputHandler extends SimpleChannelInboundHandler<Message> i
 
     @Override
     protected final void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        final byte[][] tags = msg.getTags();
         target.println(msg.toString());
         logged.incrementAndGet();
     }

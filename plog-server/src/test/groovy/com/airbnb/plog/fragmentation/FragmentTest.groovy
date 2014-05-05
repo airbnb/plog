@@ -5,7 +5,7 @@ import io.netty.buffer.Unpooled
 
 class FragmentTest extends GroovyTestCase {
     void testRejectsTooSmallForHeader() {
-        final validPayload = (0..1) + (5..2) + (6..23)
+        final validPayload = (0..1) + (5..2) + (6..19) + [0, 0, 0, 0]
         fragmentFromPayload(validPayload)
         final truncated = validPayload[0..22]
         shouldFail IllegalArgumentException, {
@@ -42,19 +42,19 @@ class FragmentTest extends GroovyTestCase {
     }
 
     void testAlone() {
-        assert fragmentFromPayload((0..1) + [0, 1, 0, 0] + (6..24)).isAlone()
+        assert fragmentFromPayload((0..1) + [0, 1, 0, 0] + (6..19) + [0, 0, 0, 0]).isAlone()
     }
 
     void testNotAlone() {
-        assert !fragmentFromPayload((0..1) + [0, 10, 0, 5] + (6..24)).isAlone()
+        assert !fragmentFromPayload((0..1) + [0, 10, 0, 5] + (6..19) + [0, 0, 0, 0]).isAlone()
     }
 
     void testNotAloneButFirst() {
-        assert !fragmentFromPayload((0..1) + [0, 2, 0, 0] + (6..24)).isAlone()
+        assert !fragmentFromPayload((0..1) + [0, 2, 0, 0] + (6..19) + [0, 0, 0, 0]).isAlone()
     }
 
     void testToString() {
-        final fragment = fragmentFromPayload((0..1) + (5..2) + (6..24) as byte[])
+        final fragment = fragmentFromPayload((0..1) + (5..2) + (6..19) + [0, 0, 0, 0] as byte[])
         final expected = 'Fragment(fragmentCount=1284, fragmentIndex=770, fragmentSize=1543, msgId=38789515787, totalLength=202182159, msgHash=269554195)'
         assert fragment.toString() == expected
     }
