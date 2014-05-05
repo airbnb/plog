@@ -2,6 +2,9 @@ package com.airbnb.plog.listeners
 import com.typesafe.config.ConfigFactory
 
 class UDPListenerTest extends GroovyTestCase {
+    final static LOOPBACK_ADDR = Inet4Address.localHost
+    public static final int PORT = 23456
+
     final refConfig = ConfigFactory.defaultReference().getConfig('plog')
     final defaultUDPConfig = refConfig.getConfig('udp.defaults')
             .withFallback(refConfig.getConfig('defaults'))
@@ -15,19 +18,22 @@ class UDPListenerTest extends GroovyTestCase {
         final newOut = new ByteArrayOutputStream()
         System.setOut(new PrintStream(newOut, true))
 
+        Thread.sleep(100)
+
         test.run()
 
         final start = System.currentTimeMillis()
-        while (System.currentTimeMillis() - start < 1000) {
+        while (System.currentTimeMillis() - start < 5000) {
             if (newOut.size() >= expectation.length())
                 break
             else
                 Thread.sleep(100)
         }
 
-        assert newOut.toString() == expectation
+        final output = newOut.toString()
+        assert output == expectation
 
-        group.shutdownGracefully().await()
+        listener.group.shutdownGracefully().await()
         System.setOut(new PrintStream(oldOut))
     }
 
@@ -93,7 +99,7 @@ class UDPListenerTest extends GroovyTestCase {
 
     void sendPacket(byte[] payload) {
         final socket = new DatagramSocket()
-        socket.send(new DatagramPacket(payload, payload.length, InetAddress.getLoopbackAddress(), 23456))
+        socket.send(new DatagramPacket(payload, payload.length, LOOPBACK_ADDR, PORT))
         socket.close()
     }
 }
