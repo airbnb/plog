@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     private final String defaultTopic;
     private final Producer<byte[], byte[]> producer;
-    private final AtomicLong failedToSendMessageExceptions = new AtomicLong();
+    private final AtomicLong failedToSendMessageExceptions = new AtomicLong(), seenMessages = new AtomicLong();
     private final ProducerStats producerStats;
     private final ProducerTopicMetrics producerAllTopicsStats;
 
@@ -43,18 +43,38 @@ public class KafkaHandler extends SimpleChannelInboundHandler<Message> implement
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
-        try {
-            producer.send(new KeyedMessage<byte[], byte[]>(defaultTopic, msg.asBytes()));
-        } catch (FailedToSendMessageException e) {
-            log.warn("Failed to send message", e);
-            failedToSendMessageExceptions.incrementAndGet();
-        }
+        seenMessages.incrementAndGet();
+        final byte[] payload = msg.asBytes();
+
+        boolean sawKtTag = false;
+
+        for (String tag : msg.getTags())
+            if (tag.startsWith("kt:")) {
+                sawKtTag = true;
+                sendOrReportFailure(tag.substring(3), payload);
+            }
+
+        if (!sawKtTag)
+            sendOrReportFailure(defaultTopic, payload);
+    }
+
+    private boolean sendOrReportFailure(String topic, byte[] msg) {
+        final boolean nonNullTopic = !("null".equals(topic));
+        if (nonNullTopic)
+            try {
+                producer.send(new KeyedMessage<byte[], byte[]>(topic, msg));
+            } catch (FailedToSendMessageException e) {
+                log.warn("Failed to send to topic {}", topic, e);
+                failedToSendMessageExceptions.incrementAndGet();
+            }
+        return nonNullTopic;
     }
 
     @Override
     public JsonObject getStats() {
         return new JsonObject()
                 .add("default_topic", defaultTopic)
+                .add("seen_messages", seenMessages.get())
                 .add("failed_to_send", failedToSendMessageExceptions.get())
                 .add("failed_send_rate", meterToJsonObject(producerStats.failedSendRate()))
                 .add("resend_rate", meterToJsonObject(producerStats.resendRate()))
