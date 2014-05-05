@@ -14,6 +14,7 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -94,22 +95,23 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
         if (fragment.isAlone()) {
             if (detector != null)
                 detector.reportNewMessage(fragment.getMsgId());
-            pushPayloadIfValid(fragment.content(), fragment.getMsgHash(), 1, out);
+            pushPayloadIfValid(fragment.content(), fragment.getMsgHash(), 1, fragment.getTags(), out);
         } else {
             message = ingestIntoIncompleteMessage(fragment);
             if (message.isComplete())
-                pushPayloadIfValid(message.getPayload(), message.getChecksum(), message.getFragmentCount(), out);
+                pushPayloadIfValid(message.getPayload(), message.getChecksum(), message.getFragmentCount(), message.getTags(), out);
         }
     }
 
     private void pushPayloadIfValid(final ByteBuf payload,
                                     final int expectedHash,
                                     final int fragmentCount,
+                                    Collection<String> tags,
                                     List<Object> out) {
         final byte[] bytes = ByteBufs.toByteArray(payload);
         final int computedHash = Hashing.murmur3_32().hashBytes(bytes).asInt();
         if (computedHash == expectedHash) {
-            out.add(new MessageImpl(payload, null));
+            out.add(new MessageImpl(payload, tags));
             this.stats.receivedV0MultipartMessage();
         } else {
             log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",

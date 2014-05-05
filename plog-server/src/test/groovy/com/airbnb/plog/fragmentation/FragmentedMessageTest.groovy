@@ -9,14 +9,15 @@ class FragmentedMessageTest extends GroovyTestCase {
     private static final StatisticsReporter stats = new SimpleStatisticsReporter()
 
     // Always go with id=0 & hash=0
-    private static create(int count, int index, int fsize, int length, byte[] payload) {
-        FragmentedMessage.fromFragment(
-                new Fragment(count, index, fsize, 0, length, 0, Unpooled.wrappedBuffer(payload)), stats)
+    private static create(int count, int index, int fsize, int length, byte[] payload, Collection<String> tags = []) {
+        final tagRep = Unpooled.wrappedBuffer(tags.join('\0').bytes)
+        FragmentedMessage.fromFragment(new Fragment(count, index, fsize, 0, length, 0, Unpooled.wrappedBuffer(payload), tagRep), stats)
     }
 
     private
-    static ingest(FragmentedMessage msg, int count, int index, int fsize, int length, byte[] payload) {
-        msg.ingestFragment(new Fragment(count, index, fsize, 0, length, 0, Unpooled.wrappedBuffer(payload)), stats)
+    static ingest(FragmentedMessage msg, int count, int index, int fsize, int length, byte[] payload, Collection<String> tags = []) {
+        final tagRep = Unpooled.wrappedBuffer(tags.join('\0').bytes)
+        msg.ingestFragment(new Fragment(count, index, fsize, 0, length, 0, Unpooled.wrappedBuffer(payload), tagRep), stats)
     }
 
     private static
@@ -119,9 +120,9 @@ class FragmentedMessageTest extends GroovyTestCase {
     void testCatchesChecksumInconsistency() {
         final long initial = stats.receivedV0InvalidMultipartFragment(2, 5)
         final msg = FragmentedMessage.fromFragment(
-                new Fragment(5, 2, 10, 0, 45, 42, Unpooled.wrappedBuffer('0123456789'.bytes)), stats)
+                new Fragment(5, 2, 10, 0, 45, 42, Unpooled.wrappedBuffer('0123456789'.bytes), Unpooled.EMPTY_BUFFER), stats)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 1
-        msg.ingestFragment(new Fragment(5, 2, 10, 0, 45, 24, Unpooled.wrappedBuffer('0123456789'.bytes)), stats)
+        msg.ingestFragment(new Fragment(5, 2, 10, 0, 45, 24, Unpooled.wrappedBuffer('0123456789'.bytes), Unpooled.EMPTY_BUFFER), stats)
         assert stats.receivedV0InvalidMultipartFragment(2, 5) == initial + 3
     }
 }

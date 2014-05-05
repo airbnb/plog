@@ -65,7 +65,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
     void testForwardsFragments() {
         runTest { EmbeddedChannel channel, StatisticsReporter stats ->
             // I'm so sad fragment count and index are in this order
-            final payload = (0..1) + (5..2) + (6..30)
+            final payload = (0..1) + (5..2) + (6..19) + [0, 0, 0, 0] + (24 .. 30)
             insert(payload as byte[], channel)
             final frag = (Fragment) channel.readInbound()
             assert frag.fragmentCount == (5 << 8) + 4

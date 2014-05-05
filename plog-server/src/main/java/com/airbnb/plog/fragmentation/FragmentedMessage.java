@@ -1,5 +1,6 @@
 package com.airbnb.plog.fragmentation;
 
+import com.airbnb.plog.Tagged;
 import com.airbnb.plog.stats.StatisticsReporter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -8,10 +9,11 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
+import java.util.Collection;
 
 @Slf4j
 @ToString(exclude = {"payload"})
-public class FragmentedMessage {
+public class FragmentedMessage implements Tagged {
     private final ByteBuf payload;
     @Getter
     private final BitSet receivedFragments;
@@ -23,6 +25,8 @@ public class FragmentedMessage {
     private final int checksum;
     @Getter
     private boolean complete = false;
+    @Getter
+    private Collection<String> tags;
 
     private FragmentedMessage(ByteBufAllocator alloc,
                               final int totalLength,
@@ -55,6 +59,7 @@ public class FragmentedMessage {
         final int fragmentIndex = fragment.getFragmentIndex();
         final boolean fragmentIsLast = (fragmentIndex == fragmentCount - 1);
         final int foffset = fragmentSize * fragmentIndex;
+        final ByteBuf fragmentTagsBuffer = fragment.getTagsBuffer();
 
         final int lengthOfCurrentFragment = fragmentPayload.capacity();
         final boolean validFragmentLength;
@@ -73,6 +78,9 @@ public class FragmentedMessage {
             stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
             return;
         }
+
+        if (fragmentTagsBuffer != null)
+            this.tags = fragment.getTags();
 
         // valid fragment
         synchronized (receivedFragments) {

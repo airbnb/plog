@@ -1,4 +1,5 @@
 package com.airbnb.plog.listeners
+
 import com.typesafe.config.ConfigFactory
 
 class UDPListenerTest extends GroovyTestCase {
