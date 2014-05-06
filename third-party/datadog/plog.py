@@ -38,8 +38,6 @@ class PlogCheck(AgentCheck):
 				stats['exceptions'])
 			counter('unhandled_objects',
 				stats['unhandled_objects'])
-			counter('failed_to_send',
-				stats['failed_to_send'])
 			counter('udp_simple',
 				stats['udp_simple_messages'])
 			counter('holes.from_dead_port',
