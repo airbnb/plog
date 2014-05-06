@@ -1,12 +1,20 @@
 apply plugin: 'application'
 apply plugin: 'shadow'
 
-mainClassName = 'com.airbnb.plog.PlogServer'
+mainClassName = 'com.airbnb.plog.server.PlogServer'
 
 dependencies {
-    compile project(':plog-kafka')
+    // Base functionality
+    compile project(':plog-client')
     compile project(':plog-server')
+
+    // Utilities
+    compile project(':plog-replay')
+    compile project(':plog-stress')
+
+    // Sinks
     compile project(':plog-console')
+    compile project(':plog-kafka')
 
     // We love logback at Airbnb. Kill log4j.
     compile 'ch.qos.logback:logback-classic:1.1.2'
@@ -20,7 +28,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'com.airbnb.plog.PlogServer',
+        attributes 'Main-Class': 'com.airbnb.plog.server.PlogServer',
                 'Plog-Version': version
     }
 }

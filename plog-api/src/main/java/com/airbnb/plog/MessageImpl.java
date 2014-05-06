@@ -1,6 +1,6 @@
 package com.airbnb.plog;
 
-import com.airbnb.plog.utils.ByteBufs;
+import com.airbnb.plog.server.pipeline.ByteBufs;
 import com.google.common.base.Joiner;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
