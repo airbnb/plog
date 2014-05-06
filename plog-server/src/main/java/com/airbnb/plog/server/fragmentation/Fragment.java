@@ -80,7 +80,8 @@ public class Fragment extends DefaultByteBufHolder implements Tagged {
         final int tagsBufferLength = content.getUnsignedShort(20);
         final ByteBuf tagsBuffer = tagsBufferLength == 0 ? null : content.slice(HEADER_SIZE, tagsBufferLength);
 
-        final ByteBuf payload = content.slice(HEADER_SIZE + tagsBufferLength, length - HEADER_SIZE - tagsBufferLength);
+        final int payloadLength = length - HEADER_SIZE - tagsBufferLength;
+        final ByteBuf payload = content.slice(HEADER_SIZE + tagsBufferLength, payloadLength);
 
         final int port = packet.sender().getPort();
         final long msgId = (((long) port) << Integer.SIZE) + idRightPart;

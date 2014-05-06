@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Collection;
+import java.util.Collections;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -19,6 +20,11 @@ public class MessageImpl extends DefaultByteBufHolder implements Message {
 
     @Getter(AccessLevel.NONE)
     private byte[] memoizedBytes;
+
+    @Override
+    public Collection<String> getTags() {
+        return (this.tags == null) ? Collections.<String>emptyList() : this.tags;
+    }
 
     public MessageImpl(ByteBuf data, Collection<String> tags) {
         super(data);

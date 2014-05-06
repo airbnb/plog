@@ -98,8 +98,8 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
         if (fragment.isAlone()) {
             if (detector != null)
                 detector.reportNewMessage(fragment.getMsgId());
-            final ByteBuf content = fragment.content();
-            pushPayloadIfValid(content, fragment.getMsgHash(), 1, fragment.getTags(), out);
+            final ByteBuf payload = fragment.content();
+            pushPayloadIfValid(payload, fragment.getMsgHash(), 1, fragment.getTags(), out);
         } else {
             FragmentedMessage message = ingestIntoIncompleteMessage(fragment);
             if (message.isComplete())
