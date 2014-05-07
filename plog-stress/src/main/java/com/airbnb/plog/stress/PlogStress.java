@@ -1,11 +1,11 @@
 package com.airbnb.plog.stress;
 
 import com.airbnb.plog.client.fragmentation.Fragmenter;
+import com.airbnb.plog.common.Murmur3;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.RateLimiter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -73,7 +73,7 @@ public class PlogStress {
         log.info("Generating {} different hashes", differentSizes);
         final int[] precomputedHashes = new int[differentSizes];
         for (int i = 0; i < differentSizes; i++)
-            precomputedHashes[i] = Hashing.murmur3_32().hashBytes(randomBytes, 0, minSize + sizeIncrements * i).asInt();
+            precomputedHashes[i] = Murmur3.hash32(randomMessage, 0, minSize + sizeIncrements * i, 0);
 
         final ByteBufAllocator allocator = new PooledByteBufAllocator();
 

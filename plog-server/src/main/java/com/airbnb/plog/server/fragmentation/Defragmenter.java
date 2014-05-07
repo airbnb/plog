@@ -1,12 +1,10 @@
 package com.airbnb.plog.server.fragmentation;
 
 import com.airbnb.plog.MessageImpl;
+import com.airbnb.plog.common.Murmur3;
 import com.airbnb.plog.server.packetloss.ListenerHoleDetector;
 import com.airbnb.plog.server.stats.StatisticsReporter;
-import com.airbnb.plog.server.pipeline.ByteBufs;
 import com.google.common.cache.*;
-import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
 import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -112,15 +110,15 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
                                     final int fragmentCount,
                                     Collection<String> tags,
                                     List<Object> out) {
-        final byte[] bytes = ByteBufs.toByteArray(payload);
-        final int computedHash = Hashing.murmur3_32().hashBytes(bytes).asInt();
-        if (computedHash == expectedHash) {
+        final int computedHash = Murmur3.hash32(payload);
+
+        if (Murmur3.hash32(payload) == expectedHash) {
             payload.retain();
             out.add(new MessageImpl(payload, tags));
             this.stats.receivedV0MultipartMessage();
         } else {
-            log.warn("Client sent hash {}, not matching computed hash {} for bytes {} (fragment count {})",
-                    expectedHash, computedHash, BaseEncoding.base16().encode(bytes), fragmentCount);
+            log.warn("Client sent hash {}, not matching computed hash {} (fragment count {})",
+                    expectedHash, computedHash, fragmentCount);
             this.stats.receivedV0InvalidChecksum(fragmentCount);
         }
     }

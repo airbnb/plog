@@ -1,9 +1,8 @@
 package com.airbnb.plog.client.fragmentation;
 
 import com.airbnb.plog.Message;
-import com.airbnb.plog.server.pipeline.ByteBufs;
+import com.airbnb.plog.common.Murmur3;
 import com.google.common.base.Charsets;
-import com.google.common.hash.Hashing;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
@@ -25,12 +24,15 @@ public class Fragmenter {
     }
 
     public ByteBuf[] fragment(ByteBufAllocator alloc, byte[] payload, Collection<String> tags, int messageIndex) {
-        final int hash = Hashing.murmur3_32().hashBytes(payload).asInt();
-        return fragment(alloc, Unpooled.wrappedBuffer(payload), tags, messageIndex, payload.length, hash);
+        final ByteBuf buf = Unpooled.wrappedBuffer(payload);
+        final int hash = Murmur3.hash32(buf, 0, payload.length);
+        return fragment(alloc, buf, tags, messageIndex, payload.length, hash);
     }
 
     public ByteBuf[] fragment(ByteBufAllocator alloc, ByteBuf payload, Collection<String> tags, int messageIndex) {
-        return fragment(alloc, ByteBufs.toByteArray(payload), tags, messageIndex);
+        final int length = payload.readableBytes();
+        final int hash = Murmur3.hash32(payload, 0, length);
+        return fragment(alloc, payload, tags, messageIndex, length, hash);
     }
 
     public ByteBuf[] fragment(ByteBufAllocator alloc, Message msg, int messageIndex) {

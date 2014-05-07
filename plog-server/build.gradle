@@ -3,6 +3,7 @@ apply plugin: 'coveralls'
 
 dependencies {
     compile project(':plog-api')
+    compile project(':plog-common')
 
     testCompile project(':plog-console')
     testCompile 'ch.qos.logback:logback-classic:1.1.2'
