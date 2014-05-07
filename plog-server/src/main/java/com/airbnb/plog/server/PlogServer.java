@@ -8,12 +8,9 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.UnknownHostException;
-
 @Slf4j
 public class PlogServer {
-    public static void main(String[] args)
-            throws UnknownHostException {
+    public static void main(String[] args) {
         log.info("Starting...");
 
         System.err.println(
@@ -26,8 +23,7 @@ public class PlogServer {
         new PlogServer().run(ConfigFactory.load());
     }
 
-    private void run(Config config)
-            throws UnknownHostException {
+    private void run(Config config) {
         final ChannelFutureListener futureListener = new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
