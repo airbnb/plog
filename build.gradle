@@ -19,6 +19,7 @@ ext {
 }
 
 subprojects {
+    apply plugin: 'project-report'
     apply plugin: 'groovy'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
@@ -41,6 +42,7 @@ subprojects {
         compile 'com.google.guava:guava:17.0'
         compile 'com.typesafe:config:1.2.0'
         compile 'com.eclipsesource.minimal-json:minimal-json:0.9.1'
+        compile "io.netty:netty-codec:${nettyVersion}"
         compile "io.netty:netty-handler:${nettyVersion}"
         compile "org.slf4j:slf4j-api:${slf4jVersion}"
 
