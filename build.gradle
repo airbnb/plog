@@ -19,6 +19,7 @@ ext {
 }
 
 subprojects {
+    apply plugin: 'project-report'
     apply plugin: 'groovy'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
