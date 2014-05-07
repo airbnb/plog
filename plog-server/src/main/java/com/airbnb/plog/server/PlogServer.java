@@ -18,7 +18,7 @@ public class PlogServer {
                         " _ __| |___  __ _\n" +
                         "| '_ \\ / _ \\/ _` |\n" +
                         "| .__/_\\___/\\__, |\n" +
-                        "|_|         |___/"
+                        "|_|         |___/ server"
         );
         new PlogServer().run(ConfigFactory.load());
     }
