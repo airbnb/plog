@@ -23,8 +23,7 @@ public abstract class Listener {
 
     private final EndOfPipeline eopHandler;
 
-    public Listener(Config config)
-            throws UnknownHostException {
+    public Listener(Config config) {
         this.config = config;
 
         this.stats = new SimpleStatisticsReporter();

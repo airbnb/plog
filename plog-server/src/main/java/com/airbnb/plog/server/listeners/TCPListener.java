@@ -13,11 +13,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 
 public class TCPListener extends Listener {
-    public TCPListener(Config config)
-            throws UnknownHostException {
+    public TCPListener(Config config) {
         super(config);
     }
 

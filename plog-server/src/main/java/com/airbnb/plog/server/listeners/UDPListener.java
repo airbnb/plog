@@ -22,8 +22,7 @@ public class UDPListener extends Listener {
     @Getter
     private NioEventLoopGroup group = new NioEventLoopGroup(1);
 
-    public UDPListener(Config config)
-            throws UnknownHostException {
+    public UDPListener(Config config) {
         super(config);
     }
 
