@@ -35,6 +35,7 @@ subprojects {
     ext {
         nettyVersion = '4.0.19.Final'
         slf4jVersion = '1.7.7'
+        metricsVersion = '3.0.2'
     }
 
     dependencies {

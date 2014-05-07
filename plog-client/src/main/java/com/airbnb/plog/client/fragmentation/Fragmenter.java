@@ -1,10 +1,12 @@
 package com.airbnb.plog.client.fragmentation;
 
 import com.airbnb.plog.Message;
+import com.airbnb.plog.server.pipeline.ByteBufs;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteOrder;
@@ -13,8 +15,8 @@ import java.util.Collection;
 @Slf4j
 public class Fragmenter {
     public static final byte[] UDP_V0_FRAGMENT_PREFIX = new byte[]{0, 1};
-    private final int maxFragmentSizeExcludingHeader;
     private static final int HEADER_SIZE = 24;
+    private final int maxFragmentSizeExcludingHeader;
 
     public Fragmenter(int maxFragmentSize) {
         maxFragmentSizeExcludingHeader = maxFragmentSize - HEADER_SIZE;
@@ -22,13 +24,20 @@ public class Fragmenter {
             throw new IllegalArgumentException("Fragment size < " + (HEADER_SIZE + 1));
     }
 
-    public ByteBuf[] fragment(ByteBufAllocator alloc, Message msg, int messageIndex) {
-        return fragment(alloc, msg.asBytes(), msg.getTags(), messageIndex);
+    public ByteBuf[] fragment(ByteBufAllocator alloc, byte[] payload, Collection<String> tags, int messageIndex) {
+        final int hash = Hashing.murmur3_32().hashBytes(payload).asInt();
+        return fragment(alloc, Unpooled.wrappedBuffer(payload), tags, messageIndex, payload.length, hash);
     }
 
-    public ByteBuf[] fragment(ByteBufAllocator alloc, byte[] payload, Collection<String> tags, int messageIndex) {
-        final int payloadLength = payload.length;
+    public ByteBuf[] fragment(ByteBufAllocator alloc, ByteBuf payload, Collection<String> tags, int messageIndex) {
+        return fragment(alloc, ByteBufs.toByteArray(payload), tags, messageIndex);
+    }
 
+    public ByteBuf[] fragment(ByteBufAllocator alloc, Message msg, int messageIndex) {
+        return fragment(alloc, msg.content(), msg.getTags(), messageIndex);
+    }
+
+    public ByteBuf[] fragment(ByteBufAllocator alloc, ByteBuf payload, Collection<String> tags, int messageIndex, int length, int hash) {
         final byte[][] tagBytes;
 
         int tagsBufferLength = 0;
@@ -57,7 +66,7 @@ public class Fragmenter {
 
         // round-up division
         final int fragmentCount = (int) (
-                ((long) payloadLength + tagsBufferLength + maxFragmentSizeExcludingHeader - 1)
+                ((long) length + tagsBufferLength + maxFragmentSizeExcludingHeader - 1)
                         / maxFragmentSizeExcludingHeader);
 
         final ByteBuf[] fragments = new ByteBuf[fragmentCount];
@@ -69,8 +78,8 @@ public class Fragmenter {
         reference.writeZero(2);
         reference.writeShort(maxFragmentSizeExcludingHeader);
         reference.writeInt(messageIndex);
-        reference.writeInt(payloadLength);
-        reference.writeInt(Hashing.murmur3_32().hashBytes(payload).asInt());
+        reference.writeInt(length);
+        reference.writeInt(hash);
         reference.writeZero(2); // tags buffer length
         reference.writeZero(2);
 
@@ -84,7 +93,7 @@ public class Fragmenter {
             fragments[fragmentIdx] = fragment;
         }
 
-        final int lastPayloadLength = payloadLength - (maxFragmentSizeExcludingHeader * (fragmentCount - 1));
+        final int lastPayloadLength = length - (maxFragmentSizeExcludingHeader * (fragmentCount - 1));
         final ByteBuf finalFragment = makeBuffer(reference, fragmentIdx, HEADER_SIZE + tagsBufferLength + lastPayloadLength);
 
         if (tagsCount > 0) {
