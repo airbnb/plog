@@ -53,9 +53,11 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
                                     stats.missingFragmentInDroppedMessage(idx, fragmentCount);
                             message.release();
                         } else {
-                            // let's use the magic value fragment 0, expected fragments 0 if the message was GC'ed,
+                            // let's use the magic value fragment 0, expected fragments 1
+                            // if the message was GC'ed,
                             // as it wouldn't happen otherwise
-                            stats.missingFragmentInDroppedMessage(0, 0);
+                            stats.missingFragmentInDroppedMessage(0, 1);
+                            log.warn("The cache is leaking buffers!");
                         }
                     }
                 })
