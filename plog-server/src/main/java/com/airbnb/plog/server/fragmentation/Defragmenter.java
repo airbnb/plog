@@ -45,21 +45,14 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
                     @Override
                     public void onRemoval(RemovalNotification<Long, FragmentedMessage> notification) {
                         final FragmentedMessage message = notification.getValue();
-                        if (message != null) {
-                            final int fragmentCount = message.getFragmentCount();
-                            final BitSet receivedFragments = message.getReceivedFragments();
-                            for (int idx = 0; idx < fragmentCount; idx++)
-                                if (!receivedFragments.get(idx))
-                                    stats.missingFragmentInDroppedMessage(idx, fragmentCount);
-                            message.release();
-                        } else {
-                            // let's use the magic value fragment 0, expected fragments 0 if the message was GC'ed,
-                            // as it wouldn't happen otherwise
-                            stats.missingFragmentInDroppedMessage(0, 0);
-                        }
+                        final int fragmentCount = message.getFragmentCount();
+                        final BitSet receivedFragments = message.getReceivedFragments();
+                        for (int idx = 0; idx < fragmentCount; idx++)
+                            if (!receivedFragments.get(idx))
+                                stats.missingFragmentInDroppedMessage(idx, fragmentCount);
+                        message.release();
                     }
-                })
-                .build();
+                }).build();
     }
 
     public CacheStats getCacheStats() {
