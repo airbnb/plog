@@ -12,7 +12,6 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -44,6 +43,9 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
                 .removalListener(new RemovalListener<Long, FragmentedMessage>() {
                     @Override
                     public void onRemoval(RemovalNotification<Long, FragmentedMessage> notification) {
+                        if (notification.getCause() == RemovalCause.EXPLICIT)
+                            return;
+
                         final FragmentedMessage message = notification.getValue();
                         final int fragmentCount = message.getFragmentCount();
                         final BitSet receivedFragments = message.getReceivedFragments();
@@ -59,60 +61,58 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
         return incompleteMessages.stats();
     }
 
-    private synchronized FragmentedMessage ingestIntoIncompleteMessage(Fragment fragment) {
-        final long id = fragment.getMsgId();
-        final FragmentedMessage fromMap = incompleteMessages.getIfPresent(id);
-        if (fromMap != null) {
-            fromMap.ingestFragment(fragment, this.stats);
-            if (fromMap.isComplete()) {
-                log.debug("complete message");
-                incompleteMessages.invalidate(fragment.getMsgId());
-            } else {
-                log.debug("incomplete message");
-            }
-            return fromMap;
-        } else {
-            if (detector != null)
-                detector.reportNewMessage(fragment.getMsgId());
-            FragmentedMessage message = FragmentedMessage.fromFragment(fragment, this.stats);
-
-            message.retain();
-            incompleteMessages.put(id, message);
-
-            return message;
-        }
-    }
-
     @Override
     protected void decode(ChannelHandlerContext ctx, Fragment fragment, List<Object> out) throws Exception {
-        log.debug("Defragmenting {}", fragment);
         if (fragment.isAlone()) {
             if (detector != null)
                 detector.reportNewMessage(fragment.getMsgId());
+
             final ByteBuf payload = fragment.content();
-            pushPayloadIfValid(payload, fragment.getMsgHash(), 1, fragment.getTags(), out);
-        } else {
-            FragmentedMessage message = ingestIntoIncompleteMessage(fragment);
-            if (message.isComplete())
-                pushPayloadIfValid(message.getPayload(), message.getChecksum(), message.getFragmentCount(), message.getTags(), out);
-        }
-    }
+            final int computedHash = Murmur3.hash32(payload);
 
-    private void pushPayloadIfValid(final ByteBuf payload,
-                                    final int expectedHash,
-                                    final int fragmentCount,
-                                    Collection<String> tags,
-                                    List<Object> out) {
-        final int computedHash = Murmur3.hash32(payload);
-
-        if (Murmur3.hash32(payload) == expectedHash) {
-            payload.retain();
-            out.add(new MessageImpl(payload, tags));
-            this.stats.receivedV0MultipartMessage();
+            if (computedHash == fragment.getMsgHash()) {
+                payload.retain();
+                out.add(new MessageImpl(payload, fragment.getTags()));
+                this.stats.receivedV0MultipartMessage();
+            } else
+                this.stats.receivedV0InvalidChecksum(1);
         } else {
-            log.warn("Client sent hash {}, not matching computed hash {} (fragment count {})",
-                    expectedHash, computedHash, fragmentCount);
-            this.stats.receivedV0InvalidChecksum(fragmentCount);
+            // 2 fragments or more
+
+            final long msgId = fragment.getMsgId();
+            final FragmentedMessage message;
+            final boolean complete;
+
+            synchronized (incompleteMessages) {
+                final FragmentedMessage fromMap = incompleteMessages.getIfPresent(msgId);
+                if (fromMap == null) {
+                    complete = false;
+                    message = FragmentedMessage.fromFragment(fragment, this.stats);
+
+                    if (detector != null)
+                        detector.reportNewMessage(fragment.getMsgId());
+
+                    incompleteMessages.put(msgId, message);
+                } else {
+                    message = fromMap;
+                    message.ingestFragment(fragment, this.stats);
+                    complete = message.isComplete();
+                }
+            }
+
+            if (complete) {
+                incompleteMessages.invalidate(fragment.getMsgId());
+
+                final ByteBuf payload = message.getPayload();
+
+                if (Murmur3.hash32(payload) == message.getChecksum()) {
+                    out.add(new MessageImpl(payload, message.getTags()));
+                    this.stats.receivedV0MultipartMessage();
+                } else {
+                    message.release();
+                    this.stats.receivedV0InvalidChecksum(message.getFragmentCount());
+                }
+            }
         }
     }
 }
