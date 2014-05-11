@@ -28,7 +28,7 @@ While updates may still be made and we welcome feedback, keep in mind we may not
 
 - To build source JARs and upload to bintray:
 
-        $ gr build sourceJar bintrayUpload
+        $ ./gradlew build sourcesJar bintrayUpload
 
 ## Configuration
 
