@@ -20,6 +20,16 @@ While updates may still be made and we welcome feedback, keep in mind we may not
     $ printf 'yipee!' | socat -t0 - UDP-DATAGRAM:127.0.0.1:23456
     $ printf '\0\0statsplz' | socat - UDP-DATAGRAM:127.0.0.1:23456
 
+## Build / Upload
+
+- To build a shadow JAR:
+
+        $ ./gradlew shadowJar
+
+- To build source JARs and upload to bintray:
+
+        $ gr build sourceJar bintrayUpload
+
 ## Configuration
 
 All configuration can be done through system properties.
