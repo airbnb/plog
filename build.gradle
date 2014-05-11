@@ -13,8 +13,9 @@ ext {
             standardOutput = out
         }
         final full = out.toString().trim()
+
         // 'v1.0' -> '1.0', 'vendetta' -> 'vendetta'
-        full ==~ /v\d/ ? full.substring(1) : full
+        full ==~ /v\d.*/ ? full.substring(1) : full
     }
 }
 
