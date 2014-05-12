@@ -20,11 +20,12 @@ ext {
 }
 
 subprojects {
-    apply plugin: 'project-report'
     apply plugin: 'groovy'
+    apply plugin: 'project-report'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'bintray'
+    apply plugin: 'errorprone'
 
     version = rootProject.ext.gitVersion
 
@@ -91,4 +92,5 @@ subprojects {
 buildscript {
     repositories { jcenter() }
     dependencies { classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3' }
+    dependencies { classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.0.2' }
 }
