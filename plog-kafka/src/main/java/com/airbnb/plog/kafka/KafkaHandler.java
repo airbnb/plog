@@ -2,7 +2,6 @@ package com.airbnb.plog.kafka;
 
 import com.airbnb.plog.Message;
 import com.airbnb.plog.handlers.Handler;
-import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.yammer.metrics.core.Meter;
 import io.netty.channel.ChannelHandlerContext;
@@ -35,10 +34,10 @@ public class KafkaHandler extends SimpleChannelInboundHandler<Message> implement
     private static JsonObject meterToJsonObject(Meter meter) {
         return new JsonObject()
                 .add("count", meter.count())
-                .add("rate", new JsonArray()
-                        .add(meter.oneMinuteRate())
-                        .add(meter.fiveMinuteRate())
-                        .add(meter.fifteenMinuteRate()));
+                .add("rate", new JsonObject()
+                        .add("1", meter.oneMinuteRate())
+                        .add("5", meter.fiveMinuteRate())
+                        .add("15", meter.fifteenMinuteRate()));
     }
 
     @Override
@@ -76,12 +75,12 @@ public class KafkaHandler extends SimpleChannelInboundHandler<Message> implement
                 .add("default_topic", defaultTopic)
                 .add("seen_messages", seenMessages.get())
                 .add("failed_to_send", failedToSendMessageExceptions.get())
-                .add("failed_send_rate", meterToJsonObject(producerStats.failedSendRate()))
-                .add("resend_rate", meterToJsonObject(producerStats.resendRate()))
-                .add("serialization_error_rate", meterToJsonObject(producerStats.serializationErrorRate()))
-                .add("message_rate", meterToJsonObject(producerAllTopicsStats.messageRate()))
-                .add("dropped_message_rate", meterToJsonObject(producerAllTopicsStats.droppedMessageRate()))
-                .add("byte_rate", meterToJsonObject(producerAllTopicsStats.byteRate()));
+                .add("failed_send", meterToJsonObject(producerStats.failedSendRate()))
+                .add("resend", meterToJsonObject(producerStats.resendRate()))
+                .add("serialization_error", meterToJsonObject(producerStats.serializationErrorRate()))
+                .add("message", meterToJsonObject(producerAllTopicsStats.messageRate()))
+                .add("dropped_message", meterToJsonObject(producerAllTopicsStats.droppedMessageRate()))
+                .add("byte", meterToJsonObject(producerAllTopicsStats.byteRate()));
     }
 
     @Override
