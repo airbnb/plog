@@ -42,6 +42,7 @@ subprojects {
     dependencies {
         compile 'org.projectlombok:lombok:1.12.6'
         compile 'com.google.guava:guava:17.0'
+        compile 'com.google.code.findbugs:jsr305:2.0.3' // used by guava concurrent APIs
         compile 'com.typesafe:config:1.2.0'
         compile 'com.eclipsesource.minimal-json:minimal-json:0.9.1'
         compile "io.netty:netty-codec:${nettyVersion}"

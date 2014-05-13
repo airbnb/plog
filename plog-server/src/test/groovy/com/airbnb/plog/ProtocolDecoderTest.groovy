@@ -2,10 +2,10 @@ package com.airbnb.plog
 
 import com.airbnb.plog.server.commands.FourLetterCommand
 import com.airbnb.plog.server.fragmentation.Fragment
-import com.airbnb.plog.server.stats.SimpleStatisticsReporter
-import com.airbnb.plog.server.stats.StatisticsReporter
 import com.airbnb.plog.server.pipeline.ByteBufs
 import com.airbnb.plog.server.pipeline.ProtocolDecoder
+import com.airbnb.plog.server.stats.SimpleStatisticsReporter
+import com.airbnb.plog.server.stats.StatisticsReporter
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
 
@@ -67,7 +67,7 @@ class ProtocolDecoderTest extends GroovyTestCase {
     void testForwardsFragments() {
         runTest { EmbeddedChannel channel, StatisticsReporter stats ->
             // I'm so sad fragment count and index are in this order
-            final payload = (0..1) + (5..2) + (6..19) + [0, 0, 0, 0] + (24 .. 30)
+            final payload = (0..1) + (5..2) + (6..19) + [0, 0, 0, 0] + (24..30)
             insert(payload as byte[], channel)
             final frag = (Fragment) channel.readInbound()
             assert frag.fragmentCount == (5 << 8) + 4

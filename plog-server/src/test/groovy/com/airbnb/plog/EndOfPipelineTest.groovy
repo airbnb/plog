@@ -1,7 +1,7 @@
 package com.airbnb.plog
 
-import com.airbnb.plog.server.stats.SimpleStatisticsReporter
 import com.airbnb.plog.server.pipeline.EndOfPipeline
+import com.airbnb.plog.server.stats.SimpleStatisticsReporter
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.embedded.EmbeddedChannel

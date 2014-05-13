@@ -1,8 +1,8 @@
 package com.airbnb.plog.server.commands
 
 import com.airbnb.plog.Utils
-import com.airbnb.plog.server.stats.SimpleStatisticsReporter
 import com.airbnb.plog.server.pipeline.ByteBufs
+import com.airbnb.plog.server.stats.SimpleStatisticsReporter
 import com.typesafe.config.ConfigFactory
 import io.netty.channel.embedded.EmbeddedChannel
 

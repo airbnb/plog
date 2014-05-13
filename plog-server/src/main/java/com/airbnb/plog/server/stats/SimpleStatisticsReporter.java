@@ -1,7 +1,7 @@
 package com.airbnb.plog.server.stats;
 
-import com.airbnb.plog.server.fragmentation.Defragmenter;
 import com.airbnb.plog.handlers.Handler;
+import com.airbnb.plog.server.fragmentation.Defragmenter;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.cache.CacheStats;

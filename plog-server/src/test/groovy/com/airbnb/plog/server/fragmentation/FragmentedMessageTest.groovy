@@ -1,8 +1,8 @@
 package com.airbnb.plog.server.fragmentation
 
+import com.airbnb.plog.server.pipeline.ByteBufs
 import com.airbnb.plog.server.stats.SimpleStatisticsReporter
 import com.airbnb.plog.server.stats.StatisticsReporter
-import com.airbnb.plog.server.pipeline.ByteBufs
 import io.netty.buffer.Unpooled
 
 class FragmentedMessageTest extends GroovyTestCase {
