@@ -10,6 +10,7 @@ import lombok.Getter;
 
 import java.util.Queue;
 
+@SuppressWarnings("ClassOnlyUsedInOneModule")
 public class MessageQueueProvider implements HandlerProvider {
     @Getter
     private static final Queue<Message> queue = Queues.newArrayDeque();

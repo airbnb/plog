@@ -14,7 +14,7 @@ import java.util.Collection;
 
 @Slf4j
 @ToString
-public class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
+public final class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
     @Getter
     private final BitSet receivedFragments;
     @Getter
@@ -26,7 +26,7 @@ public class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
     @Getter
     private boolean complete = false;
     @Getter
-    private Collection<String> tags;
+    private Collection<String> tags = null;
 
     private FragmentedMessage(ByteBufAllocator alloc,
                               final int totalLength,

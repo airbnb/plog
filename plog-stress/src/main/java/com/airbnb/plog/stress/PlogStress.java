@@ -22,14 +22,16 @@ import java.nio.channels.DatagramChannel;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("CallToSystemExit")
 @Slf4j
-public class PlogStress {
+public final class PlogStress {
     private final MetricRegistry registry = new MetricRegistry();
 
     public static void main(String[] args) {
         new PlogStress().run(ConfigFactory.load());
     }
 
+    @SuppressWarnings("OverlyLongMethod")
     private void run(Config config) {
         System.err.println(
                 "      _\n" +
@@ -96,7 +98,7 @@ public class PlogStress {
 
         for (int i = 0; i < threadCount; i++) {
             new Thread("stress_" + i) {
-                private DatagramChannel channel;
+                private DatagramChannel channel = null;
 
                 @Override
                 public void run() {

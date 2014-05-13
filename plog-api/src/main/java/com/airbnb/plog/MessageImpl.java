@@ -15,7 +15,7 @@ import java.util.Collections;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class MessageImpl extends DefaultByteBufHolder implements Message {
+public final class MessageImpl extends DefaultByteBufHolder implements Message {
     private final Collection<String> tags;
 
     @Getter(AccessLevel.NONE)
@@ -39,10 +39,10 @@ public class MessageImpl extends DefaultByteBufHolder implements Message {
 
     @Override
     public byte[] asBytes() {
-        if (memoizedBytes == null)
-            memoizedBytes = ByteBufs.toByteArray(content());
+        if (this.memoizedBytes == null)
+            this.memoizedBytes = ByteBufs.toByteArray(content());
 
-        return memoizedBytes;
+        return this.memoizedBytes;
     }
 
     @Override

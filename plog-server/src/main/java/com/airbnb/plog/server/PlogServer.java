@@ -13,8 +13,9 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@SuppressWarnings("CallToSystemExit")
 @Slf4j
-public class PlogServer {
+public final class PlogServer {
     public static void main(String[] args) {
         log.info("Starting...");
 

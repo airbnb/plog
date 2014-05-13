@@ -14,7 +14,7 @@ import io.netty.handler.codec.LineBasedFrameDecoder;
 
 import java.net.InetSocketAddress;
 
-public class TCPListener extends Listener {
+public final class TCPListener extends Listener {
     public TCPListener(Config config) {
         super(config);
     }

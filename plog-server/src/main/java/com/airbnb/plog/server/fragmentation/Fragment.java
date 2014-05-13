@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 @ToString(exclude = {"tagsBuffer"})
-public class Fragment extends DefaultByteBufHolder implements Tagged {
+public final class Fragment extends DefaultByteBufHolder implements Tagged {
     static final int HEADER_SIZE = 24;
 
     @Getter

@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @RequiredArgsConstructor
 @Slf4j
-public class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
+public final class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     private final String defaultTopic;
     private final Producer<byte[], byte[]> producer;
     private final AtomicLong failedToSendMessageExceptions = new AtomicLong(), seenMessages = new AtomicLong();

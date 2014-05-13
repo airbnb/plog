@@ -15,13 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Constructor;
 
 @Slf4j
-public abstract class Listener extends AbstractService {
+abstract class Listener extends AbstractService {
     @Getter
     private final Config config;
     @Getter
     private final SimpleStatisticsReporter stats;
     private final EndOfPipeline eopHandler;
-    private EventLoopGroup eventLoopGroup;
+    private EventLoopGroup eventLoopGroup = null;
 
     public Listener(Config config) {
         this.config = config;

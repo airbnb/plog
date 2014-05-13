@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class Defragmenter extends MessageToMessageDecoder<Fragment> {
+public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
     private final StatisticsReporter stats;
     private final Cache<Long, FragmentedMessage> incompleteMessages;
     private final ListenerHoleDetector detector;
@@ -47,6 +47,9 @@ public class Defragmenter extends MessageToMessageDecoder<Fragment> {
                             return;
 
                         final FragmentedMessage message = notification.getValue();
+                        if (message == null)
+                            return; // cannot happen with this cache, holds strong refs.
+
                         final int fragmentCount = message.getFragmentCount();
                         final BitSet receivedFragments = message.getReceivedFragments();
                         for (int idx = 0; idx < fragmentCount; idx++)

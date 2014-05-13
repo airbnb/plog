@@ -12,7 +12,7 @@ import java.nio.ByteOrder;
 import java.util.Collection;
 
 @Slf4j
-public class Fragmenter {
+public final class Fragmenter {
     public static final byte[] UDP_V0_FRAGMENT_PREFIX = new byte[]{0, 1};
     private static final int HEADER_SIZE = 24;
     private final int maxFragmentSizeExcludingHeader;

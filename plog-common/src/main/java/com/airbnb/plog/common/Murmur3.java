@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.ByteOrder;
 
 @Slf4j
-public class Murmur3 {
+public final class Murmur3 {
     private static final int C1 = 0xcc9e2d51;
     private static final int C2 = 0x1b873593;
 
@@ -18,6 +18,7 @@ public class Murmur3 {
         return hash32(data, offset, length, 0);
     }
 
+    @SuppressWarnings("OverlyLongMethod")
     public static int hash32(ByteBuf data, final int offset, final int length, final int seed) {
         final ByteBuf ordered = data.order(ByteOrder.LITTLE_ENDIAN);
 

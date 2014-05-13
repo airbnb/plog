@@ -7,6 +7,7 @@ import com.typesafe.config.Config;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+@SuppressWarnings("ClassOnlyUsedInOneModule")
 public class ReverseBytesProvider implements HandlerProvider {
     @Override
     public Handler getHandler(Config config) throws Exception {

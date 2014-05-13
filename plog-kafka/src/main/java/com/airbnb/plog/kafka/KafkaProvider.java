@@ -14,7 +14,7 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-public class KafkaProvider implements HandlerProvider {
+public final class KafkaProvider implements HandlerProvider {
     private final static AtomicInteger clientId = new AtomicInteger();
 
     @Override

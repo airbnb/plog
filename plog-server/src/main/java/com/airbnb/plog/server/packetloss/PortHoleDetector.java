@@ -41,6 +41,7 @@ final class PortHoleDetector {
      * @return The size of the hole (missing intermediate values)
      * between the previously smallest and newly smallest entry
      */
+    @SuppressWarnings("OverlyLongMethod")
     int ensurePresent(int candidate, int maxHole) {
         if (maxHole < 1)
             throw new MaxHoleTooSmall(maxHole);
@@ -141,8 +142,9 @@ final class PortHoleDetector {
     }
 
     @RequiredArgsConstructor
-    static final class MaxHoleTooSmall extends IllegalArgumentException {
-        final int maximumHole;
+    private static final class MaxHoleTooSmall extends IllegalArgumentException {
+        @Getter
+        private final int maximumHole;
 
         @Override
         public String getMessage() {

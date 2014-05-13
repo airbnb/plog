@@ -17,7 +17,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class UDPListener extends Listener {
+public final class UDPListener extends Listener {
     @Getter
     private NioEventLoopGroup group = new NioEventLoopGroup(1);
 
