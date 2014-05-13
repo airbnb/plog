@@ -25,10 +25,11 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
         this.stats = statisticsReporter;
 
         final Config holeConfig = config.getConfig("detect_holes");
-        if (holeConfig.getBoolean("enabled"))
+        if (holeConfig.getBoolean("enabled")) {
             detector = new ListenerHoleDetector(holeConfig, stats);
-        else
+        } else {
             detector = null;
+        }
 
         incompleteMessages = CacheBuilder.newBuilder()
                 .maximumWeight(config.getInt("max_size"))
@@ -43,18 +44,22 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
                 .removalListener(new RemovalListener<Long, FragmentedMessage>() {
                     @Override
                     public void onRemoval(RemovalNotification<Long, FragmentedMessage> notification) {
-                        if (notification.getCause() == RemovalCause.EXPLICIT)
+                        if (notification.getCause() == RemovalCause.EXPLICIT) {
                             return;
+                        }
 
                         final FragmentedMessage message = notification.getValue();
-                        if (message == null)
+                        if (message == null) {
                             return; // cannot happen with this cache, holds strong refs.
+                        }
 
                         final int fragmentCount = message.getFragmentCount();
                         final BitSet receivedFragments = message.getReceivedFragments();
-                        for (int idx = 0; idx < fragmentCount; idx++)
-                            if (!receivedFragments.get(idx))
+                        for (int idx = 0; idx < fragmentCount; idx++) {
+                            if (!receivedFragments.get(idx)) {
                                 stats.missingFragmentInDroppedMessage(idx, fragmentCount);
+                            }
+                        }
                         message.release();
                     }
                 }).build();
@@ -67,8 +72,9 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
     @Override
     protected void decode(ChannelHandlerContext ctx, Fragment fragment, List<Object> out) throws Exception {
         if (fragment.isAlone()) {
-            if (detector != null)
+            if (detector != null) {
                 detector.reportNewMessage(fragment.getMsgId());
+            }
 
             final ByteBuf payload = fragment.content();
             final int computedHash = Murmur3.hash32(payload);
@@ -77,8 +83,9 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
                 payload.retain();
                 out.add(new MessageImpl(payload, fragment.getTags()));
                 this.stats.receivedV0MultipartMessage();
-            } else
+            } else {
                 this.stats.receivedV0InvalidChecksum(1);
+            }
         } else {
             // 2 fragments or more
 
@@ -92,8 +99,9 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
                     complete = false;
                     message = FragmentedMessage.fromFragment(fragment, this.stats);
 
-                    if (detector != null)
+                    if (detector != null) {
                         detector.reportNewMessage(fragment.getMsgId());
+                    }
 
                     incompleteMessages.put(msgId, message);
                 } else {

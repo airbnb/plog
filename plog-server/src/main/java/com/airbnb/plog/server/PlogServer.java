@@ -44,11 +44,13 @@ public final class PlogServer {
 
         final ArrayList<Service> services = Lists.newArrayList();
 
-        for (final Config cfg : udpConfig.getConfigList("listeners"))
+        for (final Config cfg : udpConfig.getConfigList("listeners")) {
             services.add(new UDPListener(cfg.withFallback(udpDefaults)));
+        }
 
-        for (final Config cfg : tcpConfig.getConfigList("listeners"))
+        for (final Config cfg : tcpConfig.getConfigList("listeners")) {
             services.add(new TCPListener(cfg.withFallback(tcpDefaults)));
+        }
 
         final long shutdownTime = plogServer.getDuration("shutdown_time", TimeUnit.MILLISECONDS);
 

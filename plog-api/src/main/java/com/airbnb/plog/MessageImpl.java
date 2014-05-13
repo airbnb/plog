@@ -21,11 +21,6 @@ public final class MessageImpl extends DefaultByteBufHolder implements Message {
     @Getter(AccessLevel.NONE)
     private byte[] memoizedBytes;
 
-    @Override
-    public Collection<String> getTags() {
-        return (this.tags == null) ? Collections.<String>emptyList() : this.tags;
-    }
-
     public MessageImpl(ByteBuf data, Collection<String> tags) {
         super(data);
         this.tags = tags;
@@ -38,9 +33,15 @@ public final class MessageImpl extends DefaultByteBufHolder implements Message {
     }
 
     @Override
+    public Collection<String> getTags() {
+        return (this.tags == null) ? Collections.<String>emptyList() : this.tags;
+    }
+
+    @Override
     public byte[] asBytes() {
-        if (this.memoizedBytes == null)
+        if (this.memoizedBytes == null) {
             this.memoizedBytes = ByteBufs.toByteArray(content());
+        }
 
         return this.memoizedBytes;
     }

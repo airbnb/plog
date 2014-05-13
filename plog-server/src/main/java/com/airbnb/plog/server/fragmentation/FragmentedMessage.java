@@ -79,8 +79,9 @@ public final class FragmentedMessage extends DefaultByteBufHolder implements Tag
             return;
         }
 
-        if (fragmentTagsBuffer != null)
+        if (fragmentTagsBuffer != null) {
             this.tags = fragment.getTags();
+        }
 
         // valid fragment
         synchronized (receivedFragments) {
@@ -93,8 +94,9 @@ public final class FragmentedMessage extends DefaultByteBufHolder implements Tag
     }
 
     public final ByteBuf getPayload() {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Incomplete");
+        }
 
         content().readerIndex(0);
         content().writerIndex(getContentLength());

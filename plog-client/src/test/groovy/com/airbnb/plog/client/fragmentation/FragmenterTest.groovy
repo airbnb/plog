@@ -30,7 +30,7 @@ class FragmenterTest extends GroovyTestCase {
             for (payloadLength in (0..5).asList() + [20, 50, 100, 200]) {
                 for (tags in [null, [], ['foo'], ['foo', 'bar']]) {
                     if (fragmentSize == 25 && tags != null && !tags.isEmpty())
-                        // no room :(
+                    // no room :(
                         break
 
                     final payload = BYTES[0..payloadLength].toArray() as byte[]

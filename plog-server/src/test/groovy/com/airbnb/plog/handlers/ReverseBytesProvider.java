@@ -21,8 +21,9 @@ public class ReverseBytesProvider implements HandlerProvider {
             final int length = payload.length;
 
             final byte[] reverse = new byte[length];
-            for (int i = 0; i < length; i++)
+            for (int i = 0; i < length; i++) {
                 reverse[i] = payload[length - i - 1];
+            }
 
             final Message reversed = MessageImpl.fromBytes(ctx.alloc(), reverse, msg.getTags());
             reversed.retain();

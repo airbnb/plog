@@ -57,8 +57,9 @@ public final class PlogStress {
 
         final int sizeDelta = maxSize - minSize;
         final int differentSizes = sizeDelta / sizeIncrements;
-        if (differentSizes == 0)
+        if (differentSizes == 0) {
             throw new RuntimeException("No sizes! Decrease plog.stress.size_increments");
+        }
 
         final int stopAfter = stressConfig.getInt("stop_after");
 
@@ -74,8 +75,9 @@ public final class PlogStress {
 
         log.info("Generating {} different hashes", differentSizes);
         final int[] precomputedHashes = new int[differentSizes];
-        for (int i = 0; i < differentSizes; i++)
+        for (int i = 0; i < differentSizes; i++) {
             precomputedHashes[i] = Murmur3.hash32(randomMessage, 0, minSize + sizeIncrements * i, 0);
+        }
 
         final ByteBufAllocator allocator = new PooledByteBufAllocator();
 
@@ -105,8 +107,9 @@ public final class PlogStress {
                     try {
                         for (int sent = 0; sent < stopAfter; sent++, messageMeter.mark()) {
                             if (sent % socketRenewRate == 0) {
-                                if (channel != null)
+                                if (channel != null) {
                                     channel.close();
+                                }
                                 channel = DatagramChannel.open();
                                 channel.socket().setSendBufferSize(bufferSize);
                                 socketMeter.mark();

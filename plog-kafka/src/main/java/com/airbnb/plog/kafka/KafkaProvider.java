@@ -21,12 +21,14 @@ public final class KafkaProvider implements HandlerProvider {
     public Handler getHandler(Config config) throws Exception {
         final String defaultTopic = config.getString("default_topic");
 
-        if ("null".equals(defaultTopic))
+        if ("null".equals(defaultTopic)) {
             log.warn("default topic is \"null\"; messages will be discarded unless tagged with kt:");
+        }
 
         final Properties properties = new Properties();
-        for (Map.Entry<String, ConfigValue> kv : config.getConfig("producer_config").entrySet())
+        for (Map.Entry<String, ConfigValue> kv : config.getConfig("producer_config").entrySet()) {
             properties.put(kv.getKey(), kv.getValue().unwrapped().toString());
+        }
 
         final String clientId = "plog_" +
                 InetAddress.getLocalHost().getHostName() + "_" +

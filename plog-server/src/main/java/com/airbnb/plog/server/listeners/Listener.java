@@ -81,12 +81,13 @@ abstract class Listener extends AbstractService {
         eventLoopGroup.shutdownGracefully().addListener(new GenericFutureListener() {
             @Override
             public void operationComplete(Future future) throws Exception {
-                if (future.isSuccess())
+                if (future.isSuccess()) {
                     notifyStopped();
-                else {
+                } else {
                     final Throwable failure = future.cause();
-                    if (failure != null)
+                    if (failure != null) {
                         log.error("Shutdown failed", failure);
+                    }
                 }
             }
         });
