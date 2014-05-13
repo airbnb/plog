@@ -37,8 +37,9 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
                     if (cmd != null) {
                         log.debug("v0 command");
                         out.add(cmd);
-                    } else
+                    } else {
                         stats.receivedUnknownCommand();
+                    }
                     break;
                 case 1:
                     log.debug("v0 multipart message: {}", msg);
@@ -63,8 +64,9 @@ public final class ProtocolDecoder extends MessageToMessageDecoder<DatagramPacke
     private FourLetterCommand readCommand(DatagramPacket msg) {
         final ByteBuf content = msg.content();
         final int trailLength = content.readableBytes() - 6;
-        if (trailLength < 0)
+        if (trailLength < 0) {
             return null;
+        }
         final byte[] trail = new byte[trailLength];
         final byte[] cmdBuff = new byte[4];
         content.getBytes(2, cmdBuff, 0, 4);

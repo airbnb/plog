@@ -15,16 +15,11 @@ import java.util.Collections;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class MessageImpl extends DefaultByteBufHolder implements Message {
+public final class MessageImpl extends DefaultByteBufHolder implements Message {
     private final Collection<String> tags;
 
     @Getter(AccessLevel.NONE)
     private byte[] memoizedBytes;
-
-    @Override
-    public Collection<String> getTags() {
-        return (this.tags == null) ? Collections.<String>emptyList() : this.tags;
-    }
 
     public MessageImpl(ByteBuf data, Collection<String> tags) {
         super(data);
@@ -38,11 +33,17 @@ public class MessageImpl extends DefaultByteBufHolder implements Message {
     }
 
     @Override
-    public byte[] asBytes() {
-        if (memoizedBytes == null)
-            memoizedBytes = ByteBufs.toByteArray(content());
+    public Collection<String> getTags() {
+        return (this.tags == null) ? Collections.<String>emptyList() : this.tags;
+    }
 
-        return memoizedBytes;
+    @Override
+    public byte[] asBytes() {
+        if (this.memoizedBytes == null) {
+            this.memoizedBytes = ByteBufs.toByteArray(content());
+        }
+
+        return this.memoizedBytes;
     }
 
     @Override

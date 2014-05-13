@@ -9,9 +9,9 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import java.util.List;
 
 @ChannelHandler.Sharable
-class ByteBufToMessageDecoder extends MessageToMessageDecoder<ByteBuf> {
+final class ByteBufToMessageDecoder extends MessageToMessageDecoder<ByteBuf> {
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
+    protected final void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
         buf.retain();
         out.add(new MessageImpl(buf, null));
     }

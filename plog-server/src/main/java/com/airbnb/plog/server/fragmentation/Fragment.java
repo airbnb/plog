@@ -16,7 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 @ToString(exclude = {"tagsBuffer"})
-public class Fragment extends DefaultByteBufHolder implements Tagged {
+public final class Fragment extends DefaultByteBufHolder implements Tagged {
     static final int HEADER_SIZE = 24;
 
     @Getter
@@ -58,22 +58,26 @@ public class Fragment extends DefaultByteBufHolder implements Tagged {
         final ByteBuf content = packet.content().order(ByteOrder.BIG_ENDIAN);
 
         final int length = content.readableBytes();
-        if (length < HEADER_SIZE)
+        if (length < HEADER_SIZE) {
             throw new IllegalArgumentException("Packet too short: " + length + " bytes");
+        }
 
         final int fragmentCount = content.getUnsignedShort(2);
-        if (fragmentCount == 0)
+        if (fragmentCount == 0) {
             throw new IllegalArgumentException("0 fragment count");
+        }
 
         final int fragmentIndex = content.getUnsignedShort(4);
-        if (fragmentIndex >= fragmentCount)
+        if (fragmentIndex >= fragmentCount) {
             throw new IllegalArgumentException("Index " + fragmentIndex + " < count " + fragmentCount);
+        }
 
         final int fragmentSize = content.getUnsignedShort(6);
         final int idRightPart = content.getInt(8);
         final int totalLength = content.getInt(12);
-        if (totalLength < 0)
+        if (totalLength < 0) {
             throw new IllegalArgumentException("Cannot support length " + totalLength + " > 2^31");
+        }
 
         final int msgHash = content.getInt(16);
 
@@ -95,8 +99,9 @@ public class Fragment extends DefaultByteBufHolder implements Tagged {
 
     @Override
     public Collection<String> getTags() {
-        if (tagsBuffer == null)
+        if (tagsBuffer == null) {
             return Collections.emptyList();
+        }
         final String seq = new String(ByteBufs.toByteArray(tagsBuffer), Charsets.UTF_8);
         return Splitter.on('\0').omitEmptyStrings().splitToList(seq);
     }

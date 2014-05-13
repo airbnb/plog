@@ -14,7 +14,7 @@ import java.util.Collection;
 
 @Slf4j
 @ToString
-public class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
+public final class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
     @Getter
     private final BitSet receivedFragments;
     @Getter
@@ -26,7 +26,7 @@ public class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
     @Getter
     private boolean complete = false;
     @Getter
-    private Collection<String> tags;
+    private Collection<String> tags = null;
 
     private FragmentedMessage(ByteBufAllocator alloc,
                               final int totalLength,
@@ -79,8 +79,9 @@ public class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
             return;
         }
 
-        if (fragmentTagsBuffer != null)
+        if (fragmentTagsBuffer != null) {
             this.tags = fragment.getTags();
+        }
 
         // valid fragment
         synchronized (receivedFragments) {
@@ -93,8 +94,9 @@ public class FragmentedMessage extends DefaultByteBufHolder implements Tagged {
     }
 
     public final ByteBuf getPayload() {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Incomplete");
+        }
 
         content().readerIndex(0);
         content().writerIndex(getContentLength());

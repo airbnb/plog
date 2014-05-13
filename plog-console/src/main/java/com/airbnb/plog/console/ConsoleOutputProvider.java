@@ -7,14 +7,15 @@ import com.typesafe.config.ConfigException;
 
 import java.io.PrintStream;
 
-public class ConsoleOutputProvider implements HandlerProvider {
+public final class ConsoleOutputProvider implements HandlerProvider {
     @Override
     public Handler getHandler(Config config) throws Exception {
         PrintStream target = System.out;
         try {
             final String targetDescription = config.getString("target");
-            if (targetDescription.toLowerCase().equals("stderr"))
+            if (targetDescription.toLowerCase().equals("stderr")) {
                 target = System.err;
+            }
         } catch (ConfigException.Missing ignored) {
         }
 

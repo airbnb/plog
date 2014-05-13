@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @RequiredArgsConstructor
 @Slf4j
-public class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
+public final class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     private final String defaultTopic;
     private final Producer<byte[], byte[]> producer;
     private final AtomicLong failedToSendMessageExceptions = new AtomicLong(), seenMessages = new AtomicLong();
@@ -47,25 +47,28 @@ public class KafkaHandler extends SimpleChannelInboundHandler<Message> implement
 
         boolean sawKtTag = false;
 
-        for (String tag : msg.getTags())
+        for (String tag : msg.getTags()) {
             if (tag.startsWith("kt:")) {
                 sawKtTag = true;
                 sendOrReportFailure(tag.substring(3), payload);
             }
+        }
 
-        if (!sawKtTag)
+        if (!sawKtTag) {
             sendOrReportFailure(defaultTopic, payload);
+        }
     }
 
     private boolean sendOrReportFailure(String topic, byte[] msg) {
         final boolean nonNullTopic = !("null".equals(topic));
-        if (nonNullTopic)
+        if (nonNullTopic) {
             try {
                 producer.send(new KeyedMessage<byte[], byte[]>(topic, msg));
             } catch (FailedToSendMessageException e) {
                 log.warn("Failed to send to topic {}", topic, e);
                 failedToSendMessageExceptions.incrementAndGet();
             }
+        }
         return nonNullTopic;
     }
 

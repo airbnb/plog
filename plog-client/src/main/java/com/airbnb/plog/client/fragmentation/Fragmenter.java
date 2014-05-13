@@ -12,15 +12,28 @@ import java.nio.ByteOrder;
 import java.util.Collection;
 
 @Slf4j
-public class Fragmenter {
+public final class Fragmenter {
     public static final byte[] UDP_V0_FRAGMENT_PREFIX = new byte[]{0, 1};
     private static final int HEADER_SIZE = 24;
     private final int maxFragmentSizeExcludingHeader;
 
     public Fragmenter(int maxFragmentSize) {
         maxFragmentSizeExcludingHeader = maxFragmentSize - HEADER_SIZE;
-        if (maxFragmentSizeExcludingHeader < 1)
+        if (maxFragmentSizeExcludingHeader < 1) {
             throw new IllegalArgumentException("Fragment size < " + (HEADER_SIZE + 1));
+        }
+    }
+
+    private static void writeHeader(int messageIndex, int fragmentLength, int tagsBufferLength, int messageLength, int hash, int fragmentCount, int fragmentIdx, ByteBuf fragment) {
+        fragment.writeBytes(UDP_V0_FRAGMENT_PREFIX);
+        fragment.writeShort(fragmentCount);
+        fragment.writeShort(fragmentIdx);
+        fragment.writeShort(fragmentLength);
+        fragment.writeInt(messageIndex);
+        fragment.writeInt(messageLength);
+        fragment.writeInt(hash);
+        fragment.writeShort(tagsBufferLength);
+        fragment.writeZero(2);
     }
 
     public ByteBuf[] fragment(ByteBufAllocator alloc, byte[] payload, Collection<String> tags, int messageIndex) {
@@ -47,8 +60,9 @@ public class Fragmenter {
         final int tagsCount;
         if (tags != null && !tags.isEmpty()) {
             tagsCount = tags.size();
-            if (tagsCount > 1)
+            if (tagsCount > 1) {
                 tagsBufferLength += tagsCount - 1;
+            }
             tagBytes = new byte[tagsCount][];
             int tagIdx = 0;
             for (String tag : tags) {
@@ -58,9 +72,10 @@ public class Fragmenter {
                 tagIdx++;
             }
 
-            if (tagBytes.length > maxFragmentSizeExcludingHeader)
+            if (tagBytes.length > maxFragmentSizeExcludingHeader) {
                 throw new IllegalStateException("Cannot store " + tagBytes.length + " bytes of tags in " +
                         maxFragmentSizeExcludingHeader + " bytes max");
+            }
         } else {
             tagBytes = null;
             tagsCount = 0;
@@ -101,17 +116,5 @@ public class Fragmenter {
         fragments[fragmentCount - 1] = finalFragment;
 
         return fragments;
-    }
-
-    private static void writeHeader(int messageIndex, int fragmentLength, int tagsBufferLength, int messageLength, int hash, int fragmentCount, int fragmentIdx, ByteBuf fragment) {
-        fragment.writeBytes(UDP_V0_FRAGMENT_PREFIX);
-        fragment.writeShort(fragmentCount);
-        fragment.writeShort(fragmentIdx);
-        fragment.writeShort(fragmentLength);
-        fragment.writeInt(messageIndex);
-        fragment.writeInt(messageLength);
-        fragment.writeInt(hash);
-        fragment.writeShort(tagsBufferLength);
-        fragment.writeZero(2);
     }
 }

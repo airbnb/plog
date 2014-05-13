@@ -22,14 +22,16 @@ import java.nio.channels.DatagramChannel;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+@SuppressWarnings("CallToSystemExit")
 @Slf4j
-public class PlogStress {
+public final class PlogStress {
     private final MetricRegistry registry = new MetricRegistry();
 
     public static void main(String[] args) {
         new PlogStress().run(ConfigFactory.load());
     }
 
+    @SuppressWarnings("OverlyLongMethod")
     private void run(Config config) {
         System.err.println(
                 "      _\n" +
@@ -55,8 +57,9 @@ public class PlogStress {
 
         final int sizeDelta = maxSize - minSize;
         final int differentSizes = sizeDelta / sizeIncrements;
-        if (differentSizes == 0)
+        if (differentSizes == 0) {
             throw new RuntimeException("No sizes! Decrease plog.stress.size_increments");
+        }
 
         final int stopAfter = stressConfig.getInt("stop_after");
 
@@ -72,8 +75,9 @@ public class PlogStress {
 
         log.info("Generating {} different hashes", differentSizes);
         final int[] precomputedHashes = new int[differentSizes];
-        for (int i = 0; i < differentSizes; i++)
+        for (int i = 0; i < differentSizes; i++) {
             precomputedHashes[i] = Murmur3.hash32(randomMessage, 0, minSize + sizeIncrements * i, 0);
+        }
 
         final ByteBufAllocator allocator = new PooledByteBufAllocator();
 
@@ -96,15 +100,16 @@ public class PlogStress {
 
         for (int i = 0; i < threadCount; i++) {
             new Thread("stress_" + i) {
-                private DatagramChannel channel;
+                private DatagramChannel channel = null;
 
                 @Override
                 public void run() {
                     try {
                         for (int sent = 0; sent < stopAfter; sent++, messageMeter.mark()) {
                             if (sent % socketRenewRate == 0) {
-                                if (channel != null)
+                                if (channel != null) {
                                     channel.close();
+                                }
                                 channel = DatagramChannel.open();
                                 channel.socket().setSendBufferSize(bufferSize);
                                 socketMeter.mark();

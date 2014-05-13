@@ -10,14 +10,15 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-public class EaterProvider implements HandlerProvider {
+@SuppressWarnings("ClassOnlyUsedInOneModule")
+public final class EaterProvider implements HandlerProvider {
     @Override
     public Handler getHandler(Config config) throws Exception {
         return new Eater();
     }
 
     private static class Eater extends SimpleChannelInboundHandler<Message> implements Handler {
-        final AtomicLong counter = new AtomicLong();
+        private final AtomicLong counter = new AtomicLong();
 
         @Override
         public JsonObject getStats() {

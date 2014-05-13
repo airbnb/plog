@@ -6,7 +6,7 @@ import lombok.ToString;
 import java.net.InetSocketAddress;
 
 @ToString
-public class FourLetterCommand {
+public final class FourLetterCommand {
     public static final String PING = "PING";
     public static final String STAT = "STAT";
     public static final String KILL = "KILL";

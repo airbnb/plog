@@ -6,5 +6,5 @@ import io.netty.channel.ChannelHandler;
 public interface Handler extends ChannelHandler {
     public JsonObject getStats();
 
-    String getName();
+    public String getName();
 }

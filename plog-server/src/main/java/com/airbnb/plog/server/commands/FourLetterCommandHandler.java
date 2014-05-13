@@ -12,9 +12,10 @@ import io.netty.channel.socket.DatagramPacket;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@SuppressWarnings("CallToSystemExit")
 @Slf4j
 @RequiredArgsConstructor
-public class FourLetterCommandHandler extends SimpleChannelInboundHandler<FourLetterCommand> {
+public final class FourLetterCommandHandler extends SimpleChannelInboundHandler<FourLetterCommand> {
     private static final byte[] PONG_BYTES = "PONG".getBytes();
     private final SimpleStatisticsReporter stats;
     private final Config config;

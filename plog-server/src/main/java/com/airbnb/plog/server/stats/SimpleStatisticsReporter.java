@@ -49,8 +49,9 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
 
     private static JsonArray arrayForLogStats(AtomicLongArray data) {
         final JsonArray result = new JsonArray();
-        for (int i = 0; i < data.length(); i++)
+        for (int i = 0; i < data.length(); i++) {
             result.add(data.get(i));
+        }
         return result;
     }
 
@@ -59,8 +60,9 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         for (int packetCountLog = 0; packetCountLog <= Short.SIZE; packetCountLog++) {
             final JsonArray entry = new JsonArray();
             result.add(entry);
-            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++)
+            for (int packetIndexLog = 0; packetIndexLog <= packetCountLog; packetIndexLog++) {
                 entry.add(data.get(packetCountLog * (Short.SIZE + 1) + packetIndexLog));
+            }
         }
         return result;
     }
@@ -181,12 +183,13 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
     }
 
     private String getPlogVersion() {
-        if (MEMOIZED_PLOG_VERSION == null)
+        if (MEMOIZED_PLOG_VERSION == null) {
             try {
                 MEMOIZED_PLOG_VERSION = readVersionFromManifest();
             } catch (Throwable e) {
                 MEMOIZED_PLOG_VERSION = "unknown";
             }
+        }
         return MEMOIZED_PLOG_VERSION;
     }
 
@@ -197,17 +200,19 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
             final URL url = resources.nextElement();
             final Attributes mainAttributes = new Manifest(url.openStream()).getMainAttributes();
             final String version = mainAttributes.getValue("Plog-Version");
-            if (version != null)
+            if (version != null) {
                 return version;
+            }
         }
         throw new NoSuchFieldError();
     }
 
     public synchronized void withDefrag(Defragmenter defragmenter) {
-        if (this.defragmenter == null)
+        if (this.defragmenter == null) {
             this.defragmenter = defragmenter;
-        else
+        } else {
             throw new IllegalStateException("Defragmenter already provided!");
+        }
     }
 
     public synchronized void appendHandler(Handler handler) {

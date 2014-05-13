@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 @ChannelHandler.Sharable
 @Slf4j
 @RequiredArgsConstructor
-public class EndOfPipeline extends SimpleChannelInboundHandler<Object> {
+public final class EndOfPipeline extends SimpleChannelInboundHandler<Object> {
     // This makes me excrutiatingly sad
     private static final Pattern IGNORABLE_ERROR_MESSAGE = Pattern.compile(
             "^.*(?:connection.*(?:reset|closed|abort|broken)|broken.*pipe).*$",

@@ -11,9 +11,9 @@ import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RequiredArgsConstructor
-public class ConsoleOutputHandler extends SimpleChannelInboundHandler<Message> implements Handler {
-    final PrintStream target;
-    final AtomicLong logged = new AtomicLong();
+public final class ConsoleOutputHandler extends SimpleChannelInboundHandler<Message> implements Handler {
+    private final PrintStream target;
+    private final AtomicLong logged = new AtomicLong();
 
     @Override
     protected final void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
