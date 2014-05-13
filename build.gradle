@@ -25,6 +25,8 @@ subprojects {
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'bintray'
+    apply plugin: 'cobertura'
+    apply plugin: 'coveralls'
 
     version = rootProject.ext.gitVersion
 
@@ -61,6 +63,8 @@ subprojects {
         from sourceSets.main.allJava
     }
 
+    cobertura.coverageFormats = ['html', 'xml']
+
     publishing.publications {
         mavenJava(MavenPublication) {
             from components.java
@@ -86,10 +90,13 @@ subprojects {
         mavenLocal()
         jcenter()
     }
-
 }
 
 buildscript {
     repositories { jcenter() }
-    dependencies { classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3' }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3'
+        classpath 'net.saliman:gradle-cobertura-plugin:2.2.4'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:0.2.5'
+    }
 }
