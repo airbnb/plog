@@ -14,7 +14,7 @@ class UDPListenerTest extends GroovyTestCase {
     private void runTest(Map config, Closure test, byte[] payloadExpectation, Collection<String> tagExpectation = []) {
         final compiledConfig = ConfigFactory.parseMap(config).withFallback(defaultUDPConfig)
         final listener = new UDPListener(compiledConfig)
-        listener.start().await()
+        listener.startAsync().awaitRunning()
 
         test.run()
 
@@ -30,7 +30,7 @@ class UDPListenerTest extends GroovyTestCase {
         assert grabbed.asBytes() == payloadExpectation
         grabbed.release()
 
-        listener.group.shutdownGracefully().await()
+        listener.stopAsync().awaitTerminated()
     }
 
     void testMultipleHandlers() {

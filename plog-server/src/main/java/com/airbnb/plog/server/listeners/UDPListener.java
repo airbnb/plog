@@ -1,8 +1,8 @@
 package com.airbnb.plog.server.listeners;
 
-import com.airbnb.plog.server.pipeline.ProtocolDecoder;
 import com.airbnb.plog.server.commands.FourLetterCommandHandler;
 import com.airbnb.plog.server.fragmentation.Defragmenter;
+import com.airbnb.plog.server.pipeline.ProtocolDecoder;
 import com.airbnb.plog.server.stats.SimpleStatisticsReporter;
 import com.typesafe.config.Config;
 import io.netty.bootstrap.Bootstrap;
@@ -14,7 +14,6 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import lombok.Getter;
 
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,7 +26,7 @@ public class UDPListener extends Listener {
     }
 
     @Override
-    public ChannelFuture start() {
+    protected StartReturn start() {
         final Config config = getConfig();
 
         final SimpleStatisticsReporter stats = getStats();
@@ -42,7 +41,7 @@ public class UDPListener extends Listener {
         final ExecutorService threadPool =
                 Executors.newFixedThreadPool(config.getInt("threads"));
 
-        return new Bootstrap()
+        final ChannelFuture bindFuture = new Bootstrap()
                 .group(group)
                 .channel(NioDatagramChannel.class)
                 .option(ChannelOption.SO_REUSEADDR, true)
@@ -78,5 +77,7 @@ public class UDPListener extends Listener {
                     }
                 })
                 .bind(new InetSocketAddress(config.getString("host"), config.getInt("port")));
+
+        return new StartReturn(bindFuture, group);
     }
 }

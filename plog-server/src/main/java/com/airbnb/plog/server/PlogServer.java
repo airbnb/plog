@@ -2,11 +2,16 @@ package com.airbnb.plog.server;
 
 import com.airbnb.plog.server.listeners.TCPListener;
 import com.airbnb.plog.server.listeners.UDPListener;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.ServiceManager;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class PlogServer {
@@ -24,15 +29,7 @@ public class PlogServer {
     }
 
     private void run(Config config) {
-        final ChannelFutureListener futureListener = new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                if (channelFuture.isDone() && !channelFuture.isSuccess()) {
-                    log.error("Channel failure", channelFuture.cause());
-                    System.exit(1);
-                }
-            }
-        };
+        log.info("Starting with config {}", config);
 
         final Config plogServer = config.getConfig("plog.server");
 
@@ -44,12 +41,43 @@ public class PlogServer {
         final Config tcpConfig = plogServer.getConfig("tcp");
         final Config tcpDefaults = tcpConfig.getConfig("defaults").withFallback(globalDefaults);
 
+        final ArrayList<Service> services = Lists.newArrayList();
+
         for (final Config cfg : udpConfig.getConfigList("listeners"))
-            new UDPListener(cfg.withFallback(udpDefaults)).start().addListener(futureListener);
+            services.add(new UDPListener(cfg.withFallback(udpDefaults)));
 
         for (final Config cfg : tcpConfig.getConfigList("listeners"))
-            new TCPListener(cfg.withFallback(tcpDefaults)).start().addListener(futureListener);
+            services.add(new TCPListener(cfg.withFallback(tcpDefaults)));
 
-        log.info("Started with config {}", config);
+        final long shutdownTime = plogServer.getDuration("shutdown_time", TimeUnit.MILLISECONDS);
+
+        final ServiceManager manager = new ServiceManager(services);
+        manager.addListener(new ServiceManager.Listener() {
+            @Override
+            public void healthy() {
+                log.info("All listeners started!");
+            }
+
+            @Override
+            public void failure(Service service) {
+                log.error("Failure for listener {}", service);
+                System.exit(1);
+            }
+        });
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                log.info("Shutting down...");
+                try {
+                    manager.stopAsync().awaitStopped(shutdownTime, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException e) {
+                    log.warn("Did not shut down gracefully after {}ms!", shutdownTime, e);
+                    System.exit(2);
+                }
+            }
+        });
+
+        manager.startAsync();
     }
 }

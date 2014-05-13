@@ -20,11 +20,12 @@ public class TCPListener extends Listener {
     }
 
     @Override
-    public ChannelFuture start() {
+    protected StartReturn start() {
         final Config config = getConfig();
 
-        return new ServerBootstrap()
-                .group(new NioEventLoopGroup())
+        final NioEventLoopGroup group = new NioEventLoopGroup();
+        final ChannelFuture bindFuture = new ServerBootstrap()
+                .group(group)
                 .channel(NioServerSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_REUSEADDR, true)
@@ -40,5 +41,6 @@ public class TCPListener extends Listener {
                         finalizePipeline(pipeline);
                     }
                 }).bind(new InetSocketAddress(config.getString("host"), config.getInt("port")));
+        return new StartReturn(bindFuture, group);
     }
 }
