@@ -86,7 +86,6 @@ subprojects {
         mavenLocal()
         jcenter()
     }
-
 }
 
 buildscript {
