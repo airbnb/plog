@@ -3,11 +3,13 @@ package com.airbnb.plog.server.packetloss;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 
 @Slf4j
+@ToString
 final class PortHoleDetector {
     @Getter(AccessLevel.PACKAGE)
     private final int[] entries;
@@ -30,8 +32,8 @@ final class PortHoleDetector {
         if (value != null) {
             log.info("Resetting {} for {}", this.entries, value);
         }
-        minSeen = Long.MAX_VALUE;
-        maxSeen = Long.MIN_VALUE;
+        this.minSeen = Long.MAX_VALUE;
+        this.maxSeen = Long.MIN_VALUE;
         Arrays.fill(this.entries, Integer.MIN_VALUE);
     }
 
@@ -44,7 +46,7 @@ final class PortHoleDetector {
      * between the previously smallest and newly smallest entry
      */
     @SuppressWarnings("OverlyLongMethod")
-    int ensurePresent(int candidate, int maxHole) {
+    final int ensurePresent(int candidate, int maxHole) {
         if (maxHole < 1) {
             throw new MaxHoleTooSmall(maxHole);
         }
@@ -107,19 +109,22 @@ final class PortHoleDetector {
         if (hole > 0) {
             if (hole <= maxHole) {
                 log.info("Pushed out hole between {} and {}", purgedOut, newFirst);
+                debugState();
                 return hole;
             } else {
                 log.info("Pushed out and ignored hole between {} and {}", purgedOut, newFirst);
+                debugState();
                 return 0;
             }
         } else if (hole < 0) {
-            log.warn("Negative hole pushed out between {} and {} ({})",
-                    purgedOut, newFirst, this.entries);
+            log.warn("Negative hole pushed out between {} and {}",
+                    purgedOut, newFirst);
+            debugState();
         }
         return 0;
     }
 
-    int countTotalHoles(int maxHole) {
+    final int countTotalHoles(int maxHole) {
         if (maxHole < 1) {
             throw new MaxHoleTooSmall(maxHole);
         }
@@ -138,18 +143,25 @@ final class PortHoleDetector {
                 final long hole = next - current - 1;
                 if (hole > 0) {
                     if (hole <= maxHole) {
-                        log.info("Scanned hole between {} and {}", hole, current, next);
+                        log.info("Scanned hole {} between {} and {}", hole, current, next);
+                        debugState();
                         holes += hole;
                     } else {
-                        log.info("Scanned and ignored hole between {} and {}", current, next);
+                        log.info("Scanned and ignored hole {} between {} and {}", hole, current, next);
+                        debugState();
                     }
                 } else if (hole < 0) {
-                    log.warn("Scanned through negative hole between {} and {} ({})",
-                            current, next, this.entries);
+                    log.warn("Scanned through negative hole {} between {} and {}",
+                            hole, current, next);
+                    debugState();
                 }
             }
         }
         return holes;
+    }
+
+    final void debugState() {
+        log.debug("Current state: {}", this);
     }
 
     @RequiredArgsConstructor
