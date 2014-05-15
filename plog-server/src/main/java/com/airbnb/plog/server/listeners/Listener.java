@@ -34,6 +34,8 @@ abstract class Listener extends AbstractService {
     void finalizePipeline(ChannelPipeline pipeline)
             throws Exception {
 
+        int i = 0;
+
         for (Config handlerConfig : config.getConfigList("handlers")) {
             final String providerName = handlerConfig.getString("provider");
             log.debug("Loading provider for {}", providerName);
@@ -43,8 +45,10 @@ abstract class Listener extends AbstractService {
             final HandlerProvider provider = (HandlerProvider) providerConstructor.newInstance();
             final Handler handler = provider.getHandler(handlerConfig);
 
-            pipeline.addLast(handler.getName(), handler);
+            pipeline.addLast(i + ':' + handler.getName(), handler);
             stats.appendHandler(handler);
+
+            i++;
         }
 
         pipeline.addLast(eopHandler);
