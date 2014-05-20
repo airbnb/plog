@@ -42,11 +42,11 @@ public final class Murmur3 {
         int k = 0;
         switch (length & 3) {
             case 3:
-                k = ordered.getByte(end4 + 2) << 16;
+                k = (ordered.getByte(end4 + 2) & 0xff) << 16;
             case 2:
-                k |= ordered.getByte(end4 + 1) << 8;
+                k |= (ordered.getByte(end4 + 1) & 0xff) << 8;
             case 1:
-                k |= ordered.getByte(end4);
+                k |= ordered.getByte(end4) & 0xff;
 
                 k *= C1;
                 k = (k << 15) | (k >>> 17);
