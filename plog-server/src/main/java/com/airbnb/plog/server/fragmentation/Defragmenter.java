@@ -89,43 +89,47 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
                 this.stats.receivedV0InvalidChecksum(1);
             }
         } else {
-            // 2 fragments or more
-            final long msgId = fragment.getMsgId();
-            final boolean[] isNew = {false};
-            final boolean complete;
+            handleMultiFragment(fragment, out);
+        }
+    }
 
-            final FragmentedMessage message = incompleteMessages.get(msgId, new Callable<FragmentedMessage>() {
-                @Override
-                public FragmentedMessage call() throws Exception {
-                    isNew[0] = true;
+    private void handleMultiFragment(final Fragment fragment, List<Object> out) throws java.util.concurrent.ExecutionException {
+        // 2 fragments or more
+        final long msgId = fragment.getMsgId();
+        final boolean[] isNew = {false};
+        final boolean complete;
 
-                    if (detector != null) {
-                        detector.reportNewMessage(fragment.getMsgId());
-                    }
+        final FragmentedMessage message = incompleteMessages.get(msgId, new Callable<FragmentedMessage>() {
+            @Override
+            public FragmentedMessage call() throws Exception {
+                isNew[0] = true;
 
-                    return FragmentedMessage.fromFragment(fragment, Defragmenter.this.stats);
+                if (detector != null) {
+                    detector.reportNewMessage(fragment.getMsgId());
                 }
-            });
 
-            if (isNew[0]) {
-                complete = false; // new 2+ fragments, so cannot be complete
-            } else {
-                message.ingestFragment(fragment, this.stats);
-                complete = message.isComplete();
+                return FragmentedMessage.fromFragment(fragment, Defragmenter.this.stats);
             }
+        });
 
-            if (complete) {
-                incompleteMessages.invalidate(fragment.getMsgId());
+        if (isNew[0]) {
+            complete = false; // new 2+ fragments, so cannot be complete
+        } else {
+            message.ingestFragment(fragment, this.stats);
+            complete = message.isComplete();
+        }
 
-                final ByteBuf payload = message.getPayload();
+        if (complete) {
+            incompleteMessages.invalidate(fragment.getMsgId());
 
-                if (Murmur3.hash32(payload) == message.getChecksum()) {
-                    out.add(new MessageImpl(payload, message.getTags()));
-                    this.stats.receivedV0MultipartMessage();
-                } else {
-                    message.release();
-                    this.stats.receivedV0InvalidChecksum(message.getFragmentCount());
-                }
+            final ByteBuf payload = message.getPayload();
+
+            if (Murmur3.hash32(payload) == message.getChecksum()) {
+                out.add(new MessageImpl(payload, message.getTags()));
+                this.stats.receivedV0MultipartMessage();
+            } else {
+                message.release();
+                this.stats.receivedV0InvalidChecksum(message.getFragmentCount());
             }
         }
     }
