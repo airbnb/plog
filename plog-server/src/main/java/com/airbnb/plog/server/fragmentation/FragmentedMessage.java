@@ -51,7 +51,7 @@ public final class FragmentedMessage extends DefaultByteBufHolder implements Tag
         return msg;
     }
 
-    public final void ingestFragment(final Fragment fragment, StatisticsReporter stats) {
+    public final boolean ingestFragment(final Fragment fragment, StatisticsReporter stats) {
         final int fragmentSize = fragment.getFragmentSize();
         final int fragmentCount = fragment.getFragmentCount();
         final int msgHash = fragment.getMsgHash();
@@ -76,21 +76,26 @@ public final class FragmentedMessage extends DefaultByteBufHolder implements Tag
                 !validFragmentLength) {
             log.warn("Invalid {} for {}", fragment, this);
             stats.receivedV0InvalidMultipartFragment(fragmentIndex, this.getFragmentCount());
-            return;
+            return false;
         }
 
         if (fragmentTagsBuffer != null) {
             this.tags = fragment.getTags();
         }
 
+        boolean justCompleted = false;
+
         // valid fragment
         synchronized (receivedFragments) {
             receivedFragments.set(fragmentIndex);
             if (receivedFragments.cardinality() == this.fragmentCount) {
+                justCompleted = true;
                 this.complete = true;
             }
         }
         content().setBytes(foffset, fragmentPayload, 0, lengthOfCurrentFragment);
+
+        return justCompleted;
     }
 
     public final ByteBuf getPayload() {

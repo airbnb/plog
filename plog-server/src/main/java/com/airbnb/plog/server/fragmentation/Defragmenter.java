@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -21,7 +22,7 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
     private final Cache<Long, FragmentedMessage> incompleteMessages;
     private final ListenerHoleDetector detector;
 
-    public Defragmenter(final StatisticsReporter statisticsReporter, Config config) {
+    public Defragmenter(final StatisticsReporter statisticsReporter, final Config config) {
         this.stats = statisticsReporter;
 
         final Config holeConfig = config.getConfig("detect_holes");
@@ -70,7 +71,8 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, Fragment fragment, List<Object> out) throws Exception {
+    protected void decode(final ChannelHandlerContext ctx, final Fragment fragment, final List<Object> out)
+            throws Exception {
         if (fragment.isAlone()) {
             if (detector != null) {
                 detector.reportNewMessage(fragment.getMsgId());
@@ -87,42 +89,46 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
                 this.stats.receivedV0InvalidChecksum(1);
             }
         } else {
-            // 2 fragments or more
+            handleMultiFragment(fragment, out);
+        }
+    }
 
-            final long msgId = fragment.getMsgId();
-            final FragmentedMessage message;
-            final boolean complete;
+    private void handleMultiFragment(final Fragment fragment, List<Object> out) throws java.util.concurrent.ExecutionException {
+        // 2 fragments or more
+        final long msgId = fragment.getMsgId();
+        final boolean[] isNew = {false};
+        final boolean complete;
 
-            synchronized (incompleteMessages) {
-                final FragmentedMessage fromMap = incompleteMessages.getIfPresent(msgId);
-                if (fromMap == null) {
-                    complete = false;
-                    message = FragmentedMessage.fromFragment(fragment, this.stats);
+        final FragmentedMessage message = incompleteMessages.get(msgId, new Callable<FragmentedMessage>() {
+            @Override
+            public FragmentedMessage call() throws Exception {
+                isNew[0] = true;
 
-                    if (detector != null) {
-                        detector.reportNewMessage(fragment.getMsgId());
-                    }
-
-                    incompleteMessages.put(msgId, message);
-                } else {
-                    message = fromMap;
-                    message.ingestFragment(fragment, this.stats);
-                    complete = message.isComplete();
+                if (detector != null) {
+                    detector.reportNewMessage(fragment.getMsgId());
                 }
+
+                return FragmentedMessage.fromFragment(fragment, Defragmenter.this.stats);
             }
+        });
 
-            if (complete) {
-                incompleteMessages.invalidate(fragment.getMsgId());
+        if (isNew[0]) {
+            complete = false; // new 2+ fragments, so cannot be complete
+        } else {
+            complete = message.ingestFragment(fragment, this.stats);
+        }
 
-                final ByteBuf payload = message.getPayload();
+        if (complete) {
+            incompleteMessages.invalidate(fragment.getMsgId());
 
-                if (Murmur3.hash32(payload) == message.getChecksum()) {
-                    out.add(new MessageImpl(payload, message.getTags()));
-                    this.stats.receivedV0MultipartMessage();
-                } else {
-                    message.release();
-                    this.stats.receivedV0InvalidChecksum(message.getFragmentCount());
-                }
+            final ByteBuf payload = message.getPayload();
+
+            if (Murmur3.hash32(payload) == message.getChecksum()) {
+                out.add(new MessageImpl(payload, message.getTags()));
+                this.stats.receivedV0MultipartMessage();
+            } else {
+                message.release();
+                this.stats.receivedV0InvalidChecksum(message.getFragmentCount());
             }
         }
     }
