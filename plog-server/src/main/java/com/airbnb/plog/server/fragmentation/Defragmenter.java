@@ -115,8 +115,7 @@ public final class Defragmenter extends MessageToMessageDecoder<Fragment> {
         if (isNew[0]) {
             complete = false; // new 2+ fragments, so cannot be complete
         } else {
-            message.ingestFragment(fragment, this.stats);
-            complete = message.isComplete();
+            complete = message.ingestFragment(fragment, this.stats);
         }
 
         if (complete) {
