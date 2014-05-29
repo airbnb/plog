@@ -48,7 +48,7 @@ public final class MessageImpl extends DefaultByteBufHolder implements Message {
 
     @Override
     public final String toString() {
-        if (tags == null) {
+        if (tags == null || tags.isEmpty()) {
             return new String(asBytes());
         } else {
             final String tagList = Joiner.on(',').join(tags);

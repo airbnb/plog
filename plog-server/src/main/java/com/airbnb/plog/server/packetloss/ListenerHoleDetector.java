@@ -18,7 +18,7 @@ public final class ListenerHoleDetector {
         final int portDetectorCapacity = config.getInt("ids_per_port");
         maximumHole = config.getInt("maximum_hole");
 
-        this.cache = CacheBuilder.<Integer, PortHoleDetector>newBuilder()
+        this.cache = CacheBuilder.newBuilder()
                 .maximumSize(config.getLong("ports"))
                 .expireAfterAccess(
                         config.getDuration("expire_time", TimeUnit.MILLISECONDS),
