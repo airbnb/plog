@@ -1,9 +1,6 @@
 ---
 language: java
 
-env:
-  - TERM=dumb
-
 jdk:
   - openjdk6
   - openjdk7
@@ -11,5 +8,6 @@ jdk:
   - oraclejdk8
 
 script:
-  - ./gradlew check --info
+  - TERM=dumb ./gradlew check --info
+  - TERM=dumb ./gradlew shadowJar --info
   - python -m py_compile third-party/datadog/plog.py

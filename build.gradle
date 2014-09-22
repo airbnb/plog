@@ -1,94 +1,101 @@
-apply plugin: 'wrapper'
-apply plugin: 'idea'
-
-idea.module {
-    downloadJavadoc = true
-    downloadSources = true
+plugins {
+  id 'wrapper'
+  id 'idea'
+  id 'com.jfrog.bintray' version '1.1'
+  id 'com.github.ben-manes.versions' version '0.8'
 }
 
 ext {
-    gitVersion = new ByteArrayOutputStream().with { out ->
-        exec {
-            commandLine 'git', 'describe', '--tags', '--dirty'
-            standardOutput = out
-        }
-        final full = out.toString().trim()
-
-        // 'v1.0' -> '1.0', 'vendetta' -> 'vendetta'
-        full ==~ /v\d.*/ ? full.substring(1) : full
+  gitVersion = new ByteArrayOutputStream().with { out ->
+    exec {
+      commandLine 'git', 'describe', '--tags', '--dirty'
+      standardOutput = out
     }
+    final full = out.toString().trim()
+
+    // 'v1.0' -> '1.0', 'vendetta' -> 'vendetta'
+    full ==~ /v\d.*/ ? full.substring(1) : full
+  }
 }
 
-subprojects {
-    apply plugin: 'project-report'
-    apply plugin: 'groovy'
-    apply plugin: 'maven'
-    apply plugin: 'maven-publish'
-    apply plugin: 'bintray'
-
-    version = rootProject.ext.gitVersion
-
-    sourceCompatibility = 1.6
-    targetCompatibility = 1.6
-
-    group = 'com.airbnb.plog'
-
-    ext {
-        nettyVersion = '4.0.19.Final'
-        slf4jVersion = '1.7.7'
-        metricsVersion = '3.0.2'
-    }
-
-    dependencies {
-        compile 'org.projectlombok:lombok:1.12.6'
-        compile 'com.google.guava:guava:17.0'
-        compile 'com.google.code.findbugs:jsr305:2.0.3' // used by guava concurrent APIs
-        compile 'com.typesafe:config:1.2.0'
-        compile 'com.eclipsesource.minimal-json:minimal-json:0.9.1'
-        compile "io.netty:netty-codec:${nettyVersion}"
-        compile "io.netty:netty-handler:${nettyVersion}"
-        compile "org.slf4j:slf4j-api:${slf4jVersion}"
-
-        testCompile 'org.codehaus.groovy:groovy-all:2.2.2'
-        testCompile 'junit:junit:4.11'
-    }
-
-    task cp << {
-        println project.sourceSets.test.runtimeClasspath.asPath
-    }
-
-    task sourcesJar(type: Jar) {
-        from sourceSets.main.allJava
-    }
-
-    publishing.publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar { classifier 'sources' }
-        }
-    }
-
-    bintray {
-        user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : null
-        key  = project.hasProperty('bintrayKey')  ? project.getProperty('bintrayKey')  : null
-
-        publications = ['mavenJava']
-
-        pkg {
-            userOrg = 'airbnb'
-            repo = 'jars'
-            name = 'plog'
-            licenses = ['Apache-2.0']
-        }
-    }
-
-    repositories {
-        mavenLocal()
-        jcenter()
-    }
+idea.project.ipr.withXml {
+    def compilerConfig = it.asNode().component.find { it.'@name' == 'CompilerConfiguration' }
+    compilerConfig.annotationProcessing[0].'@enabled' = 'true'
 }
 
-buildscript {
-    repositories { jcenter() }
-    dependencies { classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3' }
+allprojects {
+  apply plugin: 'project-report'
+  apply plugin: 'groovy'
+  apply plugin: 'maven'
+  apply plugin: 'maven-publish'
+  apply plugin: 'com.jfrog.bintray'
+
+  version = rootProject.ext.gitVersion
+
+  sourceCompatibility = 1.6
+  targetCompatibility = 1.6
+
+  group = 'com.airbnb.plog'
+
+  ext {
+    nettyVersion = '4.0.24.Final'
+    slf4jVersion = '1.7.10'
+    metricsVersion = '3.0.2'
+  }
+
+  configurations {
+    provided
+    compile.extendsFrom provided
+  }
+
+  dependencies {
+    provided 'org.projectlombok:lombok:1.16.2'
+    compile 'com.google.guava:guava:18.0'
+    compile 'com.google.code.findbugs:jsr305:3.0.0' // used by guava concurrent APIs
+    compile 'com.typesafe:config:1.2.1'
+    compile 'com.eclipsesource.minimal-json:minimal-json:0.9.2'
+    compile "io.netty:netty-codec:${nettyVersion}"
+    compile "io.netty:netty-handler:${nettyVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+
+    testCompile 'org.codehaus.groovy:groovy-all:2.4.1'
+    testCompile 'junit:junit:4.12'
+  }
+
+  sourceSets.main.compileClasspath += [configurations.provided]
+
+  task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+  }
+
+  publishing.publications {
+    mavenJava(MavenPublication) {
+      from components.java
+      artifact sourcesJar { classifier 'sources' }
+    }
+  }
+
+  bintray {
+    user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : null
+    key  = project.hasProperty('bintrayKey')  ? project.getProperty('bintrayKey')  : null
+
+    publications = ['mavenJava']
+
+    pkg {
+      userOrg = 'airbnb'
+      repo = 'jars'
+      name = 'plog'
+      licenses = ['Apache-2.0']
+    }
+  }
+
+  repositories {
+    mavenLocal()
+    jcenter()
+  }
+
+  idea.module {
+    downloadJavadoc = true
+    downloadSources = true
+  }
 }

@@ -49,7 +49,7 @@ Note that multiple TCP and UDP ports can be configure and have separate settings
 ## Building a fat JAR
 
     $ ./gradlew shadowJar
-    $ ls -l plog-distro/build/distributions/*.jar
+    $ ls -l plog-distro/build/libs/*-all.jar
 
 ## Operational tricks
 
