@@ -76,7 +76,7 @@ public final class PlogServer {
                     manager.stopAsync().awaitStopped(shutdownTime, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException e) {
                     log.warn("Did not shut down gracefully after {}ms!", shutdownTime, e);
-                    System.exit(2);
+                    Runtime.getRuntime().halt(2);
                 }
             }
         });
