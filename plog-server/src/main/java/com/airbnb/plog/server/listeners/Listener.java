@@ -88,10 +88,9 @@ abstract class Listener extends AbstractService {
                 if (future.isSuccess()) {
                     notifyStopped();
                 } else {
-                    final Throwable failure = future.cause();
-                    if (failure != null) {
-                        log.error("Shutdown failed", failure);
-                    }
+                    Throwable failure = new Exception("Netty event loop did not shutdown properly", future.cause());
+                    log.error("Shutdown failed", failure);
+                    notifyFailed(failure);
                 }
             }
         });
