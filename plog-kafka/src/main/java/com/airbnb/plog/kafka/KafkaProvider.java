@@ -3,6 +3,7 @@ package com.airbnb.plog.kafka;
 import com.airbnb.plog.handlers.Handler;
 import com.airbnb.plog.handlers.HandlerProvider;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigValue;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.ProducerConfig;
@@ -20,6 +21,10 @@ public final class KafkaProvider implements HandlerProvider {
     @Override
     public Handler getHandler(Config config) throws Exception {
         final String defaultTopic = config.getString("default_topic");
+        boolean propagate = false;
+        try {
+            propagate = config.getBoolean("propagate");
+        } catch (ConfigException.Missing ignored) {}
 
         if ("null".equals(defaultTopic)) {
             log.warn("default topic is \"null\"; messages will be discarded unless tagged with kt:");
@@ -41,6 +46,6 @@ public final class KafkaProvider implements HandlerProvider {
         final ProducerConfig producerConfig = new ProducerConfig(properties);
         final Producer<byte[], byte[]> producer = new Producer<byte[], byte[]>(producerConfig);
 
-        return new KafkaHandler(clientId, defaultTopic, producer);
+        return new KafkaHandler(clientId, propagate, defaultTopic, producer);
     }
 }
