@@ -18,13 +18,16 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public final class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     private final String defaultTopic;
+    private final boolean propagate;
     private final Producer<byte[], byte[]> producer;
     private final AtomicLong failedToSendMessageExceptions = new AtomicLong(), seenMessages = new AtomicLong();
     private final ProducerStats producerStats;
     private final ProducerTopicMetrics producerAllTopicsStats;
 
-    protected KafkaHandler(final String clientId, final String defaultTopic, final Producer<byte[], byte[]> producer) {
+    protected KafkaHandler(final String clientId, final boolean propagate, final String defaultTopic,
+                           final Producer<byte[], byte[]> producer) {
         super();
+        this.propagate = propagate;
         this.producerStats = ProducerStatsRegistry.getProducerStats(clientId);
         this.producerAllTopicsStats = ProducerTopicStatsRegistry.getProducerTopicStats(clientId).getProducerAllTopicsStats();
         this.defaultTopic = defaultTopic;
@@ -56,6 +59,11 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
 
         if (!sawKtTag) {
             sendOrReportFailure(defaultTopic, payload);
+        }
+
+        if (propagate) {
+            msg.retain();
+            ctx.fireChannelRead(msg);
         }
     }
 
