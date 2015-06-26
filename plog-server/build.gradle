@@ -1,14 +1,14 @@
 dependencies {
-    compile project(':plog-api')
-    compile project(':plog-common')
+  compile project(':plog-api')
+  compile project(':plog-common')
 
-    testCompile project(':plog-console')
-    testCompile 'ch.qos.logback:logback-classic:1.1.2'
+  testCompile project(':plog-console')
+  testCompile 'ch.qos.logback:logback-classic:1.1.2'
 }
 
 test {
-    // gradle screws up SLF4J for that test. Use IntelliJ :)
-    exclude 'com/airbnb/plog/EndOfPipeline*'
+  // gradle screws up SLF4J for that test. Use IntelliJ :)
+  exclude 'com/airbnb/plog/EndOfPipeline*'
 
-    systemProperty 'io.netty.leakDetectionLevel', 'paranoid'
+  systemProperty 'io.netty.leakDetectionLevel', 'paranoid'
 }

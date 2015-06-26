@@ -1,12 +1,10 @@
 dependencies {
-    compile project(':plog-api')
-
-    compile('org.apache.kafka:kafka_2.10:0.8.1') {
-        exclude module: 'zookeeper'
-        exclude module: 'zkclient'
-        exclude module: 'jmxri'
-        exclude module: 'jmxtools'
-        exclude module: 'slf4j-simple'
-    }
-    compile 'org.xerial.snappy:snappy-java:1.1.0.1'
+  compile project(':plog-api')
+  compile('org.apache.kafka:kafka_2.10:0.8.2.0') {
+    exclude module: 'zookeeper'
+    exclude module: 'zkclient'
+    exclude module: 'jmxri'
+    exclude module: 'jmxtools'
+    exclude module: 'slf4j-simple'
+  }
 }
