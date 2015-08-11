@@ -18,6 +18,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class KafkaProvider implements HandlerProvider {
     private final static AtomicInteger clientId = new AtomicInteger();
 
+    static class EncryptionConfig {
+        public String encryptionKey;
+        public String encryptionAlgorithm;
+        public String encryptionTransformation;
+        public String encryptionProvider;
+    }
+
     @Override
     public Handler getHandler(Config config) throws Exception {
         final String defaultTopic = config.getString("default_topic");
@@ -46,6 +53,17 @@ public final class KafkaProvider implements HandlerProvider {
         final ProducerConfig producerConfig = new ProducerConfig(properties);
         final Producer<byte[], byte[]> producer = new Producer<byte[], byte[]>(producerConfig);
 
-        return new KafkaHandler(clientId, propagate, defaultTopic, producer);
+        EncryptionConfig encryptionConfig = new EncryptionConfig();
+        try {
+            Config encryption = config.getConfig("encryption");
+            encryptionConfig.encryptionKey = encryption.getString("key");
+            encryptionConfig.encryptionAlgorithm = encryption.getString("algorithm");
+            encryptionConfig.encryptionTransformation = encryption.getString("transformation");
+            encryptionConfig.encryptionProvider = encryption.getString("provider");
+        } catch (ConfigException.Missing ignored) {
+            encryptionConfig = null;
+        }
+
+        return new KafkaHandler(clientId, propagate, defaultTopic, producer, encryptionConfig);
     }
 }

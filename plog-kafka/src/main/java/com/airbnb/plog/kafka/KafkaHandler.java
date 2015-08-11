@@ -1,5 +1,6 @@
 package com.airbnb.plog.kafka;
 
+import com.airbnb.plog.kafka.KafkaProvider.EncryptionConfig;
 import com.airbnb.plog.Message;
 import com.airbnb.plog.handlers.Handler;
 import com.eclipsesource.json.JsonObject;
@@ -12,7 +13,11 @@ import kafka.producer.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.ByteArrayOutputStream;
 import java.util.concurrent.atomic.AtomicLong;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -23,15 +28,35 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
     private final AtomicLong failedToSendMessageExceptions = new AtomicLong(), seenMessages = new AtomicLong();
     private final ProducerStats producerStats;
     private final ProducerTopicMetrics producerAllTopicsStats;
+    private final EncryptionConfig encryptionConfig;
+    private SecretKeySpec keySpec = null;
 
-    protected KafkaHandler(final String clientId, final boolean propagate, final String defaultTopic,
-                           final Producer<byte[], byte[]> producer) {
+    protected KafkaHandler(
+            final String clientId,
+            final boolean propagate,
+            final String defaultTopic,
+            final Producer<byte[], byte[]> producer,
+            final EncryptionConfig encryptionConfig) {
+
         super();
         this.propagate = propagate;
         this.producerStats = ProducerStatsRegistry.getProducerStats(clientId);
-        this.producerAllTopicsStats = ProducerTopicStatsRegistry.getProducerTopicStats(clientId).getProducerAllTopicsStats();
+        this.producerAllTopicsStats =
+            ProducerTopicStatsRegistry.getProducerTopicStats(clientId).getProducerAllTopicsStats();
         this.defaultTopic = defaultTopic;
         this.producer = producer;
+        this.encryptionConfig = encryptionConfig;
+
+        if (encryptionConfig != null) {
+            final byte[] keyBytes = encryptionConfig.encryptionKey.getBytes();
+            keySpec = new SecretKeySpec(keyBytes, encryptionConfig.encryptionAlgorithm);
+            log.info("KafkaHandler start with encryption algorithm '"
+                + encryptionConfig.encryptionAlgorithm + "' transformation '"
+                + encryptionConfig.encryptionTransformation + "' provider '"
+                + encryptionConfig.encryptionProvider + "'.");
+        } else {
+            log.info("KafkaHandler start without encryption.");
+        }
     }
 
     private static JsonObject meterToJsonObject(Meter meter) {
@@ -46,7 +71,14 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
         seenMessages.incrementAndGet();
-        final byte[] payload = msg.asBytes();
+        byte[] payload = msg.asBytes();
+        if (encryptionConfig != null) {
+            try {
+                payload = encrypt(payload);
+            } catch (Exception e) {
+                log.error("Fail to encrypt message: ", e.getMessage());
+            }
+        }
 
         boolean sawKtTag = false;
 
@@ -67,7 +99,7 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         }
     }
 
-    private boolean sendOrReportFailure(String topic, byte[] msg) {
+    private boolean sendOrReportFailure(String topic, final byte[] msg) {
         final boolean nonNullTopic = !("null".equals(topic));
         if (nonNullTopic) {
             try {
@@ -80,7 +112,19 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         return nonNullTopic;
     }
 
-    @Override
+    private byte[] encrypt(final byte[] plaintext) throws Exception {
+        Cipher cipher = Cipher.getInstance(
+            encryptionConfig.encryptionTransformation,encryptionConfig.encryptionProvider);
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        // IV size is the same as a block size and cipher dependent.
+        // This can be derived from consumer side by calling `cipher.getBlockSize()`.
+        outputStream.write(cipher.getIV());
+        outputStream.write(cipher.doFinal(plaintext));
+        return outputStream.toByteArray();
+    }
+
+  @Override
     public JsonObject getStats() {
         return new JsonObject()
                 .add("default_topic", defaultTopic)
