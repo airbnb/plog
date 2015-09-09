@@ -1,6 +1,6 @@
 dependencies {
   compile project(':plog-api')
-  compile('org.apache.kafka:kafka_2.10:0.8.2.0') {
+  compile('org.apache.kafka:kafka_2.10:0.8.2.1') {
     exclude module: 'zookeeper'
     exclude module: 'zkclient'
     exclude module: 'jmxri'
