@@ -207,6 +207,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         throw new NoSuchFieldError();
     }
 
+    @Override
     public synchronized void withDefrag(Defragmenter defragmenter) {
         if (this.defragmenter == null) {
             this.defragmenter = defragmenter;
@@ -215,6 +216,7 @@ public final class SimpleStatisticsReporter implements StatisticsReporter {
         }
     }
 
+    @Override
     public synchronized void appendHandler(Handler handler) {
         this.handlers.add(handler);
     }

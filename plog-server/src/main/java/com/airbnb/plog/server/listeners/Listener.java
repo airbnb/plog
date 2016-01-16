@@ -4,6 +4,7 @@ import com.airbnb.plog.handlers.Handler;
 import com.airbnb.plog.handlers.HandlerProvider;
 import com.airbnb.plog.server.pipeline.EndOfPipeline;
 import com.airbnb.plog.server.stats.SimpleStatisticsReporter;
+import com.airbnb.plog.server.stats.StatisticsReporter;
 import com.google.common.util.concurrent.AbstractService;
 import com.typesafe.config.Config;
 import io.netty.channel.*;
@@ -19,13 +20,17 @@ abstract class Listener extends AbstractService {
     @Getter
     private final Config config;
     @Getter
-    private final SimpleStatisticsReporter stats;
+    private final StatisticsReporter stats;
     private final EndOfPipeline eopHandler;
     private EventLoopGroup eventLoopGroup = null;
 
     public Listener(Config config) {
+        this(config, new SimpleStatisticsReporter());
+    }
+
+    public Listener(Config config, StatisticsReporter reporter) {
         this.config = config;
-        this.stats = new SimpleStatisticsReporter();
+        this.stats = reporter;
         this.eopHandler = new EndOfPipeline(stats);
     }
 

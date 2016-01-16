@@ -3,7 +3,7 @@ package com.airbnb.plog.server.listeners;
 import com.airbnb.plog.server.commands.FourLetterCommandHandler;
 import com.airbnb.plog.server.fragmentation.Defragmenter;
 import com.airbnb.plog.server.pipeline.ProtocolDecoder;
-import com.airbnb.plog.server.stats.SimpleStatisticsReporter;
+import com.airbnb.plog.server.stats.StatisticsReporter;
 import com.typesafe.config.Config;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -29,7 +29,7 @@ public final class UDPListener extends Listener {
     protected StartReturn start() {
         final Config config = getConfig();
 
-        final SimpleStatisticsReporter stats = getStats();
+        final StatisticsReporter stats = getStats();
 
         final ProtocolDecoder protocolDecoder = new ProtocolDecoder(stats);
 

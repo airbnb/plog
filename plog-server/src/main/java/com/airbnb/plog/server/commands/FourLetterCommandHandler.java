@@ -1,6 +1,6 @@
 package com.airbnb.plog.server.commands;
 
-import com.airbnb.plog.server.stats.SimpleStatisticsReporter;
+import com.airbnb.plog.server.stats.StatisticsReporter;
 import com.google.common.base.Charsets;
 import com.typesafe.config.Config;
 import io.netty.buffer.ByteBuf;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public final class FourLetterCommandHandler extends SimpleChannelInboundHandler<FourLetterCommand> {
     private static final byte[] PONG_BYTES = "PONG".getBytes();
-    private final SimpleStatisticsReporter stats;
+    private final StatisticsReporter stats;
     private final Config config;
 
     private DatagramPacket pong(ByteBufAllocator alloc, FourLetterCommand ping) {

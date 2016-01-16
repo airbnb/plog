@@ -4,4 +4,6 @@ build/
 *.pyc
 *.ipr
 *.iws
+*.iml
 application.conf
+.idea
