@@ -51,7 +51,7 @@ public final class KafkaProvider implements HandlerProvider {
         log.info("Using producer with properties {}", properties);
 
         final ProducerConfig producerConfig = new ProducerConfig(properties);
-        final Producer<byte[], byte[]> producer = new Producer<byte[], byte[]>(producerConfig);
+        final Producer<Integer, byte[]> producer = new Producer<Integer, byte[]>(producerConfig);
 
         EncryptionConfig encryptionConfig = new EncryptionConfig();
         try {
