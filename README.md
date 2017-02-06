@@ -26,8 +26,31 @@ While updates may still be made and we welcome feedback, keep in mind we may not
 
         $ ./gradlew shadowJar
 
-- To build source JARs and upload to bintray:
+- To build source JARs and upload to bintray manually:
+  - Create an account on https://bintray.com (you need to create and register your own org first)
+  - Ask an admin (e.g. Alexis Midon @alexism) to invite your newly created user to Airbnb's account
+  - find your bintray API key (Edit Profile > API Key) and set BINTRAY_USER and BINTRAY_KEY environment variables locally. e.g.
+  
+        $ export BINTRAY_USER=<your_user_id>
+        $ export BINTRAY_KEY=<your_api_key>
+        
+  - Tag master with a newer version. Use `git describe --tags` to see the previous version. e.g.
+ 
+        $ git describe --tags --dirty
+        v4.0.0-BETA-36-g21add12
+    
+    This means the previous tag was v4.0.0-BETA, there's been 36 commits since the tagged commit, and HEAD is at 21add12.
+    We use com.github.ben-manes.versions to apply set the build version to the output of 'git describe --tags --dirty'
 
+    To tag a new version, do something like the following
+    
+        $ git tag -a v4.0.1
+        $ git describe --tags --dirty
+        v4.0.1
+        $ git push origin v4.0.1
+ 
+  - Now you are ready to upload to bintray, by running the following command in the root plog directory
+    
         $ ./gradlew build sourcesJar bintrayUpload
 
 ## Configuration
