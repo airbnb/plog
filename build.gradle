@@ -91,7 +91,9 @@ allprojects {
 
   repositories {
     mavenLocal()
-    jcenter()
+    jcenter {
+      url "http://jcenter.bintray.com/"
+    }
   }
 
   idea.module {
