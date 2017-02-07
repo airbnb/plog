@@ -11,7 +11,7 @@ script:
 # https://docs.travis-ci.com/user/environment-variables/
 after_success:
   - >
-      test ! "${TRAVIS_TAG}" &&
+      test "${TRAVIS_TAG}" &&
       test "${TRAVIS_JDK_VERSION}" = 'oraclejdk8' &&
       ./gradlew --info bintrayUpload
 
