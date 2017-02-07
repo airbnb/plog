@@ -1,10 +1,21 @@
----
 language: java
-
 jdk:
-  - oraclejdk8
-
+- oraclejdk8
 script:
-  - TERM=dumb ./gradlew check --info
-  - TERM=dumb ./gradlew shadowJar --info
-  - python -m py_compile third-party/datadog/plog.py
+- TERM=dumb ./gradlew check --info
+- TERM=dumb ./gradlew shadowJar --info
+- python -m py_compile third-party/datadog/plog.py
+
+# publish artifacts to bintray on tag builds
+# TRAVIS_TAG is a default environment variable that's set if the build is for a tagged commit
+# https://docs.travis-ci.com/user/environment-variables/
+after_success:
+  - >
+      test ! "${TRAVIS_TAG}" &&
+      test "${TRAVIS_JDK_VERSION}" = 'oraclejdk8' &&
+      ./gradlew --info bintrayUpload
+
+env:
+  global:
+  - secure: R2LBHRwxi+UFVmmIs5OCl3/GE8x4RVmQJjRCfzTpQPVkYZfPvCo6ADmfkkdBCRibJ8DjHDT+o09hmu7Lb4Cdg5x2Ox6ANEUFE4UWeqQPPwoZ4xmTftRoQomNZyKZKS8qJUl0msWKnDfZFai8kWHE8Ui9LIvbjEZ9b4vHyut7dIc=
+  - secure: Yno0O5gcYW+P8kndZbyxYiFSfPX0M6mm+gef6+vWNlV0wsIOaoYxoq3s1P+VNaZm3XjArWIagIywWxGj3wCKbSH12invIyTqqdIf6yu5cFvC75/nsuoU6x/6YeTzpehIkG4Ddwyyx3ij+HopzIh6kswjYclqyPixoZQoQ5KhLyQ=
