@@ -64,7 +64,7 @@ Please refer to [Kafka's documentation](http://kafka.apache.org/08/configuration
 
 ### plog settings
 
-Please refer to [reference.conf](src/main/resources/reference.conf) for all the options and their default values.
+Please refer to [reference.conf](plog-api/src/main/resources/reference.conf) for all the options and their default values.
 
 Note that multiple TCP and UDP ports can be configure and have separate settings, and each has their own sink
 (whether Kafka or standard output).
