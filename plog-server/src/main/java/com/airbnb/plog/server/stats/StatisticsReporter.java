@@ -1,5 +1,8 @@
 package com.airbnb.plog.server.stats;
 
+import com.airbnb.plog.handlers.Handler;
+import com.airbnb.plog.server.fragmentation.Defragmenter;
+
 public interface StatisticsReporter {
     long receivedUdpSimpleMessage();
 
@@ -30,4 +33,10 @@ public interface StatisticsReporter {
     long missingFragmentInDroppedMessage(final int fragmentIndex, final int expectedFragments);
 
     long unhandledObject();
-}
+
+    String toJSON();
+
+    void appendHandler(Handler handler);
+
+    void withDefrag(Defragmenter defragmenter);
+  }
