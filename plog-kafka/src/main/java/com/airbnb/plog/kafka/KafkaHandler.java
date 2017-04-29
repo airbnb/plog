@@ -1,8 +1,8 @@
 package com.airbnb.plog.kafka;
 
-import com.airbnb.plog.kafka.KafkaProvider.EncryptionConfig;
 import com.airbnb.plog.Message;
 import com.airbnb.plog.handlers.Handler;
+import com.airbnb.plog.kafka.KafkaProvider.EncryptionConfig;
 import com.eclipsesource.json.JsonObject;
 import com.yammer.metrics.core.Meter;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,29 +13,31 @@ import kafka.producer.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayOutputStream;
-import java.util.concurrent.atomic.AtomicLong;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 @RequiredArgsConstructor
 @Slf4j
 public final class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     private final String defaultTopic;
     private final boolean propagate;
-    private final Producer<byte[], byte[]> producer;
+    private final Producer<Integer, byte[]> producer;
     private final AtomicLong failedToSendMessageExceptions = new AtomicLong(), seenMessages = new AtomicLong();
     private final ProducerStats producerStats;
     private final ProducerTopicMetrics producerAllTopicsStats;
     private final EncryptionConfig encryptionConfig;
     private SecretKeySpec keySpec = null;
+    private final Random random = new Random();
+    private Integer messageKey = random.nextInt();
 
     protected KafkaHandler(
             final String clientId,
             final boolean propagate,
             final String defaultTopic,
-            final Producer<byte[], byte[]> producer,
+            final Producer<Integer, byte[]> producer,
             final EncryptionConfig encryptionConfig) {
 
         super();
@@ -103,7 +105,8 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         final boolean nonNullTopic = !("null".equals(topic));
         if (nonNullTopic) {
             try {
-                producer.send(new KeyedMessage<byte[], byte[]>(topic, msg));
+                final Integer key = getMessageKey();
+                producer.send(new KeyedMessage<Integer, byte[]>(topic, key, msg));
             } catch (FailedToSendMessageException e) {
                 log.warn("Failed to send to topic {}", topic, e);
                 failedToSendMessageExceptions.incrementAndGet();
@@ -123,6 +126,21 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         outputStream.write(cipher.doFinal(plaintext));
         return outputStream.toByteArray();
     }
+
+  /**
+   * In order to better distribute the messages over the topic partitions,
+   * without limiting the batching efficiency, the same key is used every 1000 messages.
+   *
+   * The key is randomly generated every 1000 messages.
+   *
+   * @return
+   */
+  private Integer getMessageKey() {
+      if (seenMessages.longValue() % 1000 == 0) {
+          messageKey = random.nextInt();
+      }
+      return messageKey;
+  }
 
   @Override
     public JsonObject getStats() {
