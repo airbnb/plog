@@ -106,7 +106,7 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
             try {
                 // Base64 decode the partitionKey to get the raw bytes
                 byte[] key = Base64.getUrlDecoder().decode(partitionKey);
-                producer.send(new KeyedMessage<>(topic, key, msg));
+                producer.send(new KeyedMessage<byte[], byte[]>(topic, key, msg));
             } catch (FailedToSendMessageException e) {
                 log.warn("Failed to send to topic {}", topic, e);
                 failedToSendMessageExceptions.incrementAndGet();
