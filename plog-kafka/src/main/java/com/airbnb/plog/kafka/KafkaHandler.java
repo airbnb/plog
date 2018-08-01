@@ -7,6 +7,7 @@ import com.eclipsesource.json.JsonObject;
 import com.yammer.metrics.core.Meter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import java.util.Base64;
 import kafka.common.FailedToSendMessageException;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.*;
@@ -79,19 +80,19 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
                 log.error("Fail to encrypt message: ", e.getMessage());
             }
         }
-
-        boolean sawKtTag = false;
+        String kafkaTopic = defaultTopic;
+        // Producer will simply do round-robin when a null partitionKey is provided
+        String partitionKey = null;
 
         for (String tag : msg.getTags()) {
             if (tag.startsWith("kt:")) {
-                sawKtTag = true;
-                sendOrReportFailure(tag.substring(3), payload);
+                kafkaTopic = tag.substring(3);
+            } else if (tag.startsWith("pk:")) {
+                partitionKey = tag.substring(3);
             }
         }
 
-        if (!sawKtTag) {
-            sendOrReportFailure(defaultTopic, payload);
-        }
+        sendOrReportFailure(kafkaTopic, partitionKey, payload);
 
         if (propagate) {
             msg.retain();
@@ -99,11 +100,13 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         }
     }
 
-    private boolean sendOrReportFailure(String topic, final byte[] msg) {
+    private boolean sendOrReportFailure(String topic, String partitionKey, final byte[] msg) {
         final boolean nonNullTopic = !("null".equals(topic));
         if (nonNullTopic) {
             try {
-                producer.send(new KeyedMessage<byte[], byte[]>(topic, msg));
+                // Base64 decode the partitionKey to get the raw bytes
+                byte[] key = Base64.getUrlDecoder().decode(partitionKey);
+                producer.send(new KeyedMessage<>(topic, key, msg));
             } catch (FailedToSendMessageException e) {
                 log.warn("Failed to send to topic {}", topic, e);
                 failedToSendMessageExceptions.incrementAndGet();
