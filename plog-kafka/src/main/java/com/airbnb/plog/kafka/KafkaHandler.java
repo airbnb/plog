@@ -82,13 +82,14 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         }
         String kafkaTopic = defaultTopic;
         // Producer will simply do round-robin when a null partitionKey is provided
-        String partitionKey = null;
+        byte[] partitionKey = null;
 
         for (String tag : msg.getTags()) {
             if (tag.startsWith("kt:")) {
                 kafkaTopic = tag.substring(3);
             } else if (tag.startsWith("pk:")) {
-                partitionKey = tag.substring(3);
+              // Base64 decode the partitionKey to get the raw bytes
+                partitionKey = Base64.getUrlDecoder().decode( tag.substring(3));
             }
         }
 
@@ -100,12 +101,10 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         }
     }
 
-    private boolean sendOrReportFailure(String topic, String partitionKey, final byte[] msg) {
+    private boolean sendOrReportFailure(String topic, final byte[] key, final byte[] msg) {
         final boolean nonNullTopic = !("null".equals(topic));
         if (nonNullTopic) {
             try {
-                // Base64 decode the partitionKey to get the raw bytes
-                byte[] key = Base64.getUrlDecoder().decode(partitionKey);
                 producer.send(new KeyedMessage<byte[], byte[]>(topic, key, msg));
             } catch (FailedToSendMessageException e) {
                 log.warn("Failed to send to topic {}", topic, e);
