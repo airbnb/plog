@@ -47,6 +47,7 @@ public final class KafkaProvider implements HandlerProvider {
                 KafkaProvider.clientId.getAndIncrement();
 
         properties.put("client.id", clientId);
+        properties.put("partitioner.class", "com.airbnb.plog.kafka.HashPartitioner");
 
         log.info("Using producer with properties {}", properties);
 
