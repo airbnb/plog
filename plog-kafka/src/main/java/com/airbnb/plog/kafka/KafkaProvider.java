@@ -13,6 +13,7 @@ import java.net.InetAddress;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.kafka.common.serialization.StringSerializer;
 
 @Slf4j
 public final class KafkaProvider implements HandlerProvider {
@@ -47,11 +48,12 @@ public final class KafkaProvider implements HandlerProvider {
                 KafkaProvider.clientId.getAndIncrement();
 
         properties.put("client.id", clientId);
+        properties.put("key.serializer.class", "kafka.serializer.StringEncoder");
 
         log.info("Using producer with properties {}", properties);
 
         final ProducerConfig producerConfig = new ProducerConfig(properties);
-        final Producer<byte[], byte[]> producer = new Producer<byte[], byte[]>(producerConfig);
+        final Producer<String, byte[]> producer = new Producer<String, byte[]>(producerConfig);
 
         EncryptionConfig encryptionConfig = new EncryptionConfig();
         try {
