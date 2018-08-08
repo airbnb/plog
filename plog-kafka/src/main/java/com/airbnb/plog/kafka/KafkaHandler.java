@@ -7,7 +7,6 @@ import com.eclipsesource.json.JsonObject;
 import com.yammer.metrics.core.Meter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import java.util.Base64;
 import kafka.common.FailedToSendMessageException;
 import kafka.javaapi.producer.Producer;
 import kafka.producer.*;
