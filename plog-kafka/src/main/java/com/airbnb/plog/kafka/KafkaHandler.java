@@ -25,7 +25,7 @@ import javax.crypto.spec.SecretKeySpec;
 public final class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     private final String defaultTopic;
     private final boolean propagate;
-    private final Producer<byte[], byte[]> producer;
+    private final Producer<String, byte[]> producer;
     private final AtomicLong failedToSendMessageExceptions = new AtomicLong(), seenMessages = new AtomicLong();
     private final ProducerStats producerStats;
     private final ProducerTopicMetrics producerAllTopicsStats;
@@ -36,7 +36,7 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
             final String clientId,
             final boolean propagate,
             final String defaultTopic,
-            final Producer<byte[], byte[]> producer,
+            final Producer<String, byte[]> producer,
             final EncryptionConfig encryptionConfig) {
 
         super();
@@ -82,14 +82,13 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         }
         String kafkaTopic = defaultTopic;
         // Producer will simply do round-robin when a null partitionKey is provided
-        byte[] partitionKey = null;
+        String partitionKey = null;
 
         for (String tag : msg.getTags()) {
             if (tag.startsWith("kt:")) {
                 kafkaTopic = tag.substring(3);
             } else if (tag.startsWith("pk:")) {
-              // Base64 decode the partitionKey to get the raw bytes
-                partitionKey = Base64.getUrlDecoder().decode( tag.substring(3));
+                partitionKey = tag.substring(3);
             }
         }
 
@@ -101,11 +100,11 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         }
     }
 
-    private boolean sendOrReportFailure(String topic, final byte[] key, final byte[] msg) {
+    private boolean sendOrReportFailure(String topic, final String key, final byte[] msg) {
         final boolean nonNullTopic = !("null".equals(topic));
         if (nonNullTopic) {
             try {
-                producer.send(new KeyedMessage<byte[], byte[]>(topic, key, msg));
+                producer.send(new KeyedMessage<String, byte[]>(topic, key, msg));
             } catch (FailedToSendMessageException e) {
                 log.warn("Failed to send to topic {}", topic, e);
                 failedToSendMessageExceptions.incrementAndGet();
