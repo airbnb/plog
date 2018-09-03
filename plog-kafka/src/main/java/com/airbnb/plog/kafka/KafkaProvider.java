@@ -2,6 +2,7 @@ package com.airbnb.plog.kafka;
 
 import com.airbnb.plog.handlers.Handler;
 import com.airbnb.plog.handlers.HandlerProvider;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigValue;
@@ -13,6 +14,7 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 
 @Slf4j
 public final class KafkaProvider implements HandlerProvider {
@@ -37,6 +39,7 @@ public final class KafkaProvider implements HandlerProvider {
             log.warn("default topic is \"null\"; messages will be discarded unless tagged with kt:");
         }
 
+
         final Properties properties = new Properties();
         for (Map.Entry<String, ConfigValue> kv : config.getConfig("producer_config").entrySet()) {
             properties.put(kv.getKey(), kv.getValue().unwrapped().toString());
@@ -46,9 +49,9 @@ public final class KafkaProvider implements HandlerProvider {
                 InetAddress.getLocalHost().getHostName() + "_" +
                 KafkaProvider.clientId.getAndIncrement();
 
-        properties.put("client.id", clientId);
-        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
+        properties.put(ProducerConfig.CLIENT_ID_CONFIG, clientId);
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArraySerializer");
 
         log.info("Using producer with properties {}", properties);
 

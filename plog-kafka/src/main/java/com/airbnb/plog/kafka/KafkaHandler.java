@@ -4,7 +4,6 @@ import com.airbnb.plog.kafka.KafkaProvider.EncryptionConfig;
 import com.airbnb.plog.Message;
 import com.airbnb.plog.handlers.Handler;
 import com.eclipsesource.json.JsonObject;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -40,7 +39,7 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
 
     private static final ImmutableMap<String, MetricName> SHORTNAME_TO_METRICNAME =
         ImmutableMap.<String, MetricName>builder()
-            // Compatibility with Plog 4.0
+            // Keep some compatibility with Plog 4.0
             .put("message", new MetricName("record-send-rate", "producer-metrics"))
             .put("resend", new MetricName("record-retry-rate", "producer-metrics"))
             .put("failed_send", new MetricName("record-error-rate", "producer-metrics"))
@@ -154,10 +153,11 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         // Use default kafka naming, include all producer metrics
         for (Map.Entry<MetricName, ? extends Metric> metric : metrics.entrySet()) {
             double value = metric.getValue().value();
+            String name = metric.getKey().name().replace("-", "_");
             if (value > -Double.MAX_VALUE && value < Double.MAX_VALUE) {
-                stats.add(metric.getKey().name(), value);
+                stats.add(name, value);
             } else {
-                stats.add(metric.getKey().name(), 0.0);
+                stats.add(name, 0.0);
             }
         }
 

@@ -32,13 +32,13 @@ allprojects {
 
   version = rootProject.ext.gitVersion
 
-  sourceCompatibility = 1.6
-  targetCompatibility = 1.6
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
 
   group = 'com.airbnb.plog'
 
   ext {
-    nettyVersion = '4.0.24.Final'
+    nettyVersion = '4.1.29.Final'
     slf4jVersion = '1.7.10'
     metricsVersion = '3.0.2'
   }

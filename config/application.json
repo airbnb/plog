@@ -4,75 +4,49 @@
       "tcp" : {
         "listeners" : [
           {
-            "port" : 23456
+            "port": 23456
           }
         ]
       },
       "udp" : {
         "listeners" : [
           {
-            "port" : 23460,
+            "port": 23461,
             "handlers" : [
-              {
-                "provider" : "com.airbnb.plog.kafka.KafkaProvider",
-                "default_topic" : "scram_events",
-                "producer_config" : {
-                  "compression" : {
-                    "codec" : "snappy"
-                  },
-                  "queue" : {
-                    "enqueue" : {
-                      "timeout" : {
-                        "ms" : 0
-                      }
-                    }
-                  },
-                  "producer" : {
-                    "type" : "async"
-                  },
-                  "bootstrap" : {
-                    "servers" : "localhost:9092"
-                  },
-                  "request" : {
-                    "required" : {
-                      "acks" : 1
-                    }
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "port" : 23461,
-            "handlers" : [
-              {
-                "provider" : "com.airbnb.plog.console.ConsoleOutputProvider"
-              },
               {
                 "provider" : "com.airbnb.plog.kafka.KafkaProvider",
                 "default_topic" : "null",
                 "producer_config" : {
-                  "compression" : {
-                    "codec" : "snappy"
+                  "partitioner": {
+                    "class": "com.airbnb.plog.kafka.partitioner.FlinkPartitioner",
+                    "maxParallelism": 7200
                   },
-                  "queue" : {
-                    "enqueue" : {
-                      "timeout" : {
-                        "ms" : 0
-                      }
+                  "compression" : {
+                    "type" : "snappy"
+                  },
+                  "linger": {
+                    "ms": 10000
+                  },
+                  "batch" : {
+                    "size" : 131072
+                  },
+                  "send" : {
+                    "buffer" : {
+                      "bytes": 131072
                     }
                   },
-                  "producer" : {
-                    "type" : "async"
+                  "max": {
+                    "block": {
+                      "ms": 0
+                    }
+                  },
+                  "buffer": {
+                    "memory": 75497472
                   },
                   "bootstrap" : {
                     "servers" : "localhost:9092"
                   },
-                  "request" : {
-                    "required" : {
-                      "acks" : 1
-                    }
-                  }
+                  "acks" : 1
                 }
               }
             ]

@@ -1,4 +1,5 @@
 dependencies {
   compile project(':plog-api')
   compile(group: 'org.apache.kafka', name: 'kafka-clients', version: '0.9.0.1')
+  testCompile(group: 'org.apache.flink', name: 'flink-streaming-java_2.11', version: '1.6.0')
 }
