@@ -4,16 +4,22 @@ import com.airbnb.plog.kafka.KafkaProvider.EncryptionConfig;
 import com.airbnb.plog.Message;
 import com.airbnb.plog.handlers.Handler;
 import com.eclipsesource.json.JsonObject;
-import com.yammer.metrics.core.Meter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import kafka.common.FailedToSendMessageException;
-import kafka.javaapi.producer.Producer;
-import kafka.producer.*;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.KafkaException;
+import org.apache.kafka.common.Metric;
+import org.apache.kafka.common.MetricName;
+import org.apache.kafka.common.errors.SerializationException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.crypto.Cipher;
@@ -24,25 +30,33 @@ import javax.crypto.spec.SecretKeySpec;
 public final class KafkaHandler extends SimpleChannelInboundHandler<Message> implements Handler {
     private final String defaultTopic;
     private final boolean propagate;
-    private final Producer<String, byte[]> producer;
-    private final AtomicLong failedToSendMessageExceptions = new AtomicLong(), seenMessages = new AtomicLong();
-    private final ProducerStats producerStats;
-    private final ProducerTopicMetrics producerAllTopicsStats;
+    private final KafkaProducer<String, byte[]> producer;
+    private final AtomicLong failedToSendMessageExceptions = new AtomicLong();
+    private final AtomicLong seenMessages = new AtomicLong();
+    private final AtomicLong serializationErrors = new AtomicLong();
+
     private final EncryptionConfig encryptionConfig;
     private SecretKeySpec keySpec = null;
+
+    private static final ImmutableMap<String, MetricName> SHORTNAME_TO_METRICNAME =
+        ImmutableMap.<String, MetricName>builder()
+            // Compatibility with Plog 4.0
+            .put("message", new MetricName("record-send-rate", "producer-metrics"))
+            .put("resend", new MetricName("record-retry-rate", "producer-metrics"))
+            .put("failed_send", new MetricName("record-error-rate", "producer-metrics"))
+            .put("dropped_message", new MetricName("record-error-rate", "producer-metrics"))
+            .put("byte", new MetricName("outgoing-byte-rate", "producer-metrics"))
+            .build();
 
     protected KafkaHandler(
             final String clientId,
             final boolean propagate,
             final String defaultTopic,
-            final Producer<String, byte[]> producer,
+            final KafkaProducer<String, byte[]> producer,
             final EncryptionConfig encryptionConfig) {
 
         super();
         this.propagate = propagate;
-        this.producerStats = ProducerStatsRegistry.getProducerStats(clientId);
-        this.producerAllTopicsStats =
-            ProducerTopicStatsRegistry.getProducerTopicStats(clientId).getProducerAllTopicsStats();
         this.defaultTopic = defaultTopic;
         this.producer = producer;
         this.encryptionConfig = encryptionConfig;
@@ -57,15 +71,6 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         } else {
             log.info("KafkaHandler start without encryption.");
         }
-    }
-
-    private static JsonObject meterToJsonObject(Meter meter) {
-        return new JsonObject()
-                .add("count", meter.count())
-                .add("rate", new JsonObject()
-                        .add("1", meter.oneMinuteRate())
-                        .add("5", meter.fiveMinuteRate())
-                        .add("15", meter.fifteenMinuteRate()));
     }
 
     @Override
@@ -103,8 +108,11 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         final boolean nonNullTopic = !("null".equals(topic));
         if (nonNullTopic) {
             try {
-                producer.send(new KeyedMessage<String, byte[]>(topic, key, msg));
-            } catch (FailedToSendMessageException e) {
+                producer.send(new ProducerRecord<String, byte[]>(topic, key, msg));
+            } catch (SerializationException e) {
+                failedToSendMessageExceptions.incrementAndGet();
+                serializationErrors.incrementAndGet();
+            } catch (KafkaException e) {
                 log.warn("Failed to send to topic {}", topic, e);
                 failedToSendMessageExceptions.incrementAndGet();
             }
@@ -124,18 +132,36 @@ public final class KafkaHandler extends SimpleChannelInboundHandler<Message> imp
         return outputStream.toByteArray();
     }
 
-  @Override
+    @Override
     public JsonObject getStats() {
-        return new JsonObject()
-                .add("default_topic", defaultTopic)
-                .add("seen_messages", seenMessages.get())
-                .add("failed_to_send", failedToSendMessageExceptions.get())
-                .add("failed_send", meterToJsonObject(producerStats.failedSendRate()))
-                .add("resend", meterToJsonObject(producerStats.resendRate()))
-                .add("serialization_error", meterToJsonObject(producerStats.serializationErrorRate()))
-                .add("message", meterToJsonObject(producerAllTopicsStats.messageRate()))
-                .add("dropped_message", meterToJsonObject(producerAllTopicsStats.droppedMessageRate()))
-                .add("byte", meterToJsonObject(producerAllTopicsStats.byteRate()));
+
+        Map<MetricName, ? extends Metric> metrics = producer.metrics();
+
+        JsonObject stats = new JsonObject()
+            .add("seen_messages", seenMessages.get())
+            .add("failed_to_send", failedToSendMessageExceptions.get());
+
+        // Map to Plog v4-style naming
+        for (Map.Entry<String, MetricName> entry: SHORTNAME_TO_METRICNAME.entrySet()) {
+            Metric metric = metrics.get(entry.getValue());
+            if (metric != null) {
+                stats.add(entry.getKey(), metric.value());
+            } else {
+                stats.add(entry.getKey(), 0.0);
+            }
+        }
+
+        // Use default kafka naming, include all producer metrics
+        for (Map.Entry<MetricName, ? extends Metric> metric : metrics.entrySet()) {
+            double value = metric.getValue().value();
+            if (value > -Double.MAX_VALUE && value < Double.MAX_VALUE) {
+                stats.add(metric.getKey().name(), value);
+            } else {
+                stats.add(metric.getKey().name(), 0.0);
+            }
+        }
+
+        return stats;
     }
 
     @Override
