@@ -30,7 +30,7 @@ final class PortHoleDetector {
 
     private void reset(Integer value) {
         if (value != null) {
-             log.info("Resetting {} for {}", this.entries, value);
+            log.info("Resetting {} for {}", this.entries, value);
         }
         this.minSeen = Long.MAX_VALUE;
         this.maxSeen = Long.MIN_VALUE;
