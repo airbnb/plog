@@ -19,7 +19,7 @@ public class FlinkPartitioner implements Partitioner {
   private int maxParallelism = 16386;
 
   private static int toPositive(int number) {
-    return number & 2147483647;
+    return number & Integer.MAX_VALUE;
   }
 
   public void configure(Map<String, ?> configs) {
