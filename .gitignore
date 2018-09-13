@@ -1,7 +1,8 @@
-/out/
 build/
 /.gradle/
 *.pyc
 *.ipr
 *.iws
 application.conf
+.idea/
+*/out/*

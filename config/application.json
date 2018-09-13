@@ -1,0 +1,58 @@
+{
+  "plog" : {
+    "server" : {
+      "tcp" : {
+        "listeners" : [
+          {
+            "port": 23456
+          }
+        ]
+      },
+      "udp" : {
+        "listeners" : [
+          {
+            "port": 23461,
+            "handlers" : [
+              {
+                "provider" : "com.airbnb.plog.kafka.KafkaProvider",
+                "default_topic" : "null",
+                "producer_config" : {
+                  "partitioner": {
+                    "class": "com.airbnb.plog.kafka.partitioner.FlinkPartitioner",
+                    "maxParallelism": 7200
+                  },
+                  "compression" : {
+                    "type" : "snappy"
+                  },
+                  "linger": {
+                    "ms": 10000
+                  },
+                  "batch" : {
+                    "size" : 131072
+                  },
+                  "send" : {
+                    "buffer" : {
+                      "bytes": 131072
+                    }
+                  },
+                  "max": {
+                    "block": {
+                      "ms": 0
+                    }
+                  },
+                  "buffer": {
+                    "memory": 75497472
+                  },
+                  "bootstrap" : {
+                    "servers" : "localhost:9092"
+                  },
+                  "acks" : 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
